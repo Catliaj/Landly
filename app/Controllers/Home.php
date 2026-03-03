@@ -8,4 +8,9 @@ class Home extends BaseController
     {
         return view('LandingPage');
     }
+
+    public function auth(): string
+    {
+        return view('AuthPage');
+    }
 }
