@@ -504,6 +504,291 @@
 			color: #b8956a;
 		}
 
+		/* Role Toggle */
+		.role-toggle {
+			display: flex;
+			gap: 10px;
+			margin-bottom: 25px;
+			background: rgba(15, 27, 27, 0.05);
+			padding: 6px;
+			border-radius: 14px;
+		}
+
+		.role-btn {
+			flex: 1;
+			padding: 12px 20px;
+			border-radius: 10px;
+			border: none;
+			background: transparent;
+			color: #5a6d6d;
+			font-size: 0.9rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+
+		.role-btn svg {
+			width: 18px;
+			height: 18px;
+			stroke: currentColor;
+			fill: none;
+			stroke-width: 2;
+		}
+
+		.role-btn.active {
+			background: linear-gradient(135deg, var(--green-900) 0%, #1a3030 100%);
+			color: var(--cream-100);
+			box-shadow: 0 4px 15px rgba(15, 27, 27, 0.2);
+		}
+
+		.role-btn:hover:not(.active) {
+			background: rgba(15, 27, 27, 0.08);
+		}
+
+		/* Form Row for side-by-side fields */
+		.form-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+		}
+
+		/* File Upload */
+		.file-upload {
+			position: relative;
+			border: 2px dashed rgba(15, 27, 27, 0.2);
+			border-radius: 12px;
+			padding: 20px;
+			text-align: center;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			background: rgba(255, 255, 255, 0.5);
+		}
+
+		.file-upload:hover {
+			border-color: var(--accent);
+			background: rgba(202, 164, 110, 0.05);
+		}
+
+		.file-upload input {
+			position: absolute;
+			inset: 0;
+			opacity: 0;
+			cursor: pointer;
+		}
+
+		.file-upload-icon {
+			width: 40px;
+			height: 40px;
+			margin: 0 auto 10px;
+			background: rgba(15, 27, 27, 0.08);
+			border-radius: 10px;
+			display: grid;
+			place-items: center;
+		}
+
+		.file-upload-icon svg {
+			width: 20px;
+			height: 20px;
+			stroke: var(--accent);
+			fill: none;
+			stroke-width: 2;
+		}
+
+		.file-upload p {
+			font-size: 0.85rem;
+			color: #5a6d6d;
+			margin: 0;
+		}
+
+		.file-upload p span {
+			color: var(--accent);
+			font-weight: 600;
+		}
+
+		.file-upload-hint {
+			font-size: 0.75rem;
+			color: #9aa5a5;
+			margin-top: 6px;
+		}
+
+		/* Profile Image Upload */
+		.profile-upload {
+			display: flex;
+			align-items: center;
+			gap: 15px;
+		}
+
+		.profile-preview {
+			width: 70px;
+			height: 70px;
+			border-radius: 50%;
+			background: linear-gradient(135deg, rgba(15, 27, 27, 0.1), rgba(15, 27, 27, 0.05));
+			display: grid;
+			place-items: center;
+			overflow: hidden;
+			border: 3px solid rgba(15, 27, 27, 0.1);
+			flex-shrink: 0;
+		}
+
+		.profile-preview svg {
+			width: 28px;
+			height: 28px;
+			stroke: #9aa5a5;
+			fill: none;
+			stroke-width: 1.5;
+		}
+
+		.profile-preview img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.profile-upload-btn {
+			flex: 1;
+		}
+
+		.profile-upload-btn label {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 10px 18px;
+			background: rgba(15, 27, 27, 0.08);
+			border-radius: 10px;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: var(--green-900);
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.profile-upload-btn label:hover {
+			background: rgba(202, 164, 110, 0.15);
+		}
+
+		.profile-upload-btn label svg {
+			width: 16px;
+			height: 16px;
+			stroke: currentColor;
+			fill: none;
+			stroke-width: 2;
+		}
+
+		.profile-upload-btn input {
+			display: none;
+		}
+
+		.profile-upload-btn span {
+			display: block;
+			font-size: 0.75rem;
+			color: #9aa5a5;
+			margin-top: 6px;
+		}
+
+		/* Verification Section */
+		.verification-section {
+			margin-top: 5px;
+			padding-top: 20px;
+			border-top: 1px solid rgba(15, 27, 27, 0.1);
+		}
+
+		.verification-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 15px;
+		}
+
+		.verification-header svg {
+			width: 20px;
+			height: 20px;
+			stroke: var(--accent);
+			fill: none;
+			stroke-width: 2;
+		}
+
+		.verification-header h4 {
+			font-size: 0.95rem;
+			font-weight: 600;
+			color: var(--green-900);
+			margin: 0;
+		}
+
+		.verification-header span {
+			font-size: 0.75rem;
+			color: #9aa5a5;
+			margin-left: auto;
+		}
+
+		.upload-item {
+			margin-bottom: 15px;
+		}
+
+		.upload-item:last-child {
+			margin-bottom: 0;
+		}
+
+		.upload-label {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--green-900);
+			margin-bottom: 8px;
+		}
+
+		.upload-label .optional {
+			font-size: 0.75rem;
+			color: #9aa5a5;
+			font-weight: 400;
+		}
+
+		.upload-label .required {
+			color: #e74c3c;
+		}
+
+		/* Conditional Fields */
+		.buyer-fields,
+		.seller-fields {
+			display: none;
+		}
+
+		.buyer-fields.active,
+		.seller-fields.active {
+			display: block;
+		}
+
+		/* Scrollable form for signup */
+		.signup-form-inner {
+			max-height: 480px;
+			overflow-y: auto;
+			padding-right: 5px;
+			margin-right: -5px;
+		}
+
+		.signup-form-inner::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		.signup-form-inner::-webkit-scrollbar-track {
+			background: rgba(15, 27, 27, 0.05);
+			border-radius: 4px;
+		}
+
+		.signup-form-inner::-webkit-scrollbar-thumb {
+			background: rgba(15, 27, 27, 0.2);
+			border-radius: 4px;
+		}
+
+		.signup-form-inner::-webkit-scrollbar-thumb:hover {
+			background: rgba(15, 27, 27, 0.3);
+		}
+
 		/* Mobile Left Overlay (for when in signup mode) */
 		.mobile-overlay {
 			position: absolute;
@@ -683,21 +968,149 @@
 							<h2>Create account</h2>
 							<p>Join the premium land marketplace today</p>
 						</div>
+
+						<!-- Role Toggle -->
+						<div class="role-toggle">
+							<button type="button" class="role-btn active" data-role="buyer" id="buyerRoleBtn">
+								<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+								Buyer
+							</button>
+							<button type="button" class="role-btn" data-role="seller" id="sellerRoleBtn">
+								<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+								Seller
+							</button>
+						</div>
+
+						<div class="signup-form-inner">
 						<form>
-							<div class="form-group">
-								<label for="signup-name">Full name</label>
-								<input id="signup-name" type="text" placeholder="Juan Dela Cruz" />
+							<input type="hidden" name="role" id="selectedRole" value="buyer" />
+
+							<!-- Buyer Fields -->
+							<div class="buyer-fields active" id="buyerFields">
+								<div class="form-row">
+									<div class="form-group">
+										<label for="buyer-firstname">First Name <span style="color:#e74c3c">*</span></label>
+										<input id="buyer-firstname" type="text" placeholder="Juan" required />
+									</div>
+									<div class="form-group">
+										<label for="buyer-lastname">Last Name <span style="color:#e74c3c">*</span></label>
+										<input id="buyer-lastname" type="text" placeholder="Dela Cruz" required />
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="buyer-email">Email Address <span style="color:#e74c3c">*</span></label>
+									<input id="buyer-email" type="email" placeholder="you@example.com" required />
+								</div>
+								<div class="form-group">
+									<label for="buyer-phone">Phone Number <span style="color:#e74c3c">*</span></label>
+									<input id="buyer-phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
+								</div>
+								<div class="form-group">
+									<label for="buyer-password">Password <span style="color:#e74c3c">*</span></label>
+									<input id="buyer-password" type="password" placeholder="Create a strong password" required />
+								</div>
+								<div class="form-group">
+									<label>Profile Image</label>
+									<div class="profile-upload">
+										<div class="profile-preview" id="buyerProfilePreview">
+											<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+										</div>
+										<div class="profile-upload-btn">
+											<label for="buyer-profile-img">
+												<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+												Upload Photo
+											</label>
+											<input type="file" id="buyer-profile-img" accept="image/*" />
+											<span>JPG, PNG up to 5MB</span>
+										</div>
+									</div>
+								</div>
+								<button class="btn btn-primary" type="button">Create Buyer Account</button>
 							</div>
-							<div class="form-group">
-								<label for="signup-email">Email address</label>
-								<input id="signup-email" type="email" placeholder="you@example.com" />
+
+							<!-- Seller Fields -->
+							<div class="seller-fields" id="sellerFields">
+								<div class="form-row">
+									<div class="form-group">
+										<label for="seller-firstname">First Name <span style="color:#e74c3c">*</span></label>
+										<input id="seller-firstname" type="text" placeholder="Juan" required />
+									</div>
+									<div class="form-group">
+										<label for="seller-lastname">Last Name <span style="color:#e74c3c">*</span></label>
+										<input id="seller-lastname" type="text" placeholder="Dela Cruz" required />
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="seller-email">Email Address <span style="color:#e74c3c">*</span></label>
+									<input id="seller-email" type="email" placeholder="you@example.com" required />
+								</div>
+								<div class="form-group">
+									<label for="seller-phone">Phone Number <span style="color:#e74c3c">*</span></label>
+									<input id="seller-phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
+								</div>
+								<div class="form-group">
+									<label for="seller-password">Password <span style="color:#e74c3c">*</span></label>
+									<input id="seller-password" type="password" placeholder="Create a strong password" required />
+								</div>
+								<div class="form-group">
+									<label>Profile Picture</label>
+									<div class="profile-upload">
+										<div class="profile-preview" id="sellerProfilePreview">
+											<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+										</div>
+										<div class="profile-upload-btn">
+											<label for="seller-profile-img">
+												<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+												Upload Photo
+											</label>
+											<input type="file" id="seller-profile-img" accept="image/*" />
+											<span>JPG, PNG up to 5MB</span>
+										</div>
+									</div>
+								</div>
+
+								<!-- Seller Verification Section -->
+								<div class="verification-section">
+									<div class="verification-header">
+										<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+										<h4>Seller Verification</h4>
+										<span>For trusted seller badge</span>
+									</div>
+
+									<div class="upload-item">
+										<div class="upload-label">
+											Valid ID <span class="required">*</span>
+										</div>
+										<div class="file-upload" id="validIdUpload">
+											<input type="file" id="seller-valid-id" accept="image/*,.pdf" required />
+											<div class="file-upload-icon">
+												<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="7" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
+											</div>
+											<p><span>Click to upload</span> or drag and drop</p>
+											<p class="file-upload-hint">Government-issued ID (Passport, Driver's License, etc.)</p>
+										</div>
+									</div>
+
+									<div class="upload-item">
+										<div class="upload-label">
+											BIR / Business Permit <span class="optional">(Optional)</span>
+										</div>
+										<div class="file-upload" id="birUpload">
+											<input type="file" id="seller-bir" accept="image/*,.pdf" />
+											<div class="file-upload-icon">
+												<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+											</div>
+											<p><span>Click to upload</span> or drag and drop</p>
+											<p class="file-upload-hint">BIR Certificate or Business Permit</p>
+										</div>
+									</div>
+								</div>
+
+								<button class="btn btn-primary" type="button" style="margin-top: 20px;">Create Seller Account</button>
 							</div>
-							<div class="form-group">
-								<label for="signup-password">Password</label>
-								<input id="signup-password" type="password" placeholder="Create a strong password" />
-							</div>
-							<button class="btn btn-primary" type="button">Create Account</button>
 						</form>
+						</div>
+
 						<div class="divider">or sign up with</div>
 						<div class="social-login">
 							<button class="social-btn" type="button">
@@ -722,6 +1135,13 @@
 		const showLogin = document.getElementById('showLogin');
 		const switchToLogin = document.getElementById('switchToLogin');
 
+		// Role toggle elements
+		const buyerRoleBtn = document.getElementById('buyerRoleBtn');
+		const sellerRoleBtn = document.getElementById('sellerRoleBtn');
+		const buyerFields = document.getElementById('buyerFields');
+		const sellerFields = document.getElementById('sellerFields');
+		const selectedRole = document.getElementById('selectedRole');
+
 		// Check URL for signup mode parameter
 		const urlParams = new URLSearchParams(window.location.search);
 		if (urlParams.get('mode') === 'signup') {
@@ -739,6 +1159,91 @@
 		switchToLogin.addEventListener('click', () => {
 			authContainer.classList.remove('signup-mode');
 		});
+
+		// Role toggle functionality
+		buyerRoleBtn.addEventListener('click', () => {
+			buyerRoleBtn.classList.add('active');
+			sellerRoleBtn.classList.remove('active');
+			buyerFields.classList.add('active');
+			sellerFields.classList.remove('active');
+			selectedRole.value = 'buyer';
+		});
+
+		sellerRoleBtn.addEventListener('click', () => {
+			sellerRoleBtn.classList.add('active');
+			buyerRoleBtn.classList.remove('active');
+			sellerFields.classList.add('active');
+			buyerFields.classList.remove('active');
+			selectedRole.value = 'seller';
+		});
+
+		// Profile image preview
+		function setupImagePreview(inputId, previewId) {
+			const input = document.getElementById(inputId);
+			const preview = document.getElementById(previewId);
+
+			if (input && preview) {
+				input.addEventListener('change', function(e) {
+					const file = e.target.files[0];
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = function(e) {
+							preview.innerHTML = `<img src="${e.target.result}" alt="Profile">`;
+						}
+						reader.readAsDataURL(file);
+					}
+				});
+			}
+		}
+
+		setupImagePreview('buyer-profile-img', 'buyerProfilePreview');
+		setupImagePreview('seller-profile-img', 'sellerProfilePreview');
+
+		// File upload visual feedback
+		function setupFileUpload(uploadId, inputId) {
+			const uploadArea = document.getElementById(uploadId);
+			const input = document.getElementById(inputId);
+
+			if (uploadArea && input) {
+				input.addEventListener('change', function(e) {
+					const file = e.target.files[0];
+					if (file) {
+						const fileName = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
+						const pElement = uploadArea.querySelector('p:not(.file-upload-hint)');
+						if (pElement) {
+							pElement.innerHTML = `<span style="color: #2ecc71;">✓</span> ${fileName}`;
+						}
+						uploadArea.style.borderColor = '#2ecc71';
+						uploadArea.style.background = 'rgba(46, 204, 113, 0.05)';
+					}
+				});
+
+				// Drag and drop
+				uploadArea.addEventListener('dragover', (e) => {
+					e.preventDefault();
+					uploadArea.style.borderColor = 'var(--accent)';
+					uploadArea.style.background = 'rgba(202, 164, 110, 0.1)';
+				});
+
+				uploadArea.addEventListener('dragleave', (e) => {
+					e.preventDefault();
+					uploadArea.style.borderColor = '';
+					uploadArea.style.background = '';
+				});
+
+				uploadArea.addEventListener('drop', (e) => {
+					e.preventDefault();
+					const files = e.dataTransfer.files;
+					if (files.length) {
+						input.files = files;
+						input.dispatchEvent(new Event('change'));
+					}
+				});
+			}
+		}
+
+		setupFileUpload('validIdUpload', 'seller-valid-id');
+		setupFileUpload('birUpload', 'seller-bir');
 	</script>
 </body>
 </html>
