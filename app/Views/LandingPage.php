@@ -3510,16 +3510,16 @@
     </div>
 
     <script>
-        // Featured Carousel with Focus/Blur Effect (No Loop)
+        
         const cards = document.querySelectorAll('.featured-card');
         const dotsContainer = document.getElementById('carouselDots');
         const prevArrow = document.querySelector('.carousel-arrow.prev');
         const nextArrow = document.querySelector('.carousel-arrow.next');
         const totalCards = cards.length;
-        let currentIndex = 0; // Start with first card active
+        let currentIndex = 0; 
         let isAnimating = false;
 
-        // Create dots
+        
         for (let i = 0; i < totalCards; i++) {
             const dot = document.createElement('button');
             dot.classList.add('carousel-dot');
@@ -3529,7 +3529,7 @@
         }
 
         function updateArrowStates() {
-            // Disable prev arrow at start
+            
             if (currentIndex === 0) {
                 prevArrow.classList.add('disabled');
                 prevArrow.disabled = true;
