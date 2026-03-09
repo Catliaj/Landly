@@ -65,7 +65,7 @@ class LandListing extends Migration
                 'type'       => 'BOOLEAN',
                 'default'    => false,
             ],
-            'mother_title_disclosed' => [
+            'mother_titled_disclosed' => [
                 'type'       => 'BOOLEAN',
                 'default'    => false,
             ],
@@ -88,6 +88,11 @@ class LandListing extends Migration
             'is_verified_listing' => [
                 'type'       => 'BOOLEAN',
                 'default'    => false,
+            ],
+            'price' => [
+                'type'       => 'DECIMAL',
+                'constraint' => '15,2',
+                'default'    => 0.00,
             ],
             // Other fields to be added here...
             'created_at' => [
