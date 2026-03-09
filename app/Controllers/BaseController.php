@@ -42,4 +42,12 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
     }
+
+    /**
+     * Returns the logged-in user ID from supported session keys.
+     */
+    protected function getCurrentUserId(): int
+    {
+        return (int) (session()->get('user_id') ?? session()->get('UserID') ?? 0);
+    }
 }

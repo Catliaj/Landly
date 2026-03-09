@@ -44,6 +44,7 @@
 
 		/* Main Auth Container */
 		.auth-container {
+			--panel-width: 50%;
 			width: 100%;
 			max-width: 1100px;
 			height: 650px;
@@ -57,7 +58,8 @@
 
 		/* Left Panel - Branding/Info */
 		.info-panel {
-			flex: 1;
+			flex: 0 0 var(--panel-width);
+			max-width: var(--panel-width);
 			position: relative;
 			display: flex;
 			flex-direction: column;
@@ -191,21 +193,22 @@
 
 		/* Right Panel - Forms */
 		.form-panel {
-			flex: 1;
+			flex: 0 0 var(--panel-width);
+			max-width: var(--panel-width);
 			background: linear-gradient(180deg, #f7f2e9 0%, #efe7d8 100%);
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			position: relative;
-			overflow: hidden;
+			overflow: visible;
 		}
 
 		/* Sliding Overlay */
 		.sliding-overlay {
 			position: absolute;
 			top: 0;
-			left: 0;
-			width: 100%;
+			left: var(--panel-width);
+			width: var(--panel-width);
 			height: 100%;
 			background: 
 				linear-gradient(135deg, rgba(12, 26, 27, 0.9) 0%, rgba(20, 49, 44, 0.85) 100%),
@@ -220,7 +223,7 @@
 			text-align: center;
 			transform: translateX(100%);
 			transition: transform 0.7s cubic-bezier(0.68, -0.15, 0.32, 1.15);
-			z-index: 10;
+			z-index: 20;
 		}
 
 		.sliding-overlay::before {
@@ -232,7 +235,7 @@
 		}
 
 		.auth-container.signup-mode .sliding-overlay {
-			transform: translateX(0);
+			transform: translateX(-100%);
 		}
 
 		.sliding-overlay h2 {
@@ -280,18 +283,21 @@
 		.form-wrapper {
 			position: relative;
 			width: 100%;
+			min-height: 560px;
 		}
 
 		/* Login Form */
 		.login-form,
 		.signup-form {
 			width: 100%;
-			transition: all 0.5s cubic-bezier(0.68, -0.15, 0.32, 1.15);
+			transition: opacity 0.45s cubic-bezier(0.68, -0.15, 0.32, 1.15), transform 0.45s cubic-bezier(0.68, -0.15, 0.32, 1.15);
 		}
 
 		.login-form {
 			opacity: 1;
 			transform: translateX(0);
+			visibility: visible;
+			position: relative;
 		}
 
 		.signup-form {
@@ -301,12 +307,17 @@
 			opacity: 0;
 			transform: translateX(50px);
 			pointer-events: none;
+			visibility: hidden;
 		}
 
 		.auth-container.signup-mode .login-form {
 			opacity: 0;
 			transform: translateX(-50px);
 			pointer-events: none;
+			visibility: hidden;
+			position: absolute;
+			top: 0;
+			left: 0;
 		}
 
 		.auth-container.signup-mode .signup-form {
@@ -314,6 +325,7 @@
 			transform: translateX(0);
 			pointer-events: auto;
 			position: relative;
+			visibility: visible;
 		}
 
 		.form-header {
@@ -765,7 +777,7 @@
 
 		/* Scrollable form for signup */
 		.signup-form-inner {
-			max-height: 480px;
+			max-height: 500px;
 			overflow-y: auto;
 			padding-right: 5px;
 			margin-right: -5px;
@@ -835,6 +847,7 @@
 				flex-direction: column;
 				height: auto;
 				max-width: 500px;
+				--panel-width: 100%;
 			}
 
 			.info-panel {
@@ -865,6 +878,7 @@
 				opacity: 1 !important;
 				transform: none !important;
 				pointer-events: auto !important;
+				visibility: visible !important;
 			}
 
 			.signup-form {
@@ -913,15 +927,15 @@
 			</a>
 		</div>
 
+		<!-- Sliding Overlay (moves from right half to left half in signup mode) -->
+		<div class="sliding-overlay">
+			<h2>Already have an account?</h2>
+			<p>Sign in to access your portfolio, saved listings, and secure document vault.</p>
+			<button class="overlay-btn" id="switchToLogin">Sign In</button>
+		</div>
+
 		<!-- Right Panel - Forms -->
 		<div class="form-panel">
-			<!-- Sliding Overlay (shows when switching to signup) -->
-			<div class="sliding-overlay">
-				<h2>Already have an account?</h2>
-				<p>Sign in to access your portfolio, saved listings, and secure document vault.</p>
-				<button class="overlay-btn" id="switchToLogin">Sign In</button>
-			</div>
-
 			<div class="form-container">
 				<div class="form-wrapper">
 					<!-- Login Form -->
@@ -930,24 +944,29 @@
 							<h2>Welcome back</h2>
 							<p>Enter your credentials to access your account</p>
 						</div>
-						<form>
-							<div class="form-group">
-								<label for="login-email">Email address</label>
-								<input id="login-email" type="email" placeholder="you@example.com" />
-							</div>
-							<div class="form-group">
-								<label for="login-password">Password</label>
-								<input id="login-password" type="password" placeholder="Enter your password" />
-							</div>
-							<div class="form-options">
-								<label class="remember-me">
-									<input type="checkbox" />
-									Remember me
-								</label>
-								<a href="#" class="forgot-link">Forgot password?</a>
-							</div>
-							<button class="btn btn-primary" type="button">Sign In</button>
-						</form>
+					<form action="<?= base_url('auth/login') ?>" method="post">
+						<?= csrf_field() ?>
+
+						<div class="form-group">
+							<label for="login-email">Email address</label>
+							<input id="login-email" name="email" type="email" placeholder="you@example.com" required />
+						</div>
+
+						<div class="form-group">
+							<label for="login-password">Password</label>
+							<input id="login-password" name="password" type="password" placeholder="Enter your password" required />
+						</div>
+
+						<div class="form-options">
+							<label class="remember-me">
+								<input type="checkbox" name="remember" value="1" />
+								Remember me
+							</label>
+							<a href="<?= base_url('auth/forgot-password') ?>" class="forgot-link">Forgot password?</a>
+						</div>
+
+						<button class="btn btn-primary" type="submit">Sign In</button>
+					</form>
 						<div class="divider">or continue with</div>
 						<div class="social-login">
 							<button class="social-btn" type="button">
@@ -1142,40 +1161,52 @@
 		const sellerFields = document.getElementById('sellerFields');
 		const selectedRole = document.getElementById('selectedRole');
 
-		// Check URL for signup mode parameter
-		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.get('mode') === 'signup') {
-			authContainer.classList.add('signup-mode');
+		function setAuthMode(mode) {
+			if (!authContainer) {
+				return;
+			}
+
+			authContainer.classList.toggle('signup-mode', mode === 'signup');
 		}
 
-		showSignup.addEventListener('click', () => {
-			authContainer.classList.add('signup-mode');
-		});
+		function setRole(role) {
+			if (!buyerRoleBtn || !sellerRoleBtn || !buyerFields || !sellerFields || !selectedRole) {
+				return;
+			}
 
-		showLogin.addEventListener('click', () => {
-			authContainer.classList.remove('signup-mode');
-		});
+			const isSeller = role === 'seller';
+			buyerRoleBtn.classList.toggle('active', !isSeller);
+			sellerRoleBtn.classList.toggle('active', isSeller);
+			buyerFields.classList.toggle('active', !isSeller);
+			sellerFields.classList.toggle('active', isSeller);
+			selectedRole.value = isSeller ? 'seller' : 'buyer';
+		}
 
-		switchToLogin.addEventListener('click', () => {
-			authContainer.classList.remove('signup-mode');
-		});
+		// Check URL for signup mode parameter
+		const urlParams = new URLSearchParams(window.location.search);
+		setAuthMode(urlParams.get('mode') === 'signup' ? 'signup' : 'login');
+		setRole(selectedRole ? selectedRole.value : 'buyer');
+
+		if (showSignup) {
+			showSignup.addEventListener('click', () => setAuthMode('signup'));
+		}
+
+		if (showLogin) {
+			showLogin.addEventListener('click', () => setAuthMode('login'));
+		}
+
+		if (switchToLogin) {
+			switchToLogin.addEventListener('click', () => setAuthMode('login'));
+		}
 
 		// Role toggle functionality
-		buyerRoleBtn.addEventListener('click', () => {
-			buyerRoleBtn.classList.add('active');
-			sellerRoleBtn.classList.remove('active');
-			buyerFields.classList.add('active');
-			sellerFields.classList.remove('active');
-			selectedRole.value = 'buyer';
-		});
+		if (buyerRoleBtn) {
+			buyerRoleBtn.addEventListener('click', () => setRole('buyer'));
+		}
 
-		sellerRoleBtn.addEventListener('click', () => {
-			sellerRoleBtn.classList.add('active');
-			buyerRoleBtn.classList.remove('active');
-			sellerFields.classList.add('active');
-			buyerFields.classList.remove('active');
-			selectedRole.value = 'seller';
-		});
+		if (sellerRoleBtn) {
+			sellerRoleBtn.addEventListener('click', () => setRole('seller'));
+		}
 
 		// Profile image preview
 		function setupImagePreview(inputId, previewId) {

@@ -54,15 +54,34 @@ class AuthController extends BaseController
             }
         }
 
-        // 4️⃣ Success response
-        return $this->response->setJSON([
-            'message' => 'Login successful',
-            'user' => [
-                'user_id' => $user['user_id'],
-                'email' => $user['email'],
-                'roles' => $user['roles'],
-                'seller_verified' => $sellerVerified
-            ]
-        ])->setStatusCode(ResponseInterface::HTTP_OK);
+        // 4️⃣ Set session data
+        $sessionData = [
+            'user_id' => $user['user_id'],
+            'email' => $user['email'],
+            'roles' => $user['roles'],
+            'seller_verified' => $sellerVerified,
+            'logged_in' => true,
+        ];
+        session()->set($sessionData);
+
+        // 5️⃣ Update last login timestamp
+        $userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);
+
+        // 6️⃣ Return to view dashboard depends on role based with success message
+        return $this->redirectToDashboard($user['roles']);
+
+
+       
+    }
+
+    private function redirectToDashboard($roles)
+    {
+        if (strpos($roles, 'seller') !== false) {
+            return redirect()->to('/seller/dashboard');
+        } elseif (strpos($roles, 'buyer') !== false) {
+            return redirect()->to('/buyer/dashboard');
+        } else {
+            return redirect()->to('/');
+        }
     }
 }

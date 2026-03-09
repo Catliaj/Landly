@@ -113,4 +113,13 @@ class UserModel extends Model
         //true if email exists, false if not
         return $this->where('email', $email)->countAllResults() > 0;
     }
+
+    public function getFullnameById($userId)
+    {
+        $user = $this->find($userId);
+        if ($user) {
+            return $user['first_name'] . ' ' . $user['last_name'];
+        }
+        return null;
+    }
 }

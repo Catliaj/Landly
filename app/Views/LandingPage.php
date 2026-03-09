@@ -2880,8 +2880,7 @@
                 <a href="#contact">Contact</a>
             </nav>
             <div class="nav-actions">
-                <button class="btn btn-outline" id="openLoginModal">Log in</button>
-                <button class="btn btn-primary" id="openSignupModal">Sign up</button>
+                <a href="auth"> <button class="btn btn-outline" >Log in</button> </a>
             </div>
         </div>
     </header>
