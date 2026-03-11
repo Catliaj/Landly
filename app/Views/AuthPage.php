@@ -1001,7 +1001,8 @@
 						</div>
 
 						<div class="signup-form-inner">
-						<form>
+						<form id="signupForm" action="<?= base_url('auth/signup/buyer') ?>" method="post" enctype="multipart/form-data">
+							<?= csrf_field() ?>
 							<input type="hidden" name="role" id="selectedRole" value="buyer" />
 
 							<!-- Buyer Fields -->
@@ -1009,24 +1010,24 @@
 								<div class="form-row">
 									<div class="form-group">
 										<label for="buyer-firstname">First Name <span style="color:#e74c3c">*</span></label>
-										<input id="buyer-firstname" type="text" placeholder="Juan" required />
+										<input id="buyer-firstname" name="first_name" type="text" placeholder="Juan" required />
 									</div>
 									<div class="form-group">
 										<label for="buyer-lastname">Last Name <span style="color:#e74c3c">*</span></label>
-										<input id="buyer-lastname" type="text" placeholder="Dela Cruz" required />
+										<input id="buyer-lastname" name="last_name" type="text" placeholder="Dela Cruz" required />
 									</div>
 								</div>
 								<div class="form-group">
 									<label for="buyer-email">Email Address <span style="color:#e74c3c">*</span></label>
-									<input id="buyer-email" type="email" placeholder="you@example.com" required />
+									<input id="buyer-email" name="email" type="email" placeholder="you@example.com" required />
 								</div>
 								<div class="form-group">
 									<label for="buyer-phone">Phone Number <span style="color:#e74c3c">*</span></label>
-									<input id="buyer-phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
+									<input id="buyer-phone" name="phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
 								</div>
 								<div class="form-group">
 									<label for="buyer-password">Password <span style="color:#e74c3c">*</span></label>
-									<input id="buyer-password" type="password" placeholder="Create a strong password" required />
+									<input id="buyer-password" name="password" type="password" placeholder="Create a strong password" required />
 								</div>
 								<div class="form-group">
 									<label>Profile Image</label>
@@ -1039,12 +1040,12 @@
 												<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
 												Upload Photo
 											</label>
-											<input type="file" id="buyer-profile-img" accept="image/*" />
+											<input type="file" id="buyer-profile-img" name="profile_image" accept="image/*" />
 											<span>JPG, PNG up to 5MB</span>
 										</div>
 									</div>
 								</div>
-								<button class="btn btn-primary" type="button">Create Buyer Account</button>
+								<button class="btn btn-primary" type="submit">Create Buyer Account</button>
 							</div>
 
 							<!-- Seller Fields -->
@@ -1052,24 +1053,24 @@
 								<div class="form-row">
 									<div class="form-group">
 										<label for="seller-firstname">First Name <span style="color:#e74c3c">*</span></label>
-										<input id="seller-firstname" type="text" placeholder="Juan" required />
+										<input id="seller-firstname" name="first_name" type="text" placeholder="Juan" required />
 									</div>
 									<div class="form-group">
 										<label for="seller-lastname">Last Name <span style="color:#e74c3c">*</span></label>
-										<input id="seller-lastname" type="text" placeholder="Dela Cruz" required />
+										<input id="seller-lastname" name="last_name" type="text" placeholder="Dela Cruz" required />
 									</div>
 								</div>
 								<div class="form-group">
 									<label for="seller-email">Email Address <span style="color:#e74c3c">*</span></label>
-									<input id="seller-email" type="email" placeholder="you@example.com" required />
+									<input id="seller-email" name="email" type="email" placeholder="you@example.com" required />
 								</div>
 								<div class="form-group">
 									<label for="seller-phone">Phone Number <span style="color:#e74c3c">*</span></label>
-									<input id="seller-phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
+									<input id="seller-phone" name="phone" type="tel" placeholder="+63 9XX XXX XXXX" required />
 								</div>
 								<div class="form-group">
 									<label for="seller-password">Password <span style="color:#e74c3c">*</span></label>
-									<input id="seller-password" type="password" placeholder="Create a strong password" required />
+									<input id="seller-password" name="password" type="password" placeholder="Create a strong password" required />
 								</div>
 								<div class="form-group">
 									<label>Profile Picture</label>
@@ -1082,7 +1083,7 @@
 												<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
 												Upload Photo
 											</label>
-											<input type="file" id="seller-profile-img" accept="image/*" />
+											<input type="file" id="seller-profile-img" name="profile_image" accept="image/*" />
 											<span>JPG, PNG up to 5MB</span>
 										</div>
 									</div>
@@ -1101,7 +1102,7 @@
 											Valid ID <span class="required">*</span>
 										</div>
 										<div class="file-upload" id="validIdUpload">
-											<input type="file" id="seller-valid-id" accept="image/*,.pdf" required />
+											<input type="file" id="seller-valid-id" name="valid_id" accept="image/*,.pdf" required />
 											<div class="file-upload-icon">
 												<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="7" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
 											</div>
@@ -1115,7 +1116,7 @@
 											BIR / Business Permit <span class="optional">(Optional)</span>
 										</div>
 										<div class="file-upload" id="birUpload">
-											<input type="file" id="seller-bir" accept="image/*,.pdf" />
+											<input type="file" id="seller-bir" name="bir_permit" accept="image/*,.pdf" />
 											<div class="file-upload-icon">
 												<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
 											</div>
@@ -1125,7 +1126,7 @@
 									</div>
 								</div>
 
-								<button class="btn btn-primary" type="button" style="margin-top: 20px;">Create Seller Account</button>
+								<button class="btn btn-primary" type="submit" style="margin-top: 20px;">Create Seller Account</button>
 							</div>
 						</form>
 						</div>
@@ -1160,6 +1161,7 @@
 		const buyerFields = document.getElementById('buyerFields');
 		const sellerFields = document.getElementById('sellerFields');
 		const selectedRole = document.getElementById('selectedRole');
+		const signupForm = document.getElementById('signupForm');
 
 		function setAuthMode(mode) {
 			if (!authContainer) {
@@ -1170,16 +1172,29 @@
 		}
 
 		function setRole(role) {
-			if (!buyerRoleBtn || !sellerRoleBtn || !buyerFields || !sellerFields || !selectedRole) {
+			if (!buyerRoleBtn || !sellerRoleBtn || !buyerFields || !sellerFields || !selectedRole || !signupForm) {
 				return;
 			}
 
 			const isSeller = role === 'seller';
+			const activeFields = isSeller ? sellerFields : buyerFields;
+			const inactiveFields = isSeller ? buyerFields : sellerFields;
+			const activeAction = isSeller ? '<?= base_url('auth/signup/seller') ?>' : '<?= base_url('auth/signup/buyer') ?>';
+
 			buyerRoleBtn.classList.toggle('active', !isSeller);
 			sellerRoleBtn.classList.toggle('active', isSeller);
 			buyerFields.classList.toggle('active', !isSeller);
 			sellerFields.classList.toggle('active', isSeller);
 			selectedRole.value = isSeller ? 'seller' : 'buyer';
+			signupForm.action = activeAction;
+
+			inactiveFields.querySelectorAll('input').forEach((input) => {
+				input.disabled = true;
+			});
+
+			activeFields.querySelectorAll('input').forEach((input) => {
+				input.disabled = false;
+			});
 		}
 
 		// Check URL for signup mode parameter
