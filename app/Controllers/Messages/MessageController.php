@@ -240,11 +240,6 @@ class MessageController extends BaseController
 		]);
 	}
 
-	private function getCurrentUserId(): int
-	{
-		return (int) (session()->get('user_id') ?? session()->get('UserID') ?? 0);
-	}
-
 	private function findAccessibleSession(MessageSessions $sessionModel, int $sessionId, int $userId): ?array
 	{
 		return $sessionModel
