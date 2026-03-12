@@ -892,6 +892,64 @@
 			.auth-container.signup-mode .signup-form {
 				display: block;
 			}
+
+			.swal2-popup.landly-swal {
+				background: var(--green-900);
+				color: var(--cream-100);
+				border: 1px solid rgba(202, 164, 110, 0.35);
+				border-radius: 18px;
+				box-shadow: 0 20px 45px rgba(5, 18, 18, 0.45);
+			}
+
+			.swal2-popup.landly-swal .swal2-title,
+			.swal2-popup.landly-swal .swal2-html-container {
+				color: var(--cream-100);
+			}
+
+			.swal2-popup.landly-swal .swal2-loader {
+				border-color: var(--accent) transparent var(--accent) transparent;
+			}
+
+			.swal2-popup.landly-swal .swal2-confirm {
+				background: linear-gradient(135deg, var(--green-700) 0%, var(--green-800) 100%);
+				color: var(--cream-100);
+				border-radius: 10px;
+				box-shadow: 0 8px 20px rgba(15, 27, 27, 0.25);
+			}
+
+			.swal2-popup.landly-swal .swal2-confirm:focus {
+				box-shadow: 0 0 0 3px var(--glow);
+			}
+
+			@keyframes landlyFadeInUp {
+				from {
+					opacity: 0;
+					transform: translateY(16px) scale(0.98);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0) scale(1);
+				}
+			}
+
+			@keyframes landlyFadeOutDown {
+				from {
+					opacity: 1;
+					transform: translateY(0) scale(1);
+				}
+				to {
+					opacity: 0;
+					transform: translateY(12px) scale(0.98);
+				}
+			}
+
+			.landly-swal-show {
+				animation: landlyFadeInUp 0.28s ease-out;
+			}
+
+			.landly-swal-hide {
+				animation: landlyFadeOutDown 0.2s ease-in;
+			}
 		}
 	</style>
 </head>
@@ -944,7 +1002,7 @@
 							<h2>Welcome back</h2>
 							<p>Enter your credentials to access your account</p>
 						</div>
-					<form action="<?= base_url('auth/login') ?>" method="post">
+					<form id="loginForm" action="<?= base_url('auth/login') ?>" method="post">
 						<?= csrf_field() ?>
 
 						<div class="form-group">
@@ -1045,7 +1103,30 @@
 										</div>
 									</div>
 								</div>
-								<button class="btn btn-primary" type="submit">Create Buyer Account</button>
+
+								<!-- Buyer Verification Section -->
+								<div class="verification-section">
+									<div class="verification-header">
+										<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+										<h4>Identity Verification</h4>
+										<span>For account security</span>
+									</div>
+									<div class="upload-item">
+										<div class="upload-label">
+											Valid ID <span class="required">*</span>
+										</div>
+										<div class="file-upload" id="buyerValidIdUpload">
+											<input type="file" id="buyer-valid-id" name="valid_id" accept="image/*,.pdf" required />
+											<div class="file-upload-icon">
+												<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="7" y1="8" x2="7" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
+											</div>
+											<p><span>Click to upload</span> or drag and drop</p>
+											<p class="file-upload-hint">Government-issued ID (Passport, Driver's License, etc.)</p>
+										</div>
+									</div>
+								</div>
+
+								<button class="btn btn-primary" type="submit" style="margin-top: 20px;">Create Buyer Account</button>
 							</div>
 
 							<!-- Seller Fields -->
@@ -1113,15 +1194,15 @@
 
 									<div class="upload-item">
 										<div class="upload-label">
-											BIR / Business Permit <span class="optional">(Optional)</span>
+											Selfie With ID <span class="required">*</span>
 										</div>
-										<div class="file-upload" id="birUpload">
-											<input type="file" id="seller-bir" name="bir_permit" accept="image/*,.pdf" />
+										<div class="file-upload" id="selfieUpload">
+											<input type="file" id="seller-selfie" name="selfie_with_id" accept="image/*,.pdf" required />
 											<div class="file-upload-icon">
 												<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
 											</div>
 											<p><span>Click to upload</span> or drag and drop</p>
-											<p class="file-upload-hint">BIR Certificate or Business Permit</p>
+											<p class="file-upload-hint">Any Government Valid ID</p>
 										</div>
 									</div>
 								</div>
@@ -1149,6 +1230,7 @@
 		</div>
 	</div>
 
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script>
 		const authContainer = document.getElementById('authContainer');
 		const showSignup = document.getElementById('showSignup');
@@ -1162,6 +1244,7 @@
 		const sellerFields = document.getElementById('sellerFields');
 		const selectedRole = document.getElementById('selectedRole');
 		const signupForm = document.getElementById('signupForm');
+		const loginForm = document.getElementById('loginForm');
 
 		function setAuthMode(mode) {
 			if (!authContainer) {
@@ -1257,10 +1340,10 @@
 						const fileName = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
 						const pElement = uploadArea.querySelector('p:not(.file-upload-hint)');
 						if (pElement) {
-							pElement.innerHTML = `<span style="color: #2ecc71;">✓</span> ${fileName}`;
+							pElement.innerHTML = `<span style="color: var(--accent);">✓</span> ${fileName}`;
 						}
-						uploadArea.style.borderColor = '#2ecc71';
-						uploadArea.style.background = 'rgba(46, 204, 113, 0.05)';
+						uploadArea.style.borderColor = 'var(--accent)';
+						uploadArea.style.background = 'rgba(202, 164, 110, 0.08)';
 					}
 				});
 
@@ -1288,8 +1371,138 @@
 			}
 		}
 
+		setupFileUpload('buyerValidIdUpload', 'buyer-valid-id');
 		setupFileUpload('validIdUpload', 'seller-valid-id');
 		setupFileUpload('birUpload', 'seller-bir');
+
+		function getSwalBaseConfig() {
+			return {
+				customClass: {
+					popup: 'landly-swal',
+					confirmButton: 'landly-swal-confirm'
+				},
+				showClass: {
+					popup: 'landly-swal-show'
+				},
+				hideClass: {
+					popup: 'landly-swal-hide'
+				}
+			};
+		}
+
+		function showSubmitLoading(text) {
+			if (typeof Swal === 'undefined') {
+				return;
+			}
+
+			Swal.fire({
+				...getSwalBaseConfig(),
+				title: 'Please wait',
+				html: text,
+				allowOutsideClick: false,
+				allowEscapeKey: false,
+				showConfirmButton: false,
+				iconColor: '#caa46e',
+				didOpen: () => {
+					Swal.showLoading();
+				}
+			});
+		}
+
+		function showGenericResult(type, title, text) {
+			if (typeof Swal === 'undefined') {
+				return Promise.resolve();
+			}
+
+			return Swal.fire({
+				...getSwalBaseConfig(),
+				icon: type,
+				title,
+				text,
+				iconColor: '#caa46e',
+				confirmButtonText: 'OK'
+			});
+		}
+
+		async function submitWithFeedback(form, options) {
+			if (!form) {
+				return;
+			}
+
+			form.addEventListener('submit', async function(event) {
+				event.preventDefault();
+
+				const submitButton = form.querySelector('button[type="submit"]');
+				if (submitButton) {
+					submitButton.disabled = true;
+				}
+
+				showSubmitLoading(options.loadingText);
+
+				try {
+					const response = await fetch(form.action, {
+						method: form.method || 'POST',
+						body: new FormData(form),
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest'
+						}
+					});
+
+					if (response.ok) {
+						await showGenericResult('success', options.successTitle, options.successText);
+
+						if (options.onSuccess === 'redirect') {
+							if (response.redirected && response.url) {
+								window.location.href = response.url;
+								return;
+							}
+
+							window.location.href = '<?= base_url('/') ?>';
+							return;
+						}
+
+						if (options.onSuccess === 'switchToLogin') {
+							form.reset();
+							setRole('buyer');
+							setAuthMode('login');
+						}
+					} else {
+						const statusMessage = options.errorByStatus && options.errorByStatus[response.status]
+							? options.errorByStatus[response.status]
+							: options.errorText;
+
+						await showGenericResult('error', options.errorTitle, statusMessage);
+					}
+				} catch (error) {
+					await showGenericResult('error', options.errorTitle, options.errorText);
+				} finally {
+					if (submitButton) {
+						submitButton.disabled = false;
+					}
+				}
+			});
+		}
+
+		submitWithFeedback(loginForm, {
+			loadingText: 'Checking login credentials...',
+			successTitle: 'Login successful',
+			successText: 'Taking you to your dashboard.',
+			errorTitle: 'Login failed',
+			errorText: 'Unable to sign in. Please check your credentials and try again.',
+			errorByStatus: {
+				403: 'Your seller account is still pending verification. Please wait for approval before signing in.'
+			},
+			onSuccess: 'redirect'
+		});
+
+		submitWithFeedback(signupForm, {
+			loadingText: 'Creating your account and validating details...',
+			successTitle: 'Account created',
+			successText: 'Your registration was completed. You can now sign in.',
+			errorTitle: 'Sign-up failed',
+			errorText: 'Unable to create your account right now. Please review your details and try again.',
+			onSuccess: 'switchToLogin'
+		});
 	</script>
 </body>
 </html>
