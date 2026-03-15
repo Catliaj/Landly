@@ -86,8 +86,9 @@ class LandListing extends Migration
                 'constraint' => ['available', 'in_inquiry', 'reserved', 'closed'],
             ],
             'is_verified_listing' => [
-                'type'       => 'BOOLEAN',
-                'default'    => false,
+                'type'       => 'ENUM',
+                'constraint' => ['true', 'false', 'pending', 'rejected'],
+                'default'    => 'pending',
             ],
             'price' => [
                 'type'       => 'DECIMAL',

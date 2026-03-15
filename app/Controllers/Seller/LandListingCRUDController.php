@@ -9,6 +9,8 @@ use Config\Database;
 
 class LandListingCRUDController extends BaseController
 {
+    private const VERIFIED_LISTING_STATUSES = ['true', 'false', 'pending', 'rejected'];
+
     public function createLandListing()
     {
         $sellerId = (int) (session()->get('user_id') ?? 0);
@@ -28,6 +30,14 @@ class LandListingCRUDController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['status' => 'error', 'message' => 'Failed to store files.']);
         }
 
+        $verifiedListing = $this->normalizeVerifiedListingInput($this->request->getPost('is_verified_listing'));
+        if ($verifiedListing === null) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid value for is_verified_listing. Allowed values: true, false, pending, rejected.',
+            ]);
+        }
+
         $data = [
             'title'                   => trim((string) $this->request->getPost('title')),
             'description'             => trim((string) $this->request->getPost('description')),
@@ -45,7 +55,7 @@ class LandListingCRUDController extends BaseController
             'investment_ready'        => (int) $this->request->getPost('investment_ready'),
             'developing_area'         => (int) $this->request->getPost('developing_area'),
             'listing_status'          => (string) $this->request->getPost('listing_status'),
-            'is_verified_listing'     => (int) $this->request->getPost('is_verified_listing'),
+            'is_verified_listing'     => $verifiedListing,
             'price'                   => (float) $this->request->getPost('price'),
         ];
 
@@ -280,6 +290,33 @@ class LandListingCRUDController extends BaseController
         }
 
         return $stored;
+    }
+
+    private function normalizeVerifiedListingInput($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return 'pending';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return ((int) $value) === 1 ? 'true' : 'false';
+        }
+
+        $normalized = strtolower(trim((string) $value));
+
+        if (in_array($normalized, self::VERIFIED_LISTING_STATUSES, true)) {
+            return $normalized;
+        }
+
+        return match ($normalized) {
+            '1', 'yes', 'verified' => 'true',
+            '0', 'no', 'unverified' => 'false',
+            default => null,
+        };
     }
 
 }

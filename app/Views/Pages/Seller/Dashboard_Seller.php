@@ -640,6 +640,54 @@
             color: #9b59b6;
         }
 
+        .listing-status.available {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .listing-status.inquiry {
+            background: rgba(52, 152, 219, 0.15);
+            color: #5dade2;
+        }
+
+        .listing-status.reserved {
+            background: rgba(241, 196, 15, 0.15);
+            color: #f4d03f;
+        }
+
+        .listing-status.closed {
+            background: rgba(231, 76, 60, 0.15);
+            color: #ec7063;
+        }
+
+        .listing-status.rejected {
+            background: rgba(231, 76, 60, 0.22);
+            color: #ff9b8f;
+        }
+
+        .verification-status {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .verification-status.verified {
+            background: rgba(46, 204, 113, 0.2);
+            color: #7ef0a3;
+        }
+
+        .verification-status.pending {
+            background: rgba(241, 196, 15, 0.22);
+            color: #ffe082;
+        }
+
+        .verification-status.rejected {
+            background: rgba(231, 76, 60, 0.24);
+            color: #ffb3a8;
+        }
+
         /* Activity Feed */
         .activity-item {
             display: flex;
@@ -757,10 +805,26 @@
             transition: all 0.4s ease;
         }
 
+        .listing-card[data-verification-status="verified"] {
+            border-color: rgba(46, 204, 113, 0.24);
+        }
+
+        .listing-card[data-verification-status="pending"] {
+            border-color: rgba(241, 196, 15, 0.28);
+        }
+
+        .listing-card[data-verification-status="rejected"] {
+            border-color: rgba(231, 76, 60, 0.32);
+        }
+
         .listing-card:hover {
             transform: translateY(-8px);
             border-color: rgba(210, 180, 140, 0.3);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .listing-card.is-hidden {
+            display: none;
         }
 
         .listing-card-image {
@@ -777,14 +841,21 @@
         }
 
         .listing-card-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
             padding: 6px 12px;
             border-radius: 8px;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
+        }
+
+        .listing-card-badges {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: calc(100% - 90px);
         }
 
         .listing-card-actions {
@@ -876,6 +947,37 @@
             align-items: center;
         }
 
+        .listing-card-verification-note {
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            border: 1px solid transparent;
+        }
+
+        .listing-card-verification-note strong {
+            color: inherit;
+        }
+
+        .listing-card-verification-note.verified {
+            background: rgba(46, 204, 113, 0.09);
+            border-color: rgba(46, 204, 113, 0.3);
+            color: #b8f1c6;
+        }
+
+        .listing-card-verification-note.pending {
+            background: rgba(241, 196, 15, 0.1);
+            border-color: rgba(241, 196, 15, 0.28);
+            color: #ffe39b;
+        }
+
+        .listing-card-verification-note.rejected {
+            background: rgba(231, 76, 60, 0.11);
+            border-color: rgba(231, 76, 60, 0.28);
+            color: #ffc4ba;
+        }
+
         .listing-card-price {
             font-size: 1.2rem;
             font-weight: 700;
@@ -896,6 +998,31 @@
             stroke: currentColor;
             stroke-width: 2;
             fill: none;
+        }
+
+        .listings-empty-state {
+            display: none;
+            padding: 32px;
+            border: 1px dashed rgba(210, 180, 140, 0.22);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            text-align: center;
+            color: rgba(245, 245, 220, 0.72);
+        }
+
+        .listings-empty-state.is-visible {
+            display: block;
+        }
+
+        .listings-empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--cream-100);
+            font-size: 1.1rem;
+        }
+
+        .listings-empty-state p {
+            font-size: 0.92rem;
+            line-height: 1.6;
         }
 
         /* === ADD LISTING FORM === */
@@ -1849,7 +1976,7 @@
                     </button>
                     <div class="search-box">
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" placeholder="Search listings...">
+                        <input type="text" id="seller-listings-search" placeholder="Search listings..." autocomplete="off">
                     </div>
                     <button class="notification-btn">
                         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -1862,7 +1989,7 @@
             <?= view('Pages/Seller/Components/DashboardSection') ?>
 
             <!-- My Listings Section -->
-            <?= view('Pages/Seller/Components/ListingSection') ?>
+            <?= view('Pages/Seller/Components/ListingSection', ['sellerListings' => $sellerListings ?? [], 'listingCounts' => $listingCounts ?? []]) ?>
 
             <!-- Add Listing Section -->
             <?= view('Pages/Seller/Components/AddListingSection') ?>
@@ -2079,15 +2206,80 @@
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
         }
- 
-        // Filter buttons functionality
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        filterBtns.forEach(btn => {
+
+        const listingSearchInput = document.getElementById('seller-listings-search');
+        const listingFilterBtns = document.querySelectorAll('#section-listings .filter-btn[data-filter]');
+        const listingCards = Array.from(document.querySelectorAll('#section-listings .listing-card'));
+        const listingEmptyState = document.getElementById('seller-listings-empty');
+        const listingEmptyTitle = document.getElementById('seller-listings-empty-title');
+        const listingEmptyDescription = document.getElementById('seller-listings-empty-description');
+        let activeListingFilter = 'all';
+
+        function updateListingEmptyState(visibleCount, hasQuery) {
+            if (!listingEmptyState || !listingEmptyTitle || !listingEmptyDescription) {
+                return;
+            }
+
+            const hasListings = listingCards.length > 0;
+            const shouldShowEmpty = !hasListings || visibleCount === 0;
+
+            listingEmptyState.hidden = !shouldShowEmpty;
+            listingEmptyState.classList.toggle('is-visible', shouldShowEmpty);
+
+            if (!shouldShowEmpty) {
+                return;
+            }
+
+            if (!hasListings) {
+                listingEmptyTitle.textContent = 'No listings yet';
+                listingEmptyDescription.textContent = 'Your property listings for this account will appear here once they are created.';
+                return;
+            }
+
+            listingEmptyTitle.textContent = 'No matching listings';
+            listingEmptyDescription.textContent = hasQuery || activeListingFilter !== 'all'
+                ? 'Try a different status filter or search keyword.'
+                : 'No listings are available for this view.';
+        }
+
+        function applyListingFilters() {
+            const query = (listingSearchInput?.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+
+            listingCards.forEach((card) => {
+                const matchesFilter = activeListingFilter === 'all' || card.dataset.listingStatus === activeListingFilter;
+                const searchIndex = [
+                    card.dataset.searchTitle || '',
+                    card.dataset.searchLocation || '',
+                    card.dataset.searchType || '',
+                    card.dataset.searchDocument || '',
+                    card.dataset.searchVerification || ''
+                ].join(' ').toLowerCase();
+                const matchesSearch = query === '' || searchIndex.includes(query);
+                const isVisible = matchesFilter && matchesSearch;
+
+                card.hidden = !isVisible;
+                card.classList.toggle('is-hidden', !isVisible);
+
+                if (isVisible) {
+                    visibleCount += 1;
+                }
+            });
+
+            updateListingEmptyState(visibleCount, query !== '');
+        }
+
+        listingFilterBtns.forEach((btn) => {
             btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
+                activeListingFilter = btn.dataset.filter || 'all';
+                listingFilterBtns.forEach((filterBtn) => filterBtn.classList.remove('active'));
                 btn.classList.add('active');
+                applyListingFilters();
             });
         });
+
+        listingSearchInput?.addEventListener('input', applyListingFilters);
+        applyListingFilters();
 
         // Period buttons functionality
         const periodBtns = document.querySelectorAll('.period-btn');

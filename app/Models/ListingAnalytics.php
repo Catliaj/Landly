@@ -7,12 +7,19 @@ use CodeIgniter\Model;
 class ListingAnalytics extends Model
 {
     protected $table            = 'listinganalytics';
-    protected $primaryKey       = 'id';
+    protected $primaryKey       = 'analytics_id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+       'listing_id',
+        'views',
+        'total_inquiries',
+        'total_reservations',
+        'total_closed',
+        'last_viewed_at',
+    ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
