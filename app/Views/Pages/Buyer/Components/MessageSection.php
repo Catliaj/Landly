@@ -70,6 +70,9 @@
             activeSessionId: null
         };
         let initPromise = null;
+        let pollingTimer = null;
+        let pollingInFlight = false;
+        const POLLING_INTERVAL_MS = 5000;
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -258,6 +261,59 @@
             setChatHeader(activeSession || null);
         }
 
+        async function refreshMessagesData() {
+            if (pollingInFlight || document.hidden) {
+                return;
+            }
+
+            pollingInFlight = true;
+
+            try {
+                await fetchSessions();
+
+                if (state.activeSessionId) {
+                    const exists = state.sessions.some((session) => Number(session.session_id) === Number(state.activeSessionId));
+                    if (exists) {
+                        await fetchMessages(state.activeSessionId);
+                    }
+                }
+            } catch (error) {
+            } finally {
+                pollingInFlight = false;
+            }
+        }
+
+        function startPolling() {
+            if (pollingTimer) {
+                return;
+            }
+
+            pollingTimer = window.setInterval(refreshMessagesData, POLLING_INTERVAL_MS);
+        }
+
+        function stopPolling() {
+            if (!pollingTimer) {
+                return;
+            }
+
+            window.clearInterval(pollingTimer);
+            pollingTimer = null;
+        }
+
+        function isMessagesSectionActive() {
+            return section.classList.contains('active');
+        }
+
+        function updatePollingState() {
+            if (isMessagesSectionActive()) {
+                startPolling();
+                refreshMessagesData();
+                return;
+            }
+
+            stopPolling();
+        }
+
         async function selectSession(sessionId) {
             state.activeSessionId = Number(sessionId);
 
@@ -407,6 +463,14 @@
             }
         });
 
+        window.addEventListener('buyer:section-changed', () => {
+            updatePollingState();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            updatePollingState();
+        });
+
         initPromise = (async function initMessaging() {
             try {
                 await fetchSessions();
@@ -434,6 +498,8 @@
                 setChatHeader(null);
                 sendButton.disabled = true;
             }
+
+            updatePollingState();
         })();
     })();
 </script>

@@ -28,8 +28,11 @@ class InquriesController extends BaseController
 
         $inquiries = db_connect()
             ->table('inquiries i')
-            ->select('i.inquiry_id, i.listing_id, i.buyer_id, i.seller_id, i.inquiry_status, i.created_at, i.updated_at, l.title AS listing_title, l.price AS listing_price')
+            ->select('i.inquiry_id, i.listing_id, i.buyer_id, i.seller_id, i.inquiry_status, i.created_at, i.updated_at, l.title AS listing_title, l.price AS listing_price, ms.session_id, bu.first_name AS buyer_first_name, bu.last_name AS buyer_last_name, su.first_name AS seller_first_name, su.last_name AS seller_last_name')
             ->join('land_listings l', 'l.listing_id = i.listing_id', 'left')
+            ->join('message_sessions ms', 'ms.inquiry_id = i.inquiry_id', 'left')
+            ->join('users bu', 'bu.user_id = i.buyer_id', 'left')
+            ->join('users su', 'su.user_id = i.seller_id', 'left')
             ->groupStart()
             ->where('i.buyer_id', $userId)
             ->orWhere('i.seller_id', $userId)

@@ -2087,6 +2087,7 @@
         const sections = document.querySelectorAll('.content-section');
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
+        const BUYER_SECTION_STORAGE_KEY = 'buyerDashboardActiveSection';
 
         const sectionInfo = {
             'dashboard': {
@@ -2116,6 +2117,10 @@
         };
 
         function showSection(sectionName) {
+            if (!sectionInfo[sectionName]) {
+                sectionName = 'dashboard';
+            }
+
             // Update navigation
             navItems.forEach(item => {
                 if (item.dataset.section === sectionName) {
@@ -2140,6 +2145,19 @@
                 pageSubheading.textContent = sectionInfo[sectionName].subtitle;
             }
 
+            try {
+                localStorage.setItem(BUYER_SECTION_STORAGE_KEY, sectionName);
+            } catch (error) {
+            }
+
+            if (window.location.hash !== `#${sectionName}`) {
+                history.replaceState(null, '', `#${sectionName}`);
+            }
+
+            window.dispatchEvent(new window.CustomEvent('buyer:section-changed', {
+                detail: { sectionName }
+            }));
+
             // Close mobile sidebar
             document.querySelector('.sidebar').classList.remove('open');
         }
@@ -2151,6 +2169,20 @@
                 showSection(sectionName);
             });
         });
+
+        const initialSectionFromHash = (window.location.hash || '').replace('#', '').trim();
+        let initialSection = sectionInfo[initialSectionFromHash] ? initialSectionFromHash : '';
+
+        if (!initialSection) {
+            try {
+                const savedSection = localStorage.getItem(BUYER_SECTION_STORAGE_KEY) || '';
+                initialSection = sectionInfo[savedSection] ? savedSection : '';
+            } catch (error) {
+                initialSection = '';
+            }
+        }
+
+        showSection(initialSection || 'dashboard');
 
         // Mobile menu toggle
         function toggleSidebar() {
@@ -2215,6 +2247,13 @@
 
                 const data = await response.json();
                 if (response.ok && data.status === 'success') {
+                    window.dispatchEvent(new window.CustomEvent('buyer:inquiry-updated', {
+                        detail: {
+                            listingId: targetListingId,
+                            inquiryId: Number(data.inquiry_id || 0),
+                            inquiryStatus: String(data.inquiry_status || 'pending')
+                        }
+                    }));
                     alert(data.message || 'Inquiry created successfully.');
                     return;
                 }
