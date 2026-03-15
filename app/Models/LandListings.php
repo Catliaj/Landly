@@ -6,6 +6,8 @@ use CodeIgniter\Model;
 
 class LandListings extends Model
 {
+    private const VERIFIED_LISTING_STATUSES = ['true', 'false', 'pending', 'rejected'];
+
     protected $table = 'land_listings';
     protected $primaryKey = 'listing_id';
 
@@ -39,6 +41,17 @@ class LandListings extends Model
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+
+    // Validation
+    protected $validationRules = [
+        'is_verified_listing' => 'required|in_list[true,false,pending,rejected]',
+    ];
+    protected $skipValidation = false;
+
+    // Callbacks
+    protected $allowCallbacks = true;
+    protected $beforeInsert   = ['normalizeVerifiedListingBeforeInsert'];
+    protected $beforeUpdate   = ['normalizeVerifiedListingBeforeUpdate'];
 
     /*
     |--------------------------------------------------------------------------
@@ -78,5 +91,59 @@ class LandListings extends Model
     public function getListingsByStatus($status)
     {
         return $this->where('listing_status', $status)->findAll();
+    }
+
+    protected function normalizeVerifiedListingBeforeInsert(array $data): array
+    {
+        $verifiedValue = $data['data']['is_verified_listing'] ?? null;
+        $normalized = $this->normalizeVerifiedListingValue($verifiedValue, true);
+
+        if ($normalized !== null) {
+            $data['data']['is_verified_listing'] = $normalized;
+        }
+
+        return $data;
+    }
+
+    protected function normalizeVerifiedListingBeforeUpdate(array $data): array
+    {
+        if (! array_key_exists('is_verified_listing', $data['data'] ?? [])) {
+            return $data;
+        }
+
+        $normalized = $this->normalizeVerifiedListingValue($data['data']['is_verified_listing'], false);
+
+        if ($normalized !== null) {
+            $data['data']['is_verified_listing'] = $normalized;
+        }
+
+        return $data;
+    }
+
+    private function normalizeVerifiedListingValue($value, bool $useDefaultWhenEmpty): ?string
+    {
+        if ($value === null || $value === '') {
+            return $useDefaultWhenEmpty ? 'pending' : null;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return ((int) $value) === 1 ? 'true' : 'false';
+        }
+
+        $normalized = strtolower(trim((string) $value));
+
+        if (in_array($normalized, self::VERIFIED_LISTING_STATUSES, true)) {
+            return $normalized;
+        }
+
+        return match ($normalized) {
+            '1', 'yes', 'verified' => 'true',
+            '0', 'no', 'unverified' => 'false',
+            default => null,
+        };
     }
 }
