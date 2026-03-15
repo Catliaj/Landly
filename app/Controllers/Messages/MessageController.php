@@ -226,10 +226,14 @@ class MessageController extends BaseController
 
 		$sessions = db_connect()
 			->table('message_sessions ms')
-			->select('ms.session_id, ms.listing_id, ms.buyer_id, ms.seller_id, ms.session_status, ms.last_message_at, ms.started_at, l.title AS listing_title')
+			->select('ms.session_id, ms.listing_id, ms.inquiry_id, ms.buyer_id, ms.seller_id, ms.session_status, ms.last_message_at, ms.started_at, l.title AS listing_title, i.inquiry_status')
+			->select('(SELECT COUNT(*) FROM messages m WHERE m.session_id = ms.session_id AND m.sender_id != ' . (int) $userId . ' AND m.is_read = 0) AS unread_count', false)
 			->join('land_listings l', 'l.listing_id = ms.listing_id', 'left')
+			->join('inquiries i', 'i.inquiry_id = ms.inquiry_id', 'left')
+			->groupStart()
 			->where('ms.buyer_id', $userId)
 			->orWhere('ms.seller_id', $userId)
+			->groupEnd()
 			->orderBy('ms.last_message_at', 'DESC')
 			->get()
 			->getResultArray();

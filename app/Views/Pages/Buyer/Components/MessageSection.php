@@ -53,6 +53,7 @@
         const endpoints = {
             sessions: '<?= base_url('messages/sessions') ?>',
             messagesBase: '<?= base_url('messages/sessions') ?>',
+            startSession: '<?= base_url('messages/sessions/start') ?>',
             send: '<?= base_url('messages/send') ?>'
         };
 
@@ -68,6 +69,7 @@
             sessions: [],
             activeSessionId: null
         };
+        let initPromise = null;
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -97,12 +99,12 @@
                 return 'Now';
             }
 
-            const value = new Date(dateText.replace(' ', 'T'));
+            const value = new window.Date(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
 
-            const diffMs = Date.now() - value.getTime();
+            const diffMs = window.Date.now() - value.getTime();
             const diffMin = Math.max(0, Math.floor(diffMs / 60000));
 
             if (diffMin < 1) return 'Now';
@@ -123,7 +125,7 @@
                 return 'Now';
             }
 
-            const value = new Date(dateText.replace(' ', 'T'));
+            const value = new window.Date(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
@@ -144,10 +146,15 @@
                 return;
             }
 
-            const sellerLabel = `Seller #${session.seller_id ?? ''}`.trim();
+            const sellerLabel = getCounterpartyLabel(session);
             chatName.textContent = sellerLabel;
             chatListing.textContent = `Re: ${session.listing_title || 'Property Inquiry'}`;
             chatAvatar.textContent = getInitials(sellerLabel);
+        }
+
+        function getCounterpartyLabel(session) {
+            const sellerId = Number(session.seller_id || 0);
+            return sellerId > 0 ? `Seller #${sellerId}` : 'Seller';
         }
 
         function renderSessions() {
@@ -169,19 +176,21 @@
 
             conversationList.innerHTML = state.sessions.map((session) => {
                 const isActive = Number(session.session_id) === Number(state.activeSessionId);
-                const sellerLabel = `Seller #${session.seller_id ?? ''}`.trim();
+                const sellerLabel = getCounterpartyLabel(session);
                 const listingTitle = session.listing_title || 'Property Inquiry';
+                const unreadCount = Number(session.unread_count || 0);
 
                 return `
-                    <div class="message-item ${isActive ? 'active' : ''}" data-session-id="${session.session_id}">
+                    <div class="message-item ${isActive ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}" data-session-id="${session.session_id}">
                         <div class="message-avatar">${escapeHtml(getInitials(sellerLabel))}</div>
                         <div class="message-content">
                             <div class="message-header">
                                 <span class="message-sender">${escapeHtml(sellerLabel)}</span>
                                 <span class="message-time">${escapeHtml(formatRelativeTime(session.last_message_at))}</span>
                             </div>
-                            <p class="message-preview">${escapeHtml(`Re: ${listingTitle}`)}</p>
+                            <p class="message-preview">${escapeHtml(`Re: ${listingTitle}`)}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}</p>
                         </div>
+                        ${unreadCount > 0 ? '<span class="message-unread-dot"></span>' : ''}
                     </div>
                 `;
             }).join('');
@@ -223,7 +232,8 @@
             }
 
             const data = await response.json();
-            state.sessions = Array.isArray(data.sessions) ? data.sessions : [];
+            const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+            state.sessions = sessions.filter((session) => Number(session.buyer_id) === currentUserId);
 
             if (!state.activeSessionId && state.sessions.length > 0) {
                 state.activeSessionId = Number(state.sessions[0].session_id);
@@ -250,10 +260,87 @@
 
         async function selectSession(sessionId) {
             state.activeSessionId = Number(sessionId);
+
+            const activeSession = state.sessions.find((session) => Number(session.session_id) === Number(state.activeSessionId));
+            if (activeSession) {
+                activeSession.unread_count = 0;
+            }
+
             renderSessions();
             sendButton.disabled = false;
             await fetchMessages(state.activeSessionId);
         }
+
+        async function startConversationSession(listingId, inquiryId) {
+            const payload = {
+                listing_id: Number(listingId || 0),
+                inquiry_id: Number(inquiryId || 0)
+            };
+
+            if (!payload.listing_id || payload.listing_id <= 0) {
+                return 0;
+            }
+
+            const response = await fetch(endpoints.startSession, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                return 0;
+            }
+
+            const data = await response.json();
+            return Number(data.session_id || 0);
+        }
+
+        window.openBuyerConversation = async function (sessionContext) {
+            let targetSessionId = 0;
+            let listingId = 0;
+            let inquiryId = 0;
+
+            if (typeof sessionContext === 'object' && sessionContext !== null) {
+                targetSessionId = Number(sessionContext.sessionId || 0);
+                listingId = Number(sessionContext.listingId || 0);
+                inquiryId = Number(sessionContext.inquiryId || 0);
+            } else {
+                targetSessionId = Number(sessionContext || 0);
+            }
+
+            if (typeof window.showSection === 'function') {
+                window.showSection('messages');
+            }
+
+            if (initPromise) {
+                await initPromise;
+            }
+
+            if (!targetSessionId || targetSessionId <= 0) {
+                targetSessionId = await startConversationSession(listingId, inquiryId);
+                if (!targetSessionId || targetSessionId <= 0) {
+                    alert('Unable to open conversation for this inquiry right now.');
+                    return;
+                }
+            }
+
+            const exists = state.sessions.some((session) => Number(session.session_id) === targetSessionId);
+
+            if (!exists) {
+                await fetchSessions();
+            }
+
+            const targetExists = state.sessions.some((session) => Number(session.session_id) === targetSessionId);
+            if (!targetExists) {
+                alert('Conversation session not found for this inquiry yet.');
+                return;
+            }
+
+            await selectSession(targetSessionId);
+        };
 
         async function sendCurrentMessage() {
             if (!state.activeSessionId) {
@@ -320,7 +407,7 @@
             }
         });
 
-        (async function initMessaging() {
+        initPromise = (async function initMessaging() {
             try {
                 await fetchSessions();
 

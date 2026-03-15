@@ -25,6 +25,17 @@
                     <h4 id="sellerChatName">Select a conversation</h4>
                     <span id="sellerChatListing">Choose a conversation from the left</span>
                 </div>
+                <div class="seller-inquiry-controls">
+                    <span id="sellerInquiryStatusBadge" class="seller-inquiry-status-pill status-pending">Pending</span>
+                    <select id="sellerInquiryStatusSelect" class="seller-inquiry-status-select status-pending" disabled>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="reserved">Reserved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <button id="sellerInquiryStatusUpdateBtn" class="seller-inquiry-status-btn" type="button" disabled>Update Status</button>
+                </div>
             </div>
             <div class="chat-body" id="sellerChatBody">
                 <div class="chat-message received">
@@ -63,11 +74,18 @@
         const chatName = document.getElementById('sellerChatName');
         const chatListing = document.getElementById('sellerChatListing');
         const chatAvatar = document.getElementById('sellerChatAvatar');
+        const inquiryStatusBadge = document.getElementById('sellerInquiryStatusBadge');
+        const inquiryStatusSelect = document.getElementById('sellerInquiryStatusSelect');
+        const inquiryStatusUpdateBtn = document.getElementById('sellerInquiryStatusUpdateBtn');
 
         const state = {
             sessions: [],
-            activeSessionId: null
+            activeSessionId: null,
+            activeInquiryId: null,
+            activeInquiryStatus: 'pending'
         };
+
+        const allowedInquiryStatuses = ['pending', 'accepted', 'rejected', 'reserved', 'closed'];
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -97,12 +115,12 @@
                 return 'Now';
             }
 
-            const value = new Date(dateText.replace(' ', 'T'));
+            const value = new window.Date(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
 
-            const diffMs = Date.now() - value.getTime();
+            const diffMs = window.Date.now() - value.getTime();
             const diffMin = Math.max(0, Math.floor(diffMs / 60000));
 
             if (diffMin < 1) return 'Now';
@@ -123,7 +141,7 @@
                 return 'Now';
             }
 
-            const value = new Date(dateText.replace(' ', 'T'));
+            const value = new window.Date(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
@@ -146,6 +164,7 @@
                 chatName.textContent = 'Select a conversation';
                 chatListing.textContent = 'Choose a conversation from the left';
                 chatAvatar.textContent = '--';
+                setInquiryControls(null);
                 return;
             }
 
@@ -153,6 +172,97 @@
             chatName.textContent = buyerLabel;
             chatListing.textContent = `Re: ${session.listing_title || 'Property Inquiry'}`;
             chatAvatar.textContent = getInitials(buyerLabel);
+            setInquiryControls(session);
+        }
+
+        function normalizeInquiryStatus(statusValue) {
+            const status = String(statusValue || '').toLowerCase();
+            return allowedInquiryStatuses.includes(status) ? status : 'pending';
+        }
+
+        function statusToLabel(status) {
+            return status.charAt(0).toUpperCase() + status.slice(1);
+        }
+
+        function applyInquiryStatusTheme(status) {
+            const normalized = normalizeInquiryStatus(status);
+            inquiryStatusBadge.className = `seller-inquiry-status-pill status-${normalized}`;
+            inquiryStatusSelect.className = `seller-inquiry-status-select status-${normalized}`;
+            inquiryStatusBadge.textContent = statusToLabel(normalized);
+        }
+
+        function setInquiryControls(session) {
+            if (!session) {
+                state.activeInquiryId = null;
+                state.activeInquiryStatus = 'pending';
+                inquiryStatusSelect.value = 'pending';
+                inquiryStatusSelect.disabled = true;
+                inquiryStatusUpdateBtn.disabled = true;
+                applyInquiryStatusTheme('pending');
+                return;
+            }
+
+            state.activeInquiryId = Number(session.inquiry_id || 0) || null;
+            state.activeInquiryStatus = normalizeInquiryStatus(session.inquiry_status);
+            inquiryStatusSelect.value = state.activeInquiryStatus;
+            inquiryStatusSelect.disabled = !state.activeInquiryId;
+            inquiryStatusUpdateBtn.disabled = !state.activeInquiryId;
+            applyInquiryStatusTheme(state.activeInquiryStatus);
+        }
+
+        async function updateActiveInquiryStatus(nextStatus, options = {}) {
+            const { silent = false, refreshSessions = true } = options;
+
+            if (!state.activeInquiryId) {
+                if (!silent) {
+                    alert('No inquiry linked to this conversation.');
+                }
+                return false;
+            }
+
+            const normalizedStatus = normalizeInquiryStatus(nextStatus);
+
+            const response = await fetch(`<?= base_url('messages/inquiries') ?>/${state.activeInquiryId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ inquiry_status: normalizedStatus })
+            });
+
+            if (!response.ok) {
+                if (!silent) {
+                    alert('Unable to update inquiry status right now.');
+                }
+                return false;
+            }
+
+            const data = await response.json();
+            const resolvedStatus = normalizeInquiryStatus(data.inquiry_status || normalizedStatus);
+
+            state.activeInquiryStatus = resolvedStatus;
+            inquiryStatusSelect.value = resolvedStatus;
+            applyInquiryStatusTheme(resolvedStatus);
+
+            state.sessions = state.sessions.map((session) => {
+                if (Number(session.inquiry_id || 0) !== Number(state.activeInquiryId || 0)) {
+                    return session;
+                }
+
+                return {
+                    ...session,
+                    inquiry_status: resolvedStatus,
+                };
+            });
+
+            if (refreshSessions) {
+                await fetchSessions();
+            } else {
+                renderSessions();
+            }
+
+            return true;
         }
 
         function renderSessions() {
@@ -291,6 +401,14 @@
                 }
 
                 chatInput.value = '';
+
+                if (state.activeInquiryId && state.activeInquiryStatus === 'pending') {
+                    await updateActiveInquiryStatus('accepted', {
+                        silent: true,
+                        refreshSessions: false
+                    });
+                }
+
                 await fetchMessages(state.activeSessionId);
                 await fetchSessions();
             } catch (error) {
@@ -319,6 +437,34 @@
         });
 
         sendButton.addEventListener('click', sendCurrentMessage);
+        inquiryStatusSelect.addEventListener('change', () => {
+            applyInquiryStatusTheme(inquiryStatusSelect.value);
+            inquiryStatusUpdateBtn.disabled = !state.activeInquiryId || inquiryStatusSelect.value === state.activeInquiryStatus;
+        });
+
+        inquiryStatusUpdateBtn.addEventListener('click', async () => {
+            if (!state.activeInquiryId) {
+                return;
+            }
+
+            const desiredStatus = normalizeInquiryStatus(inquiryStatusSelect.value);
+            if (desiredStatus === state.activeInquiryStatus) {
+                return;
+            }
+
+            inquiryStatusUpdateBtn.disabled = true;
+
+            try {
+                const updated = await updateActiveInquiryStatus(desiredStatus, { silent: false, refreshSessions: true });
+                if (!updated) {
+                    inquiryStatusSelect.value = state.activeInquiryStatus;
+                    applyInquiryStatusTheme(state.activeInquiryStatus);
+                }
+            } finally {
+                inquiryStatusUpdateBtn.disabled = !state.activeInquiryId || inquiryStatusSelect.value === state.activeInquiryStatus;
+            }
+        });
+
         chatInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
