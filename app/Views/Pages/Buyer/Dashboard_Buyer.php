@@ -2071,7 +2071,7 @@
             <?= view('Pages/Buyer/Components/SavedPropertiesSection') ?>
 
             <!-- My Inquiries Section -->
-            <?= view('Pages/Buyer/Components/InquiriesSection') ?>
+            <?= view('Pages/Buyer/Components/InquiriesSection', ['buyerInquiries' => $buyerInquiries ?? []]) ?>
 
             <!-- Messages Section -->
             <?= view('Pages/Buyer/Components/MessageSection') ?>
@@ -2189,119 +2189,41 @@
         });
 
         // Property data for modal
-        const propertyData = {
-            1: {
-                title: 'Prime Agricultural Land in Cavite',
-                price: '₱4,500,000',
-                pricePerSqm: '₱900/sqm',
-                area: '5,000 sqm',
-                type: 'Agricultural',
-                titleStatus: 'Clean Title',
-                location: 'Silang, Cavite',
-                coordinates: { lat: 14.2315, lng: 120.9767 },
-                images: [
-                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800',
-                    'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800',
-                    'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=800',
-                    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800'
-                ],
-                description: 'This prime agricultural land is perfect for farming, orchard development, or future residential conversion. Features fertile soil, natural water source, and easy access to main roads. Surrounded by established farms with excellent growth potential.',
-                features: ['Fertile Soil', 'Water Source', 'Road Access', 'Electricity Available', 'Near Town Center', 'Flat Terrain'],
-                seller: { name: 'Juan Seller', initials: 'JS', phone: '+63 912 345 6789', email: 'juan.seller@email.com', verified: true, listings: 12, memberSince: 'Jan 2022' }
-            },
-            2: {
-                title: 'Commercial Lot in Tagaytay',
-                price: '₱8,200,000',
-                pricePerSqm: '₱6,833/sqm',
-                area: '1,200 sqm',
-                type: 'Commercial',
-                titleStatus: 'Clean Title',
-                location: 'Tagaytay City, Cavite',
-                coordinates: { lat: 14.1153, lng: 120.9621 },
-                images: [
-                    'https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=800',
-                    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-                    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800'
-                ],
-                description: 'Premium commercial lot in the heart of Tagaytay with stunning Taal Lake views. Ideal for hotel, restaurant, or resort development. High foot traffic area with excellent tourism potential year-round.',
-                features: ['Taal Lake View', 'High Traffic Area', 'Near Tourist Spots', 'Main Road Frontage', 'All Utilities', 'Flat Corner Lot'],
-                seller: { name: 'Maria Seller', initials: 'MS', phone: '+63 923 456 7890', email: 'maria.seller@email.com', verified: true, listings: 8, memberSince: 'Mar 2021' }
-            },
-            3: {
-                title: 'Residential Lot in Laguna',
-                price: '₱2,800,000',
-                pricePerSqm: '₱3,500/sqm',
-                area: '800 sqm',
-                type: 'Residential',
-                titleStatus: 'Clean Title',
-                location: 'San Pablo City, Laguna',
-                coordinates: { lat: 14.0685, lng: 121.3254 },
-                images: [
-                    'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=800',
-                    'https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=800',
-                    'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800'
-                ],
-                description: 'Beautiful residential lot in a peaceful subdivision in San Pablo City. Near schools, churches, and commercial centers. Perfect for building your dream home in a family-friendly community.',
-                features: ['Subdivision Lot', 'Near Schools', 'Gated Community', 'Paved Roads', 'Underground Utilities', 'Park Access'],
-                seller: { name: 'Pedro Seller', initials: 'PS', phone: '+63 934 567 8901', email: 'pedro.seller@email.com', verified: false, listings: 3, memberSince: 'Aug 2023' }
-            },
-            4: {
-                title: 'Farm Land in Quezon',
-                price: '₱6,500,000',
-                pricePerSqm: '₱650/sqm',
-                area: '10,000 sqm',
-                type: 'Agricultural',
-                titleStatus: 'Tax Declaration',
-                location: 'Lucena City, Quezon',
-                coordinates: { lat: 13.9373, lng: 121.6170 },
-                images: [
-                    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800',
-                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800',
-                    'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800',
-                    'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800'
-                ],
-                description: 'Expansive farm land ideal for coconut plantation, fruit orchards, or livestock farming. Features natural irrigation from nearby river and established mango trees. Great investment opportunity in growing agricultural area.',
-                features: ['River Access', 'Existing Mango Trees', 'Irrigation System', 'Farm House Included', 'Caretaker Available', 'Productive Land'],
-                seller: { name: 'Ana Seller', initials: 'AS', phone: '+63 945 678 9012', email: 'ana.seller@email.com', verified: true, listings: 15, memberSince: 'Jun 2020' }
-            },
-            5: {
-                title: 'Beach Lot in Batangas',
-                price: '₱15,000,000',
-                pricePerSqm: '₱6,000/sqm',
-                area: '2,500 sqm',
-                type: 'Commercial',
-                titleStatus: 'Clean Title',
-                location: 'Nasugbu, Batangas',
-                coordinates: { lat: 14.0714, lng: 120.6364 },
-                images: [
-                    'https://images.unsplash.com/photo-1518173946687-a4c036bc1bf3?w=800',
-                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
-                    'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800',
-                    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'
-                ],
-                description: 'Stunning beachfront property with white sand beach access. Perfect for resort development, beach house, or eco-tourism venture. Crystal clear waters and breathtaking sunset views. A rare find in the area.',
-                features: ['Beachfront', 'White Sand', 'Clear Waters', 'Sunset View', 'Electricity Available', 'Road Access'],
-                seller: { name: 'Rico Seller', initials: 'RS', phone: '+63 956 789 0123', email: 'rico.seller@email.com', verified: true, listings: 6, memberSince: 'Nov 2021' }
-            },
-            6: {
-                title: 'Mountain View Lot in Rizal',
-                price: '₱5,400,000',
-                pricePerSqm: '₱1,800/sqm',
-                area: '3,000 sqm',
-                type: 'Residential',
-                titleStatus: 'Clean Title',
-                location: 'Tanay, Rizal',
-                coordinates: { lat: 14.4969, lng: 121.2847 },
-                images: [
-                    'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800',
-                    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-                    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800'
-                ],
-                description: 'Breathtaking mountain view lot perfect for vacation home or eco-retreat. Cool climate year-round with stunning panoramic views of Sierra Madre mountains. Surrounded by nature with nearby hiking trails and waterfalls.',
-                features: ['Mountain View', 'Cool Climate', 'Near Waterfalls', 'Hiking Trails', 'Private Location', 'Spring Water Source'],
-                seller: { name: 'Carlo Seller', initials: 'CS', phone: '+63 967 890 1234', email: 'carlo.seller@email.com', verified: false, listings: 4, memberSince: 'Feb 2024' }
+        const propertyData = <?= json_encode($browsePropertyData ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+        async function createInquiryForListing(event, listingId) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
             }
-        };
+
+            const targetListingId = parseInt(listingId, 10);
+            if (!targetListingId || targetListingId <= 0) {
+                alert('Invalid listing.');
+                return;
+            }
+
+            try {
+                const response = await fetch('<?= base_url('messages/inquiries') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ listing_id: targetListingId })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    alert(data.message || 'Inquiry created successfully.');
+                    return;
+                }
+
+                alert(data.message || 'Unable to create inquiry.');
+            } catch (error) {
+                alert('Unable to create inquiry right now. Please try again.');
+            }
+        }
 
         // Open Property Modal
         function openPropertyModal(propertyId) {
@@ -2343,6 +2265,7 @@
             modal.dataset.lat = property.coordinates.lat;
             modal.dataset.lng = property.coordinates.lng;
             modal.dataset.title = property.title;
+            modal.dataset.listingId = propertyId;
             
             // Set seller info
             document.getElementById('sellerAvatar').textContent = property.seller.initials;
@@ -2354,6 +2277,14 @@
             // Show modal
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+        }
+
+        const modalMessageSellerButton = document.querySelector('.btn-contact-seller');
+        if (modalMessageSellerButton) {
+            modalMessageSellerButton.addEventListener('click', (event) => {
+                const listingId = Number(document.getElementById('propertyModal').dataset.listingId || 0);
+                createInquiryForListing(event, listingId);
+            });
         }
 
         // Change main image in gallery
@@ -2489,7 +2420,7 @@
                             </div>
                         </div>
                         <div class="seller-card-actions">
-                            <button class="btn-contact-seller">
+                            <button class="btn-contact-seller" type="button">
                                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                                 Message Seller
                             </button>

@@ -22,11 +22,13 @@ class DashboardController extends BaseController
         }
 
         [$sellerListings, $listingCounts] = $this->getSellerListingsPayload($userId);
+        $sellerInquiries = $this->getSellerInquiriesPayload($userId);
 
         return view('Pages/Seller/Dashboard_Seller', [
             'fullname' => $Fullname,
             'sellerListings' => $sellerListings,
             'listingCounts' => $listingCounts,
+            'sellerInquiries' => $sellerInquiries,
         ]);
     }
 
@@ -269,5 +271,120 @@ class DashboardController extends BaseController
         );
 
         return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+    }
+
+    private function getSellerInquiriesPayload(int $sellerId): array
+    {
+        $db = Database::connect();
+
+        $rows = $db->table('inquiries i')
+            ->select('i.inquiry_id, i.listing_id, i.buyer_id, i.inquiry_status, i.created_at, i.updated_at, l.title, l.price, ms.session_id, u.first_name, u.last_name')
+            ->join('land_listings l', 'l.listing_id = i.listing_id', 'left')
+            ->join('message_sessions ms', 'ms.inquiry_id = i.inquiry_id', 'left')
+            ->join('users u', 'u.user_id = i.buyer_id', 'left')
+            ->where('i.seller_id', $sellerId)
+            ->orderBy('i.created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $listingIds = array_values(array_filter(array_map(
+            static fn(array $row): int => (int) ($row['listing_id'] ?? 0),
+            $rows
+        )));
+
+        $primaryImages = $this->getPrimaryImagesByListing($listingIds);
+        $inquiries = [];
+
+        foreach ($rows as $row) {
+            $listingId = (int) ($row['listing_id'] ?? 0);
+            $title = trim((string) ($row['title'] ?? 'Untitled Listing'));
+            $buyerName = trim((string) (($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')));
+            $buyerName = $buyerName !== '' ? $buyerName : 'Buyer';
+            $status = strtolower(trim((string) ($row['inquiry_status'] ?? 'pending')));
+
+            $inquiries[] = [
+                'inquiry_id' => (int) ($row['inquiry_id'] ?? 0),
+                'session_id' => (int) ($row['session_id'] ?? 0),
+                'listing_id' => $listingId,
+                'buyer_id' => (int) ($row['buyer_id'] ?? 0),
+                'buyer_name' => $buyerName,
+                'buyer_initials' => $this->formatInitials($buyerName),
+                'status_label' => $this->formatSellerInquiryStatusLabel($status),
+                'status_class' => $this->formatSellerInquiryStatusClass($status),
+                'title' => $title,
+                'price_label' => '₱' . number_format((float) ($row['price'] ?? 0), 2),
+                'image_url' => $this->resolveListingImageUrl($primaryImages[$listingId] ?? null, $title),
+                'date_label' => $this->formatSellerInquiryDate((string) ($row['created_at'] ?? '')),
+                'message_preview' => $this->formatSellerInquiryPreview($status),
+            ];
+        }
+
+        return $inquiries;
+    }
+
+    private function formatSellerInquiryStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'accepted' => 'Accepted',
+            'rejected' => 'Rejected',
+            'reserved' => 'Reserved',
+            'closed' => 'Closed',
+            default => 'Pending',
+        };
+    }
+
+    private function formatSellerInquiryStatusClass(string $status): string
+    {
+        return match ($status) {
+            'accepted' => 'accepted',
+            'rejected' => 'rejected',
+            'reserved' => 'reserved',
+            'closed' => 'closed',
+            default => 'pending',
+        };
+    }
+
+    private function formatSellerInquiryDate(string $rawDate): string
+    {
+        if ($rawDate === '') {
+            return 'Date unavailable';
+        }
+
+        $timestamp = strtotime($rawDate);
+        if ($timestamp === false) {
+            return 'Date unavailable';
+        }
+
+        return date('M d, Y g:i A', $timestamp);
+    }
+
+    private function formatSellerInquiryPreview(string $status): string
+    {
+        return match ($status) {
+            'accepted' => 'You accepted this buyer inquiry.',
+            'rejected' => 'You rejected this buyer inquiry.',
+            'reserved' => 'This inquiry is now marked reserved.',
+            'closed' => 'This inquiry thread has been closed.',
+            default => 'New inquiry received. Open conversation to reply.',
+        };
+    }
+
+    private function formatInitials(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name)) ?: [];
+        $parts = array_values(array_filter($parts));
+
+        if ($parts === []) {
+            return 'NA';
+        }
+
+        $first = mb_substr((string) ($parts[0] ?? ''), 0, 1);
+        $second = mb_substr((string) ($parts[1] ?? ''), 0, 1);
+
+        return strtoupper($first . $second);
     }
 }

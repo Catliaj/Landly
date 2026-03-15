@@ -56,6 +56,12 @@ $routes->group('test', function ($routes) {
     $routes->get('messages/sessions/(:num)', 'Test\MessageTest::testGetMessages/$1');
     $routes->post('messages/send', 'Test\MessageTest::testSendMessage');
     $routes->post('messages/send-1-2', 'Test\MessageTest::testSendBetweenUsersOneAndTwo');
+
+    // test routes for inquiries controller
+    $routes->get('inquiries', 'Test\MessageTest::testListInquiries');
+    $routes->get('inquiries/(:num)', 'Test\MessageTest::testViewInquiry/$1');
+    $routes->post('inquiries', 'Test\MessageTest::testCreateInquiry');
+    $routes->put('inquiries/(:num)/status', 'Test\MessageTest::testUpdateInquiryStatus/$1');
 });
 
 
@@ -65,6 +71,11 @@ $routes->group('messages', function ($routes) {
     $routes->post('sessions/start', 'Messages\MessageController::startSession');
     $routes->get('sessions/(:num)', 'Messages\MessageController::getMessages/$1');
     $routes->post('send', 'Messages\MessageController::sendMessage');
+
+    $routes->get('inquiries', 'Messages\InquriesController::listInquiries');
+    $routes->get('inquiries/(:num)', 'Messages\InquriesController::viewInquiry/$1');
+    $routes->post('inquiries', 'Messages\InquriesController::createInquiry');
+    $routes->put('inquiries/(:num)/status', 'Messages\InquriesController::updateInquiryStatus/$1');
 });
 
 

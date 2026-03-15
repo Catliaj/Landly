@@ -1276,6 +1276,96 @@
             color: rgba(245, 245, 220, 0.5);
         }
 
+        .seller-inquiry-controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .seller-inquiry-status-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            border: 1px solid rgba(210, 180, 140, 0.35);
+            color: var(--cream-100);
+            background: rgba(210, 180, 140, 0.12);
+        }
+
+        .seller-inquiry-status-pill.status-pending,
+        .seller-inquiry-status-select.status-pending {
+            border-color: rgba(52, 152, 219, 0.35);
+            color: #9cd0ff;
+            background: rgba(52, 152, 219, 0.12);
+        }
+
+        .seller-inquiry-status-pill.status-accepted,
+        .seller-inquiry-status-select.status-accepted {
+            border-color: rgba(149, 213, 178, 0.45);
+            color: var(--accent);
+            background: rgba(149, 213, 178, 0.12);
+        }
+
+        .seller-inquiry-status-pill.status-rejected,
+        .seller-inquiry-status-select.status-rejected {
+            border-color: rgba(231, 76, 60, 0.35);
+            color: #ffaaa3;
+            background: rgba(231, 76, 60, 0.12);
+        }
+
+        .seller-inquiry-status-pill.status-reserved,
+        .seller-inquiry-status-select.status-reserved {
+            border-color: rgba(243, 156, 18, 0.35);
+            color: #f5c889;
+            background: rgba(243, 156, 18, 0.12);
+        }
+
+        .seller-inquiry-status-pill.status-closed,
+        .seller-inquiry-status-select.status-closed {
+            border-color: rgba(149, 165, 166, 0.35);
+            color: #d6dbdb;
+            background: rgba(149, 165, 166, 0.12);
+        }
+
+        .seller-inquiry-status-select {
+            min-width: 130px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(210, 180, 140, 0.3);
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--cream-100);
+            font-size: 0.8rem;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .seller-inquiry-status-btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent), #c9a86c);
+            color: var(--green-900);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .seller-inquiry-status-btn:hover {
+            box-shadow: 0 5px 15px rgba(210, 180, 140, 0.3);
+        }
+
+        .seller-inquiry-status-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         .chat-body {
             flex: 1;
             padding: 20px;
@@ -1433,14 +1523,31 @@
             text-transform: uppercase;
         }
 
-        .inquiry-status.new {
+        .inquiry-status.new,
+        .inquiry-status.pending {
             background: rgba(52, 152, 219, 0.15);
             color: #3498db;
         }
 
-        .inquiry-status.responded {
+        .inquiry-status.responded,
+        .inquiry-status.accepted {
             background: rgba(46, 204, 113, 0.15);
             color: #2ecc71;
+        }
+
+        .inquiry-status.rejected {
+            background: rgba(231, 76, 60, 0.15);
+            color: #ff9d94;
+        }
+
+        .inquiry-status.reserved {
+            background: rgba(243, 156, 18, 0.15);
+            color: #f5c889;
+        }
+
+        .inquiry-status.closed {
+            background: rgba(149, 165, 166, 0.18);
+            color: #d6dbdb;
         }
 
         .inquiry-property {
@@ -1998,7 +2105,7 @@
             <?= view('Pages/Seller/Components/MessagesSection') ?>
 
             <!-- Inquiries Section -->
-            <?= view('Pages/Seller/Components/InquiriesSection') ?>
+            <?= view('Pages/Seller/Components/InquiriesSection', ['sellerInquiries' => $sellerInquiries ?? []]) ?>
 
             <!-- Analytics Section -->
             <!-- <section id="section-analytics" class="content-section">
