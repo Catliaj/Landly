@@ -84,6 +84,10 @@
             activeInquiryId: null,
             activeInquiryStatus: 'pending'
         };
+        let initPromise = null;
+        let pollingTimer = null;
+        let pollingInFlight = false;
+        const POLLING_INTERVAL_MS = 2000;
 
         const allowedInquiryStatuses = ['pending', 'accepted', 'rejected', 'reserved', 'closed'];
 
@@ -262,6 +266,13 @@
                 renderSessions();
             }
 
+            window.dispatchEvent(new window.CustomEvent('seller:inquiry-updated', {
+                detail: {
+                    inquiryId: Number(state.activeInquiryId || 0),
+                    inquiryStatus: resolvedStatus
+                }
+            }));
+
             return true;
         }
 
@@ -364,12 +375,94 @@
             setChatHeader(activeSession || null);
         }
 
+        async function refreshMessagesData() {
+            if (pollingInFlight || document.hidden) {
+                return;
+            }
+
+            pollingInFlight = true;
+
+            try {
+                await fetchSessions();
+
+                if (state.activeSessionId) {
+                    const exists = state.sessions.some((session) => Number(session.session_id) === Number(state.activeSessionId));
+                    if (exists) {
+                        await fetchMessages(state.activeSessionId);
+                    }
+                }
+            } catch (error) {
+            } finally {
+                pollingInFlight = false;
+            }
+        }
+
+        function startPolling() {
+            if (pollingTimer) {
+                return;
+            }
+
+            pollingTimer = window.setInterval(refreshMessagesData, POLLING_INTERVAL_MS);
+        }
+
+        function stopPolling() {
+            if (!pollingTimer) {
+                return;
+            }
+
+            window.clearInterval(pollingTimer);
+            pollingTimer = null;
+        }
+
+        function isMessagesSectionActive() {
+            return section.classList.contains('active');
+        }
+
+        function updatePollingState() {
+            if (isMessagesSectionActive()) {
+                startPolling();
+                refreshMessagesData();
+                return;
+            }
+
+            stopPolling();
+        }
+
         async function selectSession(sessionId) {
             state.activeSessionId = Number(sessionId);
             renderSessions();
             sendButton.disabled = false;
             await fetchMessages(state.activeSessionId);
         }
+
+        window.openSellerConversation = async function (sessionId) {
+            const targetSessionId = Number(sessionId || 0);
+
+            if (typeof window.showSection === 'function') {
+                window.showSection('messages');
+            }
+
+            if (initPromise) {
+                await initPromise;
+            }
+
+            if (!targetSessionId || targetSessionId <= 0) {
+                return;
+            }
+
+            const exists = state.sessions.some((session) => Number(session.session_id) === targetSessionId);
+            if (!exists) {
+                await fetchSessions();
+            }
+
+            const targetExists = state.sessions.some((session) => Number(session.session_id) === targetSessionId);
+            if (!targetExists) {
+                alert('Conversation session not found for this inquiry yet.');
+                return;
+            }
+
+            await selectSession(targetSessionId);
+        };
 
         async function sendCurrentMessage() {
             if (!state.activeSessionId) {
@@ -472,7 +565,15 @@
             }
         });
 
-        (async function initMessaging() {
+        window.addEventListener('seller:section-changed', () => {
+            updatePollingState();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            updatePollingState();
+        });
+
+        initPromise = (async function initMessaging() {
             try {
                 await fetchSessions();
 
@@ -499,6 +600,8 @@
                 setChatHeader(null);
                 sendButton.disabled = true;
             }
+
+            updatePollingState();
         })();
     })();
 </script>

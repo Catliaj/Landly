@@ -2240,6 +2240,7 @@
         const sections = document.querySelectorAll('.content-section');
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
+        const SELLER_SECTION_STORAGE_KEY = 'sellerDashboardActiveSection';
 
         const sectionInfo = {
             'dashboard': {
@@ -2273,6 +2274,10 @@
         };
 
         function showSection(sectionName) {
+            if (!sectionInfo[sectionName]) {
+                sectionName = 'dashboard';
+            }
+
             // Update navigation
             navItems.forEach(item => {
                 if (item.dataset.section === sectionName) {
@@ -2297,6 +2302,19 @@
                 pageSubheading.textContent = sectionInfo[sectionName].subtitle;
             }
 
+            try {
+                localStorage.setItem(SELLER_SECTION_STORAGE_KEY, sectionName);
+            } catch (error) {
+            }
+
+            if (window.location.hash !== `#${sectionName}`) {
+                history.replaceState(null, '', `#${sectionName}`);
+            }
+
+            window.dispatchEvent(new window.CustomEvent('seller:section-changed', {
+                detail: { sectionName }
+            }));
+
             // Close mobile sidebar
             document.querySelector('.sidebar').classList.remove('open');
         }
@@ -2308,6 +2326,20 @@
                 showSection(sectionName);
             });
         });
+
+        const initialSectionFromHash = (window.location.hash || '').replace('#', '').trim();
+        let initialSection = sectionInfo[initialSectionFromHash] ? initialSectionFromHash : '';
+
+        if (!initialSection) {
+            try {
+                const savedSection = localStorage.getItem(SELLER_SECTION_STORAGE_KEY) || '';
+                initialSection = sectionInfo[savedSection] ? savedSection : '';
+            } catch (error) {
+                initialSection = '';
+            }
+        }
+
+        showSection(initialSection || 'dashboard');
 
         // Mobile menu toggle
         function toggleSidebar() {
