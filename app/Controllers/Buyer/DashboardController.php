@@ -34,7 +34,27 @@ class DashboardController extends BaseController
             'browsePropertyData' => $browsePropertyData,
             'buyerInquiries' => $buyerInquiries,
             'sidebarCounts' => $sidebarCounts,
+            'geoapifyApiKey' => $this->resolveGeoapifyApiKey(),
         ]);
+    }
+
+    private function resolveGeoapifyApiKey(): string
+    {
+        $candidates = [
+            env('GEOAPIFY_API_KEY'),
+            $_ENV['GEOAPIFY_API_KEY'] ?? null,
+            $_SERVER['GEOAPIFY_API_KEY'] ?? null,
+            getenv('GEOAPIFY_API_KEY') ?: null,
+        ];
+
+        foreach ($candidates as $value) {
+            $key = trim((string) ($value ?? ''));
+            if ($key !== '') {
+                return $key;
+            }
+        }
+
+        return '';
     }
 
     public function sidebarCounts(): ResponseInterface
@@ -190,8 +210,14 @@ class DashboardController extends BaseController
             $propertyTypeLabel = $this->formatPropertyType((string) ($row['property_type'] ?? ''));
             $documentStatusLabel = $this->formatDocumentStatus($row);
             $roadAccessLabel = $this->formatRoadAccess((string) ($row['road_access_type'] ?? ''));
+            $viewTypeLabel = $this->formatViewType((string) ($row['view_type'] ?? ''));
             $sellerName = $this->formatSellerName($row);
             $sellerInitials = $this->formatInitials($sellerName);
+            $areaRaw = trim((string) ($row['developing_area'] ?? ''));
+            $areaLabel = $areaRaw !== '' ? $areaRaw . ' sqm' : 'N/A';
+            $priceValue = (float) ($row['price'] ?? 0);
+            $areaNumeric = is_numeric($areaRaw) ? (float) $areaRaw : 0.0;
+            $pricePerSqm = $areaNumeric > 0 ? $this->formatPeso($priceValue / $areaNumeric) . ' / sqm' : 'N/A';
 
             $browseListings[] = [
                 'listing_id' => $listingId,
@@ -210,13 +236,28 @@ class DashboardController extends BaseController
 
             $browsePropertyData[$listingId] = [
                 'title' => $title,
-                'price' => $this->formatPeso((float) ($row['price'] ?? 0)),
-                'pricePerSqm' => 'N/A',
-                'area' => 'N/A',
+                'listingId' => $listingId,
+                'price' => $this->formatPeso($priceValue),
+                'pricePerSqm' => $pricePerSqm,
+                'area' => $areaLabel,
                 'type' => $propertyTypeLabel,
                 'titleStatus' => $documentStatusLabel,
                 'location' => $locationLabel,
-                'coordinates' => ['lat' => 14.5995, 'lng' => 120.9842],
+                'address' => $locationLabel,
+                'barangay' => trim((string) ($row['barangay'] ?? '')),
+                'city' => trim((string) ($row['city'] ?? '')),
+                'province' => trim((string) ($row['province'] ?? '')),
+                'roadAccess' => $roadAccessLabel,
+                'viewType' => $viewTypeLabel,
+                'investmentReady' => $this->formatBooleanLabel($row['investment_ready'] ?? null),
+                'isTitled' => $this->formatBooleanLabel($row['is_titled'] ?? null),
+                'hasTaxDeclaration' => $this->formatBooleanLabel($row['has_tax_declaration'] ?? null),
+                'hasLraApprovedPlan' => $this->formatBooleanLabel($row['has_lra_approved_plan'] ?? null),
+                'motherTitleDisclosed' => $this->formatBooleanLabel($row['mother_titled_disclosed'] ?? null),
+                'documentStatus' => $documentStatusLabel,
+                'listingStatus' => $statusMeta['label'],
+                'mapAddress' => $locationLabel !== 'Location unavailable' ? $locationLabel . ', Philippines' : 'Nasugbu, Batangas, Philippines',
+                'coordinates' => ['lat' => null, 'lng' => null],
                 'images' => [$imageUrl],
                 'description' => trim((string) ($row['description'] ?? 'No description provided.')),
                 'features' => $this->buildFeatureTags($row),
@@ -352,6 +393,27 @@ class DashboardController extends BaseController
             'none' => 'No Road Access',
             default => 'Road Access N/A',
         };
+    }
+
+    private function formatViewType(string $viewType): string
+    {
+        return match ($viewType) {
+            'mountain', 'mountain_view' => 'Mountain View',
+            'sea', 'sea_view', 'ocean_view' => 'Sea View',
+            'city', 'city_view' => 'City View',
+            'farm', 'farm_view' => 'Farm View',
+            default => $viewType !== '' ? ucwords(str_replace('_', ' ', $viewType)) : 'Not specified',
+        };
+    }
+
+    private function formatBooleanLabel(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        $normalized = strtolower(trim((string) $value));
+        return in_array($normalized, ['1', 'true', 'yes', 'y'], true) ? 'Yes' : 'No';
     }
 
     private function formatSellerName(array $listing): string

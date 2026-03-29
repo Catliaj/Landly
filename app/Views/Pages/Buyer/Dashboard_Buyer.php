@@ -12,6 +12,7 @@ $userProfile = $userProfile ?? [
     'status_label' => 'Inactive Buyer',
     'status_class' => 'inactive',
 ];
+$geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +23,7 @@ $userProfile = $userProfile ?? [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --green-900: #0d2818;
@@ -1887,18 +1889,48 @@ $userProfile = $userProfile ?? [
         }
 
         .modal-map {
+            width: 100%;
+            max-width: 100%;
+            display: block;
             height: 200px;
             border-radius: 16px;
             overflow: hidden;
-            margin-top: 15px;
+            margin-top: 0;
             background: var(--green-700);
             position: relative;
+            border: none;
         }
 
         .modal-map iframe {
             width: 100%;
             height: 100%;
             border: none;
+        }
+
+        .modal-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(149, 213, 178, 0.5);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(149, 213, 178, 0.75);
         }
 
         .map-expand-btn {
@@ -1988,6 +2020,86 @@ $userProfile = $userProfile ?? [
             color: var(--cream-100);
         }
 
+        .modal-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 0.75rem;
+            color: rgba(254, 250, 224, 0.55);
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--cream-100);
+            font-weight: 600;
+        }
+
+        .listing-details-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px 16px;
+            margin-top: 8px;
+        }
+
+        .listing-details-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(149, 213, 178, 0.08);
+        }
+
+        .listing-details-row span {
+            font-size: 0.8rem;
+            color: rgba(254, 250, 224, 0.6);
+        }
+
+        .listing-details-row strong {
+            font-size: 0.82rem;
+            color: var(--cream-100);
+            text-align: right;
+        }
+
+        .modal-map-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(149, 213, 178, 0.2);
+            width: 100%;
+            max-width: 100%;
+            display: block;
+        }
+
+        .expand-map-btn {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 9px;
+            background: rgba(13, 40, 24, 0.9);
+            color: var(--cream-100);
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+
+        .expand-map-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
         .detail-description {
             font-size: 0.9rem;
             line-height: 1.7;
@@ -1995,6 +2107,100 @@ $userProfile = $userProfile ?? [
         }
 
         .detail-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modal-main-image {
+            width: 100%;
+            height: 280px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(149, 213, 178, 0.15);
+        }
+
+        .modal-thumbnails {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .modal-thumb {
+            width: 100%;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .modal-thumb:hover {
+            transform: translateY(-2px);
+            border-color: rgba(149, 213, 178, 0.8);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-thumb.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(149, 213, 178, 0.25);
+        }
+
+        .modal-title {
+            line-height: 1.25;
+        }
+
+        .modal-price {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .modal-price-sqm {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.8rem;
+            color: rgba(254, 250, 224, 0.65);
+        }
+
+        .modal-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(149, 213, 178, 0.08);
+            border: 1px solid rgba(149, 213, 178, 0.22);
+            color: rgba(254, 250, 224, 0.92);
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .modal-location:hover {
+            transform: translateY(-1px);
+            border-color: rgba(149, 213, 178, 0.5);
+            background: rgba(149, 213, 178, 0.14);
+        }
+
+        .modal-location svg {
+            width: 16px;
+            height: 16px;
+            fill: rgba(149, 213, 178, 0.2);
+            stroke: var(--accent);
+            stroke-width: 1.7;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .modal-location:hover svg {
+            transform: scale(1.07);
+        }
+
+        .features-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
@@ -2011,11 +2217,12 @@ $userProfile = $userProfile ?? [
 
         .seller-card {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.22);
+            border-radius: 14px;
+            border: 1px solid rgba(149, 213, 178, 0.14);
         }
 
         .seller-card-avatar {
@@ -2035,9 +2242,114 @@ $userProfile = $userProfile ?? [
             color: var(--cream-100);
         }
 
+        .seller-card-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+        }
+
         .seller-card-info span {
             font-size: 0.8rem;
             color: rgba(254, 250, 224, 0.5);
+        }
+
+        .seller-card-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(254, 250, 224, 0.7);
+            font-size: 0.78rem;
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(149, 213, 178, 0.2);
+            border: 1px solid rgba(149, 213, 178, 0.4);
+            border-radius: 12px;
+            font-size: 0.65rem;
+            color: var(--accent);
+            letter-spacing: 0.2px;
+        }
+
+        .verified-badge svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .seller-card-actions {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 176px;
+        }
+
+        .btn-contact-seller,
+        .btn-save-property {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .btn-contact-seller svg,
+        .btn-save-property svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .btn-contact-seller {
+            background: linear-gradient(135deg, var(--green-600), var(--green-700));
+            color: var(--cream-100);
+            border-color: rgba(149, 213, 178, 0.35);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-contact-seller:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.26);
+        }
+
+        .btn-save-property {
+            background: rgba(149, 213, 178, 0.08);
+            color: var(--cream-100);
+            border-color: rgba(149, 213, 178, 0.35);
+        }
+
+        .btn-save-property:hover {
+            transform: translateY(-1px);
+            background: rgba(149, 213, 178, 0.14);
+        }
+
+        .btn-save-property.saved {
+            background: rgba(149, 213, 178, 0.22);
+            color: var(--accent);
+            border-color: rgba(149, 213, 178, 0.7);
+            box-shadow: 0 0 0 2px rgba(149, 213, 178, 0.15);
+        }
+
+        .btn-save-property.saved svg {
+            fill: currentColor;
         }
 
         .seller-verified {
@@ -2113,6 +2425,73 @@ $userProfile = $userProfile ?? [
             width: 100%;
             height: 100%;
             border: none;
+        }
+
+        /* Unified SweetAlert theme aligned with system Auth style */
+        .swal2-popup.landly-swal {
+            background: var(--green-900);
+            color: var(--cream-100);
+            border: 1px solid rgba(149, 213, 178, 0.35);
+            border-radius: 18px;
+            box-shadow: 0 20px 45px rgba(5, 18, 18, 0.45);
+        }
+
+        .swal2-popup.landly-swal .swal2-title,
+        .swal2-popup.landly-swal .swal2-html-container {
+            color: var(--cream-100);
+        }
+
+        .swal2-popup.landly-swal .swal2-loader {
+            border-color: var(--accent) transparent var(--accent) transparent;
+        }
+
+        .swal2-popup.landly-swal .swal2-confirm {
+            background: linear-gradient(135deg, var(--green-700) 0%, var(--green-800) 100%);
+            color: var(--cream-100);
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(15, 27, 27, 0.25);
+        }
+
+        .swal2-popup.landly-swal .swal2-cancel {
+            background: rgba(245, 240, 214, 0.14);
+            color: var(--cream-100);
+            border: 1px solid rgba(245, 240, 214, 0.25);
+            border-radius: 10px;
+        }
+
+        .swal2-popup.landly-swal .swal2-confirm:focus,
+        .swal2-popup.landly-swal .swal2-cancel:focus {
+            box-shadow: 0 0 0 3px rgba(149, 213, 178, 0.35);
+        }
+
+        @keyframes landlyFadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes landlyFadeOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+        }
+
+        .landly-swal-show {
+            animation: landlyFadeInUp 0.28s ease-out;
+        }
+
+        .landly-swal-hide {
+            animation: landlyFadeOutDown 0.2s ease-in;
         }
 
         @media (max-width: 768px) {
@@ -2217,7 +2596,7 @@ $userProfile = $userProfile ?? [
             </nav>
 
             <div class="sidebar-footer">
-                <button class="logout-btn" onclick="window.location.href='<?= base_url('/') ?>'">
+                <button class="logout-btn" id="buyerLogoutBtn" type="button">
                     <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     Logout
                 </button>
@@ -2630,6 +3009,11 @@ $userProfile = $userProfile ?? [
             });
         });
 
+        const buyerLogoutBtn = document.getElementById('buyerLogoutBtn');
+        buyerLogoutBtn?.addEventListener('click', () => {
+            confirmBuyerLogout();
+        });
+
         const initialSectionFromHash = (window.location.hash || '').replace('#', '').trim();
         let initialSection = sectionInfo[initialSectionFromHash] ? initialSectionFromHash : '';
 
@@ -2682,6 +3066,270 @@ $userProfile = $userProfile ?? [
 
         // Property data for modal
         const propertyData = <?= json_encode($browsePropertyData ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const logoutRedirectUrl = <?= json_encode(base_url('/'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        console.info('[Landly Map] Geoapify key loaded:', Boolean(geoapifyApiKey));
+
+        const defaultAlertConfig = {
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'landly-swal',
+                confirmButton: 'landly-swal-confirm',
+                cancelButton: 'landly-swal-cancel'
+            },
+            showClass: {
+                popup: 'landly-swal-show'
+            },
+            hideClass: {
+                popup: 'landly-swal-hide'
+            }
+        };
+
+        function hasSwal() {
+            return Boolean(window.Swal && typeof window.Swal.fire === 'function');
+        }
+
+        function fireAppAlert(options = {}) {
+            if (!hasSwal()) {
+                return Promise.resolve(null);
+            }
+
+            const mergedCustomClass = {
+                ...(defaultAlertConfig.customClass || {}),
+                ...(options.customClass || {})
+            };
+
+            return window.Swal.fire({
+                ...defaultAlertConfig,
+                ...options,
+                customClass: mergedCustomClass
+            });
+        }
+
+        function createMapEmbedUrl(lat, lng) {
+            if (!geoapifyApiKey) {
+                return '';
+            }
+
+            const safeLat = Number(lat);
+            const safeLng = Number(lng);
+            if (!Number.isFinite(safeLat) || !Number.isFinite(safeLng)) {
+                return '';
+            }
+
+            const zoom = 14;
+            const cacheBust = Date.now();
+            return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=1400&height=900&center=lonlat:${safeLng},${safeLat}&zoom=${zoom}&marker=lonlat:${safeLng},${safeLat};type:awesome;color:%23d62828;size:large&apiKey=${encodeURIComponent(geoapifyApiKey)}&cb=${cacheBust}`;
+        }
+
+        function showDetailsLoadingState() {
+            fireAppAlert({
+                title: 'Loading Details',
+                text: 'Please wait while we prepare the property details.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    if (window.Swal && typeof window.Swal.showLoading === 'function') {
+                        window.Swal.showLoading();
+                    }
+                }
+            });
+        }
+
+        function closeDetailsLoadingState() {
+            if (window.Swal && typeof window.Swal.close === 'function') {
+                window.Swal.close();
+            }
+        }
+
+        async function confirmBuyerLogout() {
+            if (!hasSwal()) {
+                const shouldLogout = window.confirm('Do you want to logout?');
+                if (shouldLogout) {
+                    window.location.href = logoutRedirectUrl;
+                }
+                return;
+            }
+
+            const result = await fireAppAlert({
+                icon: 'question',
+                title: 'Do you want to logout?',
+                text: 'You can log in again anytime.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                allowOutsideClick: true,
+                allowEscapeKey: true
+            });
+
+            if (result && result.isConfirmed) {
+                window.location.href = logoutRedirectUrl;
+            }
+        }
+
+        function loadIframeSource(iframeElement, srcUrl, timeoutMs = 10000) {
+            return new Promise((resolve) => {
+                if (!iframeElement || !srcUrl) {
+                    resolve(false);
+                    return;
+                }
+
+                let settled = false;
+                const cleanup = () => {
+                    iframeElement.removeEventListener('load', onLoad);
+                    iframeElement.removeEventListener('error', onError);
+                };
+
+                const finish = (isLoaded) => {
+                    if (settled) {
+                        return;
+                    }
+
+                    settled = true;
+                    cleanup();
+                    resolve(isLoaded);
+                };
+
+                const onLoad = () => finish(true);
+                const onError = () => finish(false);
+
+                iframeElement.addEventListener('load', onLoad, { once: true });
+                iframeElement.addEventListener('error', onError, { once: true });
+                iframeElement.src = srcUrl;
+
+                window.setTimeout(() => finish(false), timeoutMs);
+            });
+        }
+
+        async function geocodeListingAddress(addressText) {
+            if (!geoapifyApiKey || !addressText) {
+                return null;
+            }
+
+            const endpoint = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addressText)}&limit=1&format=json&filter=countrycode:ph&bias=countrycode:ph&apiKey=${encodeURIComponent(geoapifyApiKey)}`;
+
+            try {
+                console.info('[Landly Map] Geoapify geocode request:', endpoint);
+                const response = await fetch(endpoint, { cache: 'no-store' });
+                if (!response.ok) {
+                    console.warn('[Landly Map] Geoapify geocode failed:', response.status);
+                    return null;
+                }
+
+                const data = await response.json();
+                const result = Array.isArray(data.results) ? data.results[0] : null;
+                if (!result || typeof result.lat !== 'number' || typeof result.lon !== 'number') {
+                    return null;
+                }
+
+                const resultType = String(result.result_type || '').toLowerCase();
+                const category = String(result.category || '').toLowerCase();
+                const formatted = String(result.formatted || result.address_line1 || '').toLowerCase();
+                const looksLikeWater = ['water', 'ocean', 'sea', 'bay', 'river', 'coast', 'shore']
+                    .some((token) => resultType.includes(token) || category.includes(token) || formatted.includes(token));
+
+                if (looksLikeWater) {
+                    console.warn('[Landly Map] Geoapify result rejected as water-like result.');
+                    return null;
+                }
+
+                console.info('[Landly Map] Geoapify geocode result:', result.lat, result.lon);
+                return { lat: result.lat, lng: result.lon };
+            } catch (error) {
+                console.warn('[Landly Map] Geoapify request error:', error);
+                return null;
+            }
+        }
+
+        async function getListingCoordinates(propertyId, property) {
+            const rawLat = property?.coordinates?.lat;
+            const rawLng = property?.coordinates?.lng;
+            const hasExplicitCoords = rawLat !== null && rawLat !== undefined && String(rawLat).trim() !== ''
+                && rawLng !== null && rawLng !== undefined && String(rawLng).trim() !== '';
+
+            const lat = Number(rawLat);
+            const lng = Number(rawLng);
+            const isZeroPair = lat === 0 && lng === 0;
+
+            if (hasExplicitCoords && Number.isFinite(lat) && Number.isFinite(lng) && !isZeroPair) {
+                return { lat, lng };
+            }
+
+            const geocoded = await geocodeListingAddress(property.mapAddress || property.address || property.location || '');
+            if (geocoded) {
+                property.coordinates = geocoded;
+                if (propertyData[propertyId]) {
+                    propertyData[propertyId].coordinates = geocoded;
+                }
+                return geocoded;
+            }
+
+            const cityProvinceAddress = [property.city, property.province, 'Philippines']
+                .filter((part) => String(part || '').trim() !== '')
+                .join(', ');
+
+            const geocodedCityProvince = await geocodeListingAddress(cityProvinceAddress);
+            if (geocodedCityProvince) {
+                property.coordinates = geocodedCityProvince;
+                if (propertyData[propertyId]) {
+                    propertyData[propertyId].coordinates = geocodedCityProvince;
+                }
+                return geocodedCityProvince;
+            }
+
+            return { lat: 14.0664, lng: 120.6325 };
+        }
+
+        async function showInquirySentDialogAndRedirect() {
+            if (hasSwal()) {
+                await fireAppAlert({
+                    icon: 'success',
+                    title: 'Inquiry Sent',
+                    text: 'Your inquiry was sent successfully. You can now continue your conversation in Messages.',
+                    confirmButtonText: 'Go to Messages',
+                    allowOutsideClick: false,
+                    allowEscapeKey: true
+                });
+            } else {
+                alert('Inquiry sent successfully. You will now be redirected to Messages.');
+            }
+
+            showSection('messages');
+        }
+
+        async function showExistingInquiryDialogAndRedirect() {
+            if (hasSwal()) {
+                await fireAppAlert({
+                    icon: 'info',
+                    title: 'Conversation Already Started',
+                    text: 'You already have an ongoing conversation for this listing. Click below to continue in Messages.',
+                    confirmButtonText: 'Go to Messages',
+                    allowOutsideClick: false,
+                    allowEscapeKey: true
+                });
+            } else {
+                alert('You already have an ongoing conversation for this listing. You will now be redirected to Messages.');
+            }
+
+            showSection('messages');
+        }
+
+        async function showInquiryErrorDialog(message) {
+            const fallbackMessage = message || 'We could not send your inquiry right now. Please try again.';
+
+            if (hasSwal()) {
+                await fireAppAlert({
+                    icon: 'error',
+                    title: 'Unable to Send Inquiry',
+                    text: fallbackMessage,
+                    confirmButtonText: 'Okay'
+                });
+                return;
+            }
+
+            alert(fallbackMessage);
+        }
 
         async function createInquiryForListing(event, listingId) {
             if (event) {
@@ -2714,75 +3362,158 @@ $userProfile = $userProfile ?? [
                             inquiryStatus: String(data.inquiry_status || 'pending')
                         }
                     }));
-                    alert(data.message || 'Inquiry created successfully.');
+
+                    const rawMessage = String(data.message || '').toLowerCase();
+                    if (rawMessage.includes('already exists')) {
+                        await showExistingInquiryDialogAndRedirect();
+                        return;
+                    }
+
+                    await showInquirySentDialogAndRedirect();
                     return;
                 }
 
-                alert(data.message || 'Unable to create inquiry.');
+                await showInquiryErrorDialog(data.message || 'Unable to send inquiry.');
             } catch (error) {
-                alert('Unable to create inquiry right now. Please try again.');
+                await showInquiryErrorDialog('Unable to send inquiry right now. Please try again.');
             }
         }
 
         // Open Property Modal
-        function openPropertyModal(propertyId) {
+        async function openPropertyModal(propertyId) {
             const property = propertyData[propertyId];
             if (!property) return;
 
+            showDetailsLoadingState();
+
             const modal = document.getElementById('propertyModal');
-            
-            // Set main image
-            document.getElementById('modalMainImage').src = property.images[0];
-            
-            // Set thumbnails
-            const thumbsContainer = document.getElementById('modalThumbnails');
-            thumbsContainer.innerHTML = property.images.map((img, idx) => `
-                <img src="${img}" alt="Thumbnail ${idx + 1}" class="modal-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)">
-            `).join('');
-            
-            // Set property details
-            document.getElementById('modalTitle').textContent = property.title;
-            document.getElementById('modalPrice').textContent = property.price;
-            document.getElementById('modalPricePerSqm').textContent = property.pricePerSqm;
-            document.getElementById('modalLocation').textContent = property.location;
-            document.getElementById('modalArea').textContent = property.area;
-            document.getElementById('modalType').textContent = property.type;
-            document.getElementById('modalTitleStatus').textContent = property.titleStatus;
-            document.getElementById('modalDescription').textContent = property.description;
-            
-            // Set features
-            const featuresContainer = document.getElementById('modalFeatures');
-            featuresContainer.innerHTML = property.features.map(feature => `
-                <span class="feature-tag">${feature}</span>
-            `).join('');
-            
-            // Set map
-            const mapIframe = document.getElementById('modalMap');
-            mapIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.lng - 0.01}%2C${property.coordinates.lat - 0.01}%2C${property.coordinates.lng + 0.01}%2C${property.coordinates.lat + 0.01}&layer=mapnik&marker=${property.coordinates.lat}%2C${property.coordinates.lng}`;
-            
-            // Store coordinates for full map
-            modal.dataset.lat = property.coordinates.lat;
-            modal.dataset.lng = property.coordinates.lng;
-            modal.dataset.title = property.title;
-            modal.dataset.listingId = propertyId;
-            
-            // Set seller info
-            document.getElementById('sellerAvatar').textContent = property.seller.initials;
-            document.getElementById('sellerName').textContent = property.seller.name;
-            document.getElementById('sellerVerified').style.display = property.seller.verified ? 'inline-flex' : 'none';
-            document.getElementById('sellerListings').textContent = `${property.seller.listings} listings`;
-            document.getElementById('sellerMember').textContent = `Member since ${property.seller.memberSince}`;
-            
-            // Show modal
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+
+            try {
+                // Set main image
+                document.getElementById('modalMainImage').src = property.images[0];
+
+                // Set thumbnails
+                const thumbsContainer = document.getElementById('modalThumbnails');
+                thumbsContainer.innerHTML = property.images.map((img, idx) => `
+                    <img src="${img}" alt="Thumbnail ${idx + 1}" class="modal-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)">
+                `).join('');
+
+                // Set property details
+                document.getElementById('modalTitle').textContent = property.title;
+                document.getElementById('modalPrice').textContent = property.price;
+                document.getElementById('modalPricePerSqm').textContent = property.pricePerSqm;
+                document.getElementById('modalLocation').textContent = property.location;
+                document.getElementById('modalArea').textContent = property.area;
+                document.getElementById('modalType').textContent = property.type;
+                document.getElementById('modalTitleStatus').textContent = property.titleStatus;
+                document.getElementById('modalDescription').textContent = property.description;
+                document.getElementById('modalListingId').textContent = property.listingId || propertyId;
+                document.getElementById('modalAddressLine').textContent = property.address || property.location || 'Address not available';
+                document.getElementById('modalBarangay').textContent = property.barangay || 'N/A';
+                document.getElementById('modalCity').textContent = property.city || 'N/A';
+                document.getElementById('modalProvince').textContent = property.province || 'N/A';
+                document.getElementById('modalRoadAccess').textContent = property.roadAccess || 'N/A';
+                document.getElementById('modalViewType').textContent = property.viewType || 'Not specified';
+                document.getElementById('modalInvestmentReady').textContent = property.investmentReady || 'No';
+                document.getElementById('modalTaxDec').textContent = property.hasTaxDeclaration || 'No';
+                document.getElementById('modalLraPlan').textContent = property.hasLraApprovedPlan || 'No';
+                document.getElementById('modalMotherTitle').textContent = property.motherTitleDisclosed || 'No';
+                document.getElementById('modalStatus').textContent = property.listingStatus || 'Available';
+
+                // Set features
+                const featuresContainer = document.getElementById('modalFeatures');
+                featuresContainer.innerHTML = property.features.map(feature => `
+                    <span class="feature-tag">${feature}</span>
+                `).join('');
+
+                // Set map from listing address via Geoapify geocoding (if key is provided)
+                const coordinates = await getListingCoordinates(propertyId, property);
+                const mapIframe = document.getElementById('modalMap');
+                const mapUrl = createMapEmbedUrl(coordinates.lat, coordinates.lng);
+                let geoapifyLoaded = false;
+
+                if (mapUrl) {
+                    mapIframe.removeAttribute('srcdoc');
+                    console.info('[Landly Map] Geoapify static map request:', mapUrl);
+                    geoapifyLoaded = await loadIframeSource(mapIframe, mapUrl);
+                } else {
+                    mapIframe.src = 'about:blank';
+                    mapIframe.srcdoc = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#475467;background:#f8fafc;">Map is currently unavailable.</div>';
+                }
+
+                // Store coordinates for full map
+                modal.dataset.lat = coordinates.lat;
+                modal.dataset.lng = coordinates.lng;
+                modal.dataset.title = property.title;
+                modal.dataset.listingId = propertyId;
+
+                // Set seller info
+                document.getElementById('sellerAvatar').textContent = property.seller.initials;
+                document.getElementById('sellerName').textContent = property.seller.name;
+                document.getElementById('sellerVerified').style.display = property.seller.verified ? 'inline-flex' : 'none';
+                document.getElementById('sellerListings').textContent = `${property.seller.listings} listings`;
+                document.getElementById('sellerMember').textContent = `Member since ${property.seller.memberSince}`;
+
+                const modalSaveBtn = document.getElementById('modalSavePropertyBtn');
+                if (modalSaveBtn) {
+                    modalSaveBtn.dataset.listingId = String(propertyId);
+                    const isSaved = await getFavoriteStatus(propertyId);
+                    applySavedButtonState(modalSaveBtn, isSaved);
+                }
+
+                // Show modal
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                closeDetailsLoadingState();
+
+                if (hasSwal()) {
+                    if (geoapifyLoaded) {
+                        await fireAppAlert({
+                            icon: 'success',
+                            title: 'Details Loaded',
+                            text: 'Property details are ready.',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        await fireAppAlert({
+                            icon: 'warning',
+                            title: 'Details Loaded',
+                            text: 'Property details are ready, but the map is not available right now.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            } catch (error) {
+                closeDetailsLoadingState();
+                if (hasSwal()) {
+                    await fireAppAlert({
+                        icon: 'error',
+                        title: 'Unable to Load Details',
+                        text: 'Something went wrong while loading this listing. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
         }
 
-        const modalMessageSellerButton = document.querySelector('.btn-contact-seller');
+        const modalMessageSellerButton = document.getElementById('modalMessageSellerBtn');
         if (modalMessageSellerButton) {
             modalMessageSellerButton.addEventListener('click', (event) => {
                 const listingId = Number(document.getElementById('propertyModal').dataset.listingId || 0);
                 createInquiryForListing(event, listingId);
+            });
+        }
+
+        const modalSavePropertyButton = document.getElementById('modalSavePropertyBtn');
+        if (modalSavePropertyButton) {
+            modalSavePropertyButton.addEventListener('click', (event) => {
+                const listingId = Number(modalSavePropertyButton.dataset.listingId || document.getElementById('propertyModal').dataset.listingId || 0);
+                if (!listingId) {
+                    return;
+                }
+
+                toggleFavorite(event, modalSavePropertyButton, listingId);
             });
         }
 
@@ -2798,6 +3529,52 @@ $userProfile = $userProfile ?? [
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        function applySavedButtonState(buttonElement, isSaved) {
+            if (!buttonElement) {
+                return;
+            }
+
+            buttonElement.classList.toggle('saved', Boolean(isSaved));
+            buttonElement.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+            buttonElement.title = isSaved ? 'Remove from Saved' : 'Save Property';
+
+            const textNode = buttonElement.querySelector('.btn-save-property-text');
+            if (textNode) {
+                textNode.textContent = isSaved ? 'Saved Property' : 'Save Property';
+            }
+        }
+
+        async function getFavoriteStatus(listingId) {
+            try {
+                const response = await fetch('<?= base_url('buyer/favorites/is-favorited') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: 'listing_id=' + encodeURIComponent(String(listingId || 0))
+                });
+
+                const data = await response.json();
+                return Boolean(data && data.isFavorited);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function syncFavoriteButtonsForListing(listingId, isSaved) {
+            const selector = `.favorite-btn[data-listing-id="${listingId}"]`;
+            document.querySelectorAll(selector).forEach((button) => {
+                button.classList.toggle('saved', Boolean(isSaved));
+                button.title = isSaved ? 'Remove from Saved' : 'Save Property';
+            });
+
+            const modalSaveBtn = document.getElementById('modalSavePropertyBtn');
+            if (modalSaveBtn && Number(modalSaveBtn.dataset.listingId || 0) === Number(listingId)) {
+                applySavedButtonState(modalSaveBtn, isSaved);
+            }
         }
 
         // Toggle Favorite (Add/Remove)
@@ -2820,10 +3597,12 @@ $userProfile = $userProfile ?? [
                     if (data.action === 'added') {
                         buttonElement.classList.add('saved');
                         buttonElement.title = 'Remove from Saved';
+                        syncFavoriteButtonsForListing(listingId, true);
                         showNotification('Added to favorites!', 'success');
                     } else if (data.action === 'removed') {
                         buttonElement.classList.remove('saved');
                         buttonElement.title = 'Save Property';
+                        syncFavoriteButtonsForListing(listingId, false);
                         showNotification('Removed from favorites!', 'info');
                     }
                     
@@ -2906,7 +3685,7 @@ $userProfile = $userProfile ?? [
             
             const mapModal = document.getElementById('mapModal');
             document.getElementById('fullMapTitle').textContent = title;
-            document.getElementById('fullMapIframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(lng) - 0.02}%2C${parseFloat(lat) - 0.02}%2C${parseFloat(lng) + 0.02}%2C${parseFloat(lat) + 0.02}&layer=mapnik&marker=${lat}%2C${lng}`;
+            document.getElementById('fullMapIframe').src = createMapEmbedUrl(parseFloat(lat), parseFloat(lng), 0.02);
             
             mapModal.classList.add('active');
         }
@@ -2956,7 +3735,7 @@ $userProfile = $userProfile ?? [
                         <span id="modalPricePerSqm" class="modal-price-sqm"></span>
                     </div>
                     <div class="modal-location">
-                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                         <span id="modalLocation"></span>
                     </div>
                 </div>
@@ -2979,6 +3758,24 @@ $userProfile = $userProfile ?? [
                 <div class="detail-section">
                     <h3>Description</h3>
                     <p id="modalDescription"></p>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Complete Property Details</h3>
+                    <div class="listing-details-list">
+                        <div class="listing-details-row"><span>Listing ID</span><strong id="modalListingId"></strong></div>
+                        <div class="listing-details-row"><span>Address</span><strong id="modalAddressLine"></strong></div>
+                        <div class="listing-details-row"><span>Barangay</span><strong id="modalBarangay"></strong></div>
+                        <div class="listing-details-row"><span>City</span><strong id="modalCity"></strong></div>
+                        <div class="listing-details-row"><span>Province</span><strong id="modalProvince"></strong></div>
+                        <div class="listing-details-row"><span>Road Access</span><strong id="modalRoadAccess"></strong></div>
+                        <div class="listing-details-row"><span>View Type</span><strong id="modalViewType"></strong></div>
+                        <div class="listing-details-row"><span>Investment Ready</span><strong id="modalInvestmentReady"></strong></div>
+                        <div class="listing-details-row"><span>Tax Declaration</span><strong id="modalTaxDec"></strong></div>
+                        <div class="listing-details-row"><span>LRA Approved Plan</span><strong id="modalLraPlan"></strong></div>
+                        <div class="listing-details-row"><span>Mother Title Disclosed</span><strong id="modalMotherTitle"></strong></div>
+                        <div class="listing-details-row"><span>Listing Status</span><strong id="modalStatus"></strong></div>
+                    </div>
                 </div>
                 
                 <div class="detail-section">
@@ -3016,13 +3813,13 @@ $userProfile = $userProfile ?? [
                             </div>
                         </div>
                         <div class="seller-card-actions">
-                            <button class="btn-contact-seller" type="button">
+                            <button class="btn-contact-seller" id="modalMessageSellerBtn" type="button">
                                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                                 Message Seller
                             </button>
-                            <button class="btn-save-property">
+                            <button class="btn-save-property" id="modalSavePropertyBtn" type="button" title="Save Property" aria-pressed="false">
                                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                                Save Property
+                                <span class="btn-save-property-text">Save Property</span>
                             </button>
                         </div>
                     </div>

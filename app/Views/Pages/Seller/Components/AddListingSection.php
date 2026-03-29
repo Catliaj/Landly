@@ -147,6 +147,50 @@
                 </div>
             </section>
 
+            <style>
+                .swal2-popup.landly-swal {
+                    background: var(--green-900);
+                    color: var(--cream-100);
+                    border: 1px solid rgba(149, 213, 178, 0.35);
+                    border-radius: 18px;
+                    box-shadow: 0 20px 45px rgba(5, 18, 18, 0.45);
+                }
+
+                .swal2-popup.landly-swal .swal2-title,
+                .swal2-popup.landly-swal .swal2-html-container {
+                    color: var(--cream-100);
+                }
+
+                .swal2-popup.landly-swal .swal2-confirm {
+                    background: linear-gradient(135deg, var(--green-700) 0%, var(--green-800) 100%);
+                    color: var(--cream-100);
+                    border-radius: 10px;
+                    box-shadow: 0 8px 20px rgba(15, 27, 27, 0.25);
+                }
+
+                .swal2-popup.landly-swal .swal2-confirm:focus {
+                    box-shadow: 0 0 0 3px rgba(149, 213, 178, 0.35);
+                }
+
+                @keyframes landlyFadeInUp {
+                    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+
+                @keyframes landlyFadeOutDown {
+                    from { opacity: 1; transform: translateY(0) scale(1); }
+                    to { opacity: 0; transform: translateY(12px) scale(0.98); }
+                }
+
+                .landly-swal-show {
+                    animation: landlyFadeInUp 0.28s ease-out;
+                }
+
+                .landly-swal-hide {
+                    animation: landlyFadeOutDown 0.2s ease-in;
+                }
+            </style>
+
             <script>
                 (function () {
                     const form = document.getElementById('add-listing-form');
@@ -188,6 +232,19 @@
                             document.head.appendChild(script);
                         });
                     };
+
+                    const getSwalBaseConfig = () => ({
+                        customClass: {
+                            popup: 'landly-swal',
+                            confirmButton: 'landly-swal-confirm'
+                        },
+                        showClass: {
+                            popup: 'landly-swal-show'
+                        },
+                        hideClass: {
+                            popup: 'landly-swal-hide'
+                        }
+                    });
 
                     const updatePricePerSqm = () => {
                         const priceVal = parseFloat(price?.value || '0');
@@ -240,6 +297,7 @@
                         const Swal = await ensureSwal();
                         if (Swal) {
                             await Swal.fire({
+                                ...getSwalBaseConfig(),
                                 title,
                                 text: message,
                                 icon,
