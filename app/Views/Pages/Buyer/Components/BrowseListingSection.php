@@ -30,7 +30,7 @@
                         <img src="<?= esc((string) ($listing['image_url'] ?? '')) ?>" alt="<?= esc((string) ($listing['title'] ?? 'Land Listing')) ?>">
                         <span class="listing-card-badge listing-status <?= esc((string) ($listing['status_class'] ?? 'available')) ?>"><?= esc((string) ($listing['status_label'] ?? 'Available')) ?></span>
                         <div class="listing-card-actions">
-                            <button class="listing-card-action" title="Save Property" onclick="event.stopPropagation()">
+                            <button class="listing-card-action favorite-btn" data-listing-id="<?= (int) ($listing['listing_id'] ?? 0) ?>" title="Save Property" onclick="toggleFavorite(event, this, <?= (int) ($listing['listing_id'] ?? 0) ?>)">
                                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                             </button>
                             <button class="listing-card-action" title="Contact Seller" onclick="createInquiryForListing(event, <?= (int) ($listing['listing_id'] ?? 0) ?>)">

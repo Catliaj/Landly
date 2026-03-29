@@ -36,6 +36,11 @@ $routes->group('buyer', function ($routes) {
     $routes->get('listings', 'Buyer\LandListingController::listAll');
     $routes->get('listings/(:num)', 'Buyer\LandListingController::view/$1');
     
+    // Favorites routes
+    $routes->get('favorites', 'Buyer\Favorites::index');
+    $routes->post('favorites/toggle', 'Buyer\Favorites::toggle');
+    $routes->post('favorites/is-favorited', 'Buyer\Favorites::isFavorited');
+    $routes->get('favorites/get-all', 'Buyer\Favorites::getBuyerFavorites');
 });
 
 //testing controller for auth routes
@@ -76,6 +81,15 @@ $routes->group('messages', function ($routes) {
     $routes->get('inquiries/(:num)', 'Messages\InquriesController::viewInquiry/$1');
     $routes->post('inquiries', 'Messages\InquriesController::createInquiry');
     $routes->put('inquiries/(:num)/status', 'Messages\InquriesController::updateInquiryStatus/$1');
+});
+
+// Notifications routes (shared by buyer and seller)
+$routes->group('notifications', function ($routes) {
+    $routes->get('/', 'Notification\NotificationController::getNotifications');
+    $routes->get('unread-count', 'Notification\NotificationController::getUnreadCount');
+    $routes->patch('read-all', 'Notification\NotificationController::markAllAsRead');
+    $routes->patch('(:num)/read', 'Notification\NotificationController::markAsRead/$1');
+    $routes->patch('(:num)/archive', 'Notification\NotificationController::archiveNotification/$1');
 });
 
 

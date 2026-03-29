@@ -414,6 +414,157 @@
             animation: pulse 2s ease infinite;
         }
 
+        .notification-wrapper {
+            position: relative;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 6px;
+            right: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: min(420px, 92vw);
+            max-height: 70vh;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(149, 213, 178, 0.25);
+            background: linear-gradient(160deg, rgba(16, 33, 28, 0.98), rgba(23, 48, 40, 0.97));
+            backdrop-filter: blur(10px);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+            z-index: 1100;
+        }
+
+        .notification-dropdown[hidden] {
+            display: none;
+        }
+
+        .notification-dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.15);
+        }
+
+        .notification-dropdown-title {
+            color: var(--cream-100);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notification-action-btn {
+            border: 1px solid rgba(149, 213, 178, 0.25);
+            border-radius: 10px;
+            background: rgba(149, 213, 178, 0.08);
+            color: var(--cream-100);
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .notification-action-btn:hover {
+            background: rgba(149, 213, 178, 0.18);
+        }
+
+        .notification-list {
+            max-height: 58vh;
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .notification-item {
+            border: 1px solid rgba(149, 213, 178, 0.18);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            border-color: rgba(149, 213, 178, 0.45);
+            background: rgba(149, 213, 178, 0.08);
+        }
+
+        .notification-item.unread {
+            border-color: rgba(231, 76, 60, 0.55);
+        }
+
+        .notification-item-main {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .notification-message {
+            color: var(--cream-100);
+            font-size: 0.86rem;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            color: rgba(254, 250, 224, 0.65);
+            font-size: 0.72rem;
+        }
+
+        .notification-type-pill {
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(149, 213, 178, 0.3);
+            background: rgba(149, 213, 178, 0.1);
+            font-size: 0.68rem;
+            text-transform: capitalize;
+        }
+
+        .notification-detail {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(149, 213, 178, 0.2);
+            color: rgba(254, 250, 224, 0.78);
+            font-size: 0.74rem;
+            display: none;
+        }
+
+        .notification-item.expanded .notification-detail {
+            display: block;
+        }
+
+        .notification-empty,
+        .notification-loading {
+            text-align: center;
+            color: rgba(254, 250, 224, 0.7);
+            padding: 18px 10px;
+            font-size: 0.82rem;
+        }
+
         /* === DASHBOARD STATS === */
         .stats-grid {
             display: grid;
@@ -2054,10 +2205,22 @@
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         <input type="text" placeholder="Search properties...">
                     </div>
-                    <button class="notification-btn">
-                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                        <span class="notification-dot"></span>
-                    </button>
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" id="header-notification-btn" type="button" aria-label="Open notifications" aria-expanded="false">
+                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span class="notification-dot" id="header-notification-dot" hidden></span>
+                            <span class="notification-count" id="header-notification-count" hidden>0</span>
+                        </button>
+                        <div class="notification-dropdown" id="header-notification-dropdown" hidden>
+                            <div class="notification-dropdown-header">
+                                <p class="notification-dropdown-title">Notifications</p>
+                                <button class="notification-action-btn" id="header-notification-read-all" type="button">Mark all as read</button>
+                            </div>
+                            <div class="notification-list" id="header-notification-list">
+                                <div class="notification-loading">Loading notifications...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2088,6 +2251,13 @@
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
         const BUYER_SECTION_STORAGE_KEY = 'buyerDashboardActiveSection';
+        const notificationBtn = document.getElementById('header-notification-btn');
+        const notificationDropdown = document.getElementById('header-notification-dropdown');
+        const notificationList = document.getElementById('header-notification-list');
+        const notificationReadAllBtn = document.getElementById('header-notification-read-all');
+        const notificationDot = document.getElementById('header-notification-dot');
+        const notificationCount = document.getElementById('header-notification-count');
+        const notificationApiBase = '<?= base_url('notifications') ?>';
 
         const sectionInfo = {
             'dashboard': {
@@ -2115,6 +2285,166 @@
                 subtitle: 'Manage your account and preferences.'
             }
         };
+
+        const notificationState = {
+            items: [],
+            loading: false,
+        };
+
+        function formatNotificationType(type) {
+            return String(type || 'notification').replaceAll('_', ' ');
+        }
+
+        function formatNotificationDate(dateValue) {
+            if (!dateValue) return 'Just now';
+            const date = new Date(dateValue.replace(' ', 'T'));
+            if (Number.isNaN(date.getTime())) return String(dateValue);
+            return date.toLocaleString();
+        }
+
+        function setUnreadIndicator(unreadCount) {
+            const hasUnread = unreadCount > 0;
+            notificationDot.hidden = !hasUnread;
+            notificationCount.hidden = !hasUnread;
+            notificationCount.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        }
+
+        function renderNotifications() {
+            if (notificationState.loading) {
+                notificationList.innerHTML = '<div class="notification-loading">Loading notifications...</div>';
+                return;
+            }
+
+            if (!notificationState.items.length) {
+                notificationList.innerHTML = '<div class="notification-empty">No notifications yet.</div>';
+                setUnreadIndicator(0);
+                return;
+            }
+
+            const unreadCount = notificationState.items.filter((item) => !Number(item.is_read)).length;
+            setUnreadIndicator(unreadCount);
+
+            notificationList.innerHTML = notificationState.items.map((item) => {
+                const notificationId = Number(item.notification_id || 0);
+                const unreadClass = Number(item.is_read) ? '' : 'unread';
+                const detailParts = [];
+
+                if (item.listing_id) detailParts.push(`Listing ID: ${item.listing_id}`);
+                if (item.inquiry_id) detailParts.push(`Inquiry ID: ${item.inquiry_id}`);
+                if (item.message_id) detailParts.push(`Message ID: ${item.message_id}`);
+
+                return `
+                    <div class="notification-item ${unreadClass}" data-id="${notificationId}" data-read="${Number(item.is_read) ? '1' : '0'}">
+                        <div class="notification-item-main">
+                            <p class="notification-message">${String(item.message || 'You have a new notification.')}</p>
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-type-pill">${formatNotificationType(item.notification_type)}</span>
+                            <span>${formatNotificationDate(item.created_at)}</span>
+                        </div>
+                        <div class="notification-detail">${detailParts.length ? detailParts.join('<br>') : 'No additional details.'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function fetchNotifications() {
+            notificationState.loading = true;
+            renderNotifications();
+
+            try {
+                const response = await fetch(`${notificationApiBase}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                notificationState.items = Array.isArray(data.notifications) ? data.notifications : [];
+            } catch (error) {
+                notificationState.items = [];
+            } finally {
+                notificationState.loading = false;
+                renderNotifications();
+            }
+        }
+
+        async function markNotificationRead(notificationId) {
+            try {
+                await fetch(`${notificationApiBase}/${notificationId}/read`, {
+                    method: 'PATCH',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+            } catch (error) {
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await fetch(`${notificationApiBase}/read-all`, {
+                    method: 'PATCH',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                notificationState.items = notificationState.items.map((item) => ({ ...item, is_read: 1 }));
+                renderNotifications();
+            } catch (error) {
+            }
+        }
+
+        function openNotificationsDropdown() {
+            notificationDropdown.hidden = false;
+            notificationBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeNotificationsDropdown() {
+            notificationDropdown.hidden = true;
+            notificationBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        notificationBtn?.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const isHidden = notificationDropdown.hidden;
+            if (isHidden) {
+                openNotificationsDropdown();
+                await fetchNotifications();
+                return;
+            }
+
+            closeNotificationsDropdown();
+        });
+
+        notificationReadAllBtn?.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await markAllNotificationsRead();
+        });
+
+        notificationList?.addEventListener('click', async (event) => {
+            const item = event.target.closest('.notification-item');
+            if (!item) return;
+
+            item.classList.toggle('expanded');
+
+            if (item.dataset.read === '0') {
+                item.dataset.read = '1';
+                item.classList.remove('unread');
+                const notificationId = Number(item.dataset.id || 0);
+                if (notificationId > 0) {
+                    await markNotificationRead(notificationId);
+                    const target = notificationState.items.find((stateItem) => Number(stateItem.notification_id) === notificationId);
+                    if (target) target.is_read = 1;
+                    renderNotifications();
+                }
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!notificationDropdown || notificationDropdown.hidden) {
+                return;
+            }
+
+            if (!event.target.closest('.notification-wrapper')) {
+                closeNotificationsDropdown();
+            }
+        });
+
+        fetchNotifications();
 
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {
@@ -2339,6 +2669,98 @@
             modal.classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        // Toggle Favorite (Add/Remove)
+        function toggleFavorite(event, buttonElement, listingId) {
+            event.stopPropagation();
+            
+            // Send AJAX request to toggle favorite
+            fetch('<?= base_url('buyer/favorites/toggle') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: 'listing_id=' + listingId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle the 'saved' class
+                    if (data.action === 'added') {
+                        buttonElement.classList.add('saved');
+                        buttonElement.title = 'Remove from Saved';
+                        showNotification('Added to favorites!', 'success');
+                    } else if (data.action === 'removed') {
+                        buttonElement.classList.remove('saved');
+                        buttonElement.title = 'Save Property';
+                        showNotification('Removed from favorites!', 'info');
+                    }
+                    
+                    // Reload saved properties section if it exists
+                    if (typeof loadSavedProperties === 'function') {
+                        loadSavedProperties();
+                    }
+                } else {
+                    showNotification(data.message || 'Unable to update favorite', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling favorite:', error);
+                showNotification('Error updating favorite. Please try again.', 'error');
+            });
+        }
+
+        // Show notification message
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#40916c' : type === 'error' ? '#d62828' : '#2d6a4f'};
+                color: white;
+                border-radius: 8px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease-in-out;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in-out forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add slide animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
 
         // Open Full Map Modal
         function openFullMap() {

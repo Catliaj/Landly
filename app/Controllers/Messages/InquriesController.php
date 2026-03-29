@@ -5,6 +5,7 @@ namespace App\Controllers\Messages;
 use App\Controllers\BaseController;
 use App\Models\InquriesModel;
 use App\Models\LandListings;
+use App\Models\NotificationModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class InquriesController extends BaseController
@@ -188,6 +189,19 @@ class InquriesController extends BaseController
             'updated_at' => $now,
         ]);
 
+        $this->createNotificationSafely([
+            'user_id' => $sellerId,
+            'notification_type' => 'inquiry_status_changed',
+            'notification_status' => 'active',
+            'listing_id' => $listingId,
+            'inquiry_id' => $inquiryId,
+            'message_id' => null,
+            'message' => 'You received a new inquiry for your listing.',
+            'is_read' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
         return $this->response->setStatusCode(201)->setJSON([
             'status' => 'success',
             'message' => 'Inquiry created successfully.',
@@ -250,11 +264,90 @@ class InquriesController extends BaseController
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
+        $now = date('Y-m-d H:i:s');
+        $recipientId = $userId === $sellerId ? $buyerId : $sellerId;
+        if ($recipientId > 0) {
+            $this->createNotificationSafely([
+                'user_id' => $recipientId,
+                'notification_type' => 'inquiry_status_changed',
+                'notification_status' => 'active',
+                'listing_id' => (int) ($inquiry['listing_id'] ?? 0) ?: null,
+                'inquiry_id' => $inquiryId,
+                'message_id' => null,
+                'message' => 'Inquiry status updated to ' . $status . '.',
+                'is_read' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        $listingStatus = $this->mapInquiryStatusToListingStatus($status);
+        if ($listingStatus !== null) {
+            $listingModel = new LandListings();
+            $listingId = (int) ($inquiry['listing_id'] ?? 0);
+            if ($listingId > 0) {
+                $listing = $listingModel->find($listingId);
+                $previousListingStatus = (string) ($listing['listing_status'] ?? '');
+
+                if ($previousListingStatus !== $listingStatus) {
+                    $listingModel->update($listingId, [
+                        'listing_status' => $listingStatus,
+                        'updated_at' => $now,
+                    ]);
+
+                    $forUsers = array_values(array_filter(array_unique([
+                        (int) ($inquiry['seller_id'] ?? 0),
+                        (int) ($inquiry['buyer_id'] ?? 0),
+                    ])));
+
+                    foreach ($forUsers as $targetUserId) {
+                        $this->createNotificationSafely([
+                            'user_id' => $targetUserId,
+                            'notification_type' => 'listing_status_changed',
+                            'notification_status' => 'active',
+                            'listing_id' => $listingId,
+                            'inquiry_id' => $inquiryId,
+                            'message_id' => null,
+                            'message' => 'Listing status updated to ' . $listingStatus . '.',
+                            'is_read' => 0,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+                    }
+                }
+            }
+        }
+
         return $this->response->setJSON([
             'status' => 'success',
             'message' => 'Inquiry status updated.',
             'inquiry_id' => $inquiryId,
             'inquiry_status' => $status,
         ]);
+    }
+
+    private function mapInquiryStatusToListingStatus(string $inquiryStatus): ?string
+    {
+        return match ($inquiryStatus) {
+            'accepted' => 'in_inquiry',
+            'reserved' => 'reserved',
+            'closed' => 'closed',
+            default => null,
+        };
+    }
+
+    private function createNotificationSafely(array $payload): void
+    {
+        $db = db_connect();
+        if (! $db->tableExists('notifications')) {
+            return;
+        }
+
+        try {
+            $notificationModel = new NotificationModel();
+            $notificationModel->insert($payload);
+        } catch (\Throwable $e) {
+            log_message('error', 'Notification insert failed: {message}', ['message' => $e->getMessage()]);
+        }
     }
 }
