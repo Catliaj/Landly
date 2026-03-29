@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\LandListings;
 use App\Models\Messages;
 use App\Models\MessageSessions;
+use App\Models\NotificationModel;
 use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -37,12 +38,58 @@ class MessageController extends BaseController
 			->orderBy('sent_at', 'ASC')
 			->findAll();
 
+		$unreadMessages = $messagesModel
+			->where('session_id', $sessionId)
+			->where('sender_id !=', $userId)
+			->where('is_read', 0)
+			->findAll();
+
 		$messagesModel
 			->where('session_id', $sessionId)
 			->where('sender_id !=', $userId)
 			->where('is_read', 0)
 			->set(['is_read' => 1])
 			->update();
+
+		if ($unreadMessages !== []) {
+			$groupedBySender = [];
+			foreach ($unreadMessages as $message) {
+				$senderId = (int) ($message['sender_id'] ?? 0);
+				if ($senderId <= 0) {
+					continue;
+				}
+
+				if (! isset($groupedBySender[$senderId])) {
+					$groupedBySender[$senderId] = [
+						'count' => 0,
+						'latest_message_id' => 0,
+					];
+				}
+
+				$groupedBySender[$senderId]['count']++;
+				$groupedBySender[$senderId]['latest_message_id'] = max(
+					$groupedBySender[$senderId]['latest_message_id'],
+					(int) ($message['message_id'] ?? 0)
+				);
+			}
+
+			foreach ($groupedBySender as $senderId => $summary) {
+				$this->createNotificationSafely([
+					'user_id' => $senderId,
+					'notification_type' => 'message_read_state_changed',
+					'notification_status' => 'active',
+					'listing_id' => (int) ($session['listing_id'] ?? 0) ?: null,
+					'inquiry_id' => (int) ($session['inquiry_id'] ?? 0) ?: null,
+					'message_id' => (int) ($summary['latest_message_id'] ?? 0) ?: null,
+					'message' => (($summary['count'] ?? 1) > 1)
+						? 'Your recent messages were read.'
+						: 'Your message was read.',
+					'is_read' => 0,
+					'created_at' => date('Y-m-d H:i:s'),
+					'updated_at' => date('Y-m-d H:i:s'),
+				]);
+			}
+		}
 
 		return $this->response->setJSON([
 			'status' => 'success',
@@ -96,6 +143,25 @@ class MessageController extends BaseController
 		]);
 
 		$sessionModel->update($sessionId, ['last_message_at' => $now]);
+
+		$recipientId = (int) (($userId === (int) ($session['buyer_id'] ?? 0))
+			? ($session['seller_id'] ?? 0)
+			: ($session['buyer_id'] ?? 0));
+
+		if ($recipientId > 0) {
+			$this->createNotificationSafely([
+				'user_id' => $recipientId,
+				'notification_type' => 'message_received',
+				'notification_status' => 'active',
+				'listing_id' => (int) ($session['listing_id'] ?? 0) ?: null,
+				'inquiry_id' => (int) ($session['inquiry_id'] ?? 0) ?: null,
+				'message_id' => (int) $messageId,
+				'message' => 'You received a new message.',
+				'is_read' => 0,
+				'created_at' => $now,
+				'updated_at' => $now,
+			]);
+		}
 
 		return $this->response->setStatusCode(201)->setJSON([
 			'status' => 'success',
@@ -253,5 +319,20 @@ class MessageController extends BaseController
 			->groupEnd()
 			->where('session_id', $sessionId)
 			->first();
+	}
+
+	private function createNotificationSafely(array $payload): void
+	{
+		$db = db_connect();
+		if (! $db->tableExists('notifications')) {
+			return;
+		}
+
+		try {
+			$notificationModel = new NotificationModel();
+			$notificationModel->insert($payload);
+		} catch (\Throwable $e) {
+			log_message('error', 'Notification insert failed: {message}', ['message' => $e->getMessage()]);
+		}
 	}
 }

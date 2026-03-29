@@ -1,3 +1,20 @@
+<?php
+$sidebarCounts = $sidebarCounts ?? [
+    'listings_total' => 0,
+    'accepted_inquiries' => 0,
+    'unread_messages' => 0,
+];
+$listingCounts = $listingCounts ?? ['all' => 0];
+$userProfile = $userProfile ?? [
+    'full_name' => 'Seller',
+    'email' => 'N/A',
+    'avatar_url' => '',
+    'initials' => 'NA',
+    'account_status_label' => 'Inactive Seller',
+    'verification_label' => 'Not Verified',
+    'verification_class' => 'pending',
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,6 +171,14 @@
             font-weight: 600;
             color: var(--green-900);
             font-size: 1.1rem;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
 
         .user-details h4 {
@@ -416,6 +441,157 @@
             background: #e74c3c;
             border-radius: 50%;
             animation: pulse 2s ease infinite;
+        }
+
+        .notification-wrapper {
+            position: relative;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 6px;
+            right: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: min(420px, 92vw);
+            max-height: 70vh;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(210, 180, 140, 0.3);
+            background: linear-gradient(160deg, rgba(32, 19, 10, 0.98), rgba(55, 36, 24, 0.97));
+            backdrop-filter: blur(10px);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+            z-index: 1100;
+        }
+
+        .notification-dropdown[hidden] {
+            display: none;
+        }
+
+        .notification-dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(210, 180, 140, 0.2);
+        }
+
+        .notification-dropdown-title {
+            color: var(--cream-100);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notification-action-btn {
+            border: 1px solid rgba(210, 180, 140, 0.3);
+            border-radius: 10px;
+            background: rgba(210, 180, 140, 0.12);
+            color: var(--cream-100);
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .notification-action-btn:hover {
+            background: rgba(210, 180, 140, 0.22);
+        }
+
+        .notification-list {
+            max-height: 58vh;
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .notification-item {
+            border: 1px solid rgba(210, 180, 140, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            border-color: rgba(210, 180, 140, 0.5);
+            background: rgba(210, 180, 140, 0.08);
+        }
+
+        .notification-item.unread {
+            border-color: rgba(231, 76, 60, 0.55);
+        }
+
+        .notification-item-main {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .notification-message {
+            color: var(--cream-100);
+            font-size: 0.86rem;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            color: rgba(245, 245, 220, 0.68);
+            font-size: 0.72rem;
+        }
+
+        .notification-type-pill {
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(210, 180, 140, 0.35);
+            background: rgba(210, 180, 140, 0.12);
+            font-size: 0.68rem;
+            text-transform: capitalize;
+        }
+
+        .notification-detail {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(210, 180, 140, 0.22);
+            color: rgba(245, 245, 220, 0.8);
+            font-size: 0.74rem;
+            display: none;
+        }
+
+        .notification-item.expanded .notification-detail {
+            display: block;
+        }
+
+        .notification-empty,
+        .notification-loading {
+            text-align: center;
+            color: rgba(245, 245, 220, 0.74);
+            padding: 18px 10px;
+            font-size: 0.82rem;
         }
 
         /* === DASHBOARD STATS === */
@@ -2005,16 +2181,22 @@
 
             <div class="user-profile">
                 <div class="user-info">
-                    <div class="user-avatar">JS</div>
+                    <div class="user-avatar">
+                        <?php if (! empty($userProfile['avatar_url'])): ?>
+                            <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
+                        <?php else: ?>
+                            <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
+                        <?php endif; ?>
+                    </div>
                     <div class="user-details">
-                        <h4>John Seller</h4>
-                        <span>john@example.com</span>
-                        <div class="verification-badge">
+                        <h4><?= esc((string) ($userProfile['full_name'] ?? 'Seller')) ?></h4>
+                        <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?> • <?= esc((string) ($userProfile['account_status_label'] ?? 'Inactive Seller')) ?></span>
+                        <div class="verification-badge <?= esc((string) ($userProfile['verification_class'] ?? 'pending')) ?>">
                             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
-                            Verified Seller
+                            <?= esc((string) ($userProfile['verification_label'] ?? 'Not Verified')) ?>
                         </div>
                     </div>
                 </div>
@@ -2030,7 +2212,7 @@
                     <a href="#" class="nav-item" data-section="listings">
                         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                         <span>My Listings</span>
-                        <span class="nav-badge">12</span>
+                        <span class="nav-badge" id="seller-nav-listings-count"><?= (int) ($listingCounts['all'] ?? 0) ?></span>
                     </a>
                     <a href="#" class="nav-item" data-section="add-listing">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
@@ -2043,12 +2225,12 @@
                     <a href="#" class="nav-item" data-section="messages">
                         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         <span>Messages</span>
-                        <span class="nav-badge">5</span>
+                        <span class="nav-badge" id="seller-nav-messages-count"><?= (int) ($sidebarCounts['unread_messages'] ?? 0) ?></span>
                     </a>
                     <a href="#" class="nav-item" data-section="inquiries">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span>Inquiries</span>
-                        <span class="nav-badge">3</span>
+                        <span class="nav-badge" id="seller-nav-inquiries-count"><?= (int) ($sidebarCounts['accepted_inquiries'] ?? 0) ?></span>
                     </a>
                 </div>
 
@@ -2085,10 +2267,22 @@
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         <input type="text" id="seller-listings-search" placeholder="Search listings..." autocomplete="off">
                     </div>
-                    <button class="notification-btn">
-                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                        <span class="notification-dot"></span>
-                    </button>
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" id="header-notification-btn" type="button" aria-label="Open notifications" aria-expanded="false">
+                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span class="notification-dot" id="header-notification-dot" hidden></span>
+                            <span class="notification-count" id="header-notification-count" hidden>0</span>
+                        </button>
+                        <div class="notification-dropdown" id="header-notification-dropdown" hidden>
+                            <div class="notification-dropdown-header">
+                                <p class="notification-dropdown-title">Notifications</p>
+                                <button class="notification-action-btn" id="header-notification-read-all" type="button">Mark all as read</button>
+                            </div>
+                            <div class="notification-list" id="header-notification-list">
+                                <div class="notification-loading">Loading notifications...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2241,6 +2435,14 @@
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
         const SELLER_SECTION_STORAGE_KEY = 'sellerDashboardActiveSection';
+        const notificationBtn = document.getElementById('header-notification-btn');
+        const notificationDropdown = document.getElementById('header-notification-dropdown');
+        const notificationList = document.getElementById('header-notification-list');
+        const notificationReadAllBtn = document.getElementById('header-notification-read-all');
+        const notificationDot = document.getElementById('header-notification-dot');
+        const notificationCount = document.getElementById('header-notification-count');
+        const notificationApiBase = '<?= base_url('notifications') ?>';
+        const sellerSidebarCountsApi = '<?= base_url('seller/sidebar-counts') ?>';
 
         const sectionInfo = {
             'dashboard': {
@@ -2272,6 +2474,256 @@
                 subtitle: 'Complete your seller verification to build trust with buyers.'
             }
         };
+
+        const notificationState = {
+            items: [],
+            loading: false,
+        };
+
+        const notificationSyncState = {
+            latestNotificationId: 0,
+            unreadCount: 0,
+        };
+
+        function formatNotificationType(type) {
+            return String(type || 'notification').replaceAll('_', ' ');
+        }
+
+        function formatNotificationDate(dateValue) {
+            if (!dateValue) return 'Just now';
+            const date = new Date(dateValue.replace(' ', 'T'));
+            if (Number.isNaN(date.getTime())) return String(dateValue);
+            return date.toLocaleString();
+        }
+
+        function setUnreadIndicator(unreadCount) {
+            const hasUnread = unreadCount > 0;
+            notificationDot.hidden = !hasUnread;
+            notificationCount.hidden = !hasUnread;
+            notificationCount.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        }
+
+        function renderNotifications() {
+            if (notificationState.loading) {
+                notificationList.innerHTML = '<div class="notification-loading">Loading notifications...</div>';
+                return;
+            }
+
+            if (!notificationState.items.length) {
+                notificationList.innerHTML = '<div class="notification-empty">No notifications yet.</div>';
+                setUnreadIndicator(0);
+                return;
+            }
+
+            const unreadCount = notificationState.items.filter((item) => !Number(item.is_read)).length;
+            setUnreadIndicator(unreadCount);
+
+            notificationList.innerHTML = notificationState.items.map((item) => {
+                const notificationId = Number(item.notification_id || 0);
+                const unreadClass = Number(item.is_read) ? '' : 'unread';
+                const detailParts = [];
+
+                if (item.listing_id) detailParts.push(`Listing ID: ${item.listing_id}`);
+                if (item.inquiry_id) detailParts.push(`Inquiry ID: ${item.inquiry_id}`);
+                if (item.message_id) detailParts.push(`Message ID: ${item.message_id}`);
+
+                return `
+                    <div class="notification-item ${unreadClass}" data-id="${notificationId}" data-read="${Number(item.is_read) ? '1' : '0'}">
+                        <div class="notification-item-main">
+                            <p class="notification-message">${String(item.message || 'You have a new notification.')}</p>
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-type-pill">${formatNotificationType(item.notification_type)}</span>
+                            <span>${formatNotificationDate(item.created_at)}</span>
+                        </div>
+                        <div class="notification-detail">${detailParts.length ? detailParts.join('<br>') : 'No additional details.'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function fetchNotifications() {
+            notificationState.loading = true;
+            renderNotifications();
+
+            try {
+                const response = await fetch(`${notificationApiBase}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                notificationState.items = Array.isArray(data.notifications) ? data.notifications : [];
+                notificationSyncState.latestNotificationId = Number(notificationState.items[0]?.notification_id || 0);
+                notificationSyncState.unreadCount = notificationState.items.filter((item) => !Number(item.is_read)).length;
+            } catch (error) {
+                notificationState.items = [];
+                notificationSyncState.latestNotificationId = 0;
+                notificationSyncState.unreadCount = 0;
+            } finally {
+                notificationState.loading = false;
+                renderNotifications();
+            }
+        }
+
+        async function checkNotificationChanges() {
+            try {
+                const lastNotificationId = encodeURIComponent(String(notificationSyncState.latestNotificationId || 0));
+                const lastUnreadCount = encodeURIComponent(String(notificationSyncState.unreadCount ?? -1));
+                const response = await fetch(`${notificationApiBase}/changes?last_notification_id=${lastNotificationId}&last_unread_count=${lastUnreadCount}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    return false;
+                }
+
+                setUnreadIndicator(Number(data.unread_count || 0));
+                notificationSyncState.latestNotificationId = Number(data.latest_notification_id || 0);
+                notificationSyncState.unreadCount = Number(data.unread_count || 0);
+
+                return Boolean(data.has_updates);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function applySellerSidebarCounts(counts) {
+            const listingsTotal = Number(counts.listings_total || 0);
+            const inquiriesCount = Number(counts.accepted_inquiries || 0);
+            const messagesCount = Number(counts.unread_messages || 0);
+
+            const listingsBadge = document.getElementById('seller-nav-listings-count');
+            const inquiriesBadge = document.getElementById('seller-nav-inquiries-count');
+            const messagesBadge = document.getElementById('seller-nav-messages-count');
+
+            if (listingsBadge) listingsBadge.textContent = String(listingsTotal);
+            if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+            if (messagesBadge) messagesBadge.textContent = String(messagesCount);
+        }
+
+        async function pollNotificationsRealtime() {
+            if (document.hidden) {
+                return;
+            }
+
+            const hasUpdates = await checkNotificationChanges();
+            if (!hasUpdates) {
+                return;
+            }
+
+            await refreshSellerSidebarCounts();
+
+            if (notificationDropdown && !notificationDropdown.hidden) {
+                await fetchNotifications();
+                return;
+            }
+        }
+
+        async function markNotificationRead(notificationId) {
+            try {
+                await fetch(`${notificationApiBase}/${notificationId}/read`, {
+                    method: 'PATCH',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+            } catch (error) {
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await fetch(`${notificationApiBase}/read-all`, {
+                    method: 'PATCH',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                notificationState.items = notificationState.items.map((item) => ({ ...item, is_read: 1 }));
+                renderNotifications();
+            } catch (error) {
+            }
+        }
+
+        async function refreshSellerSidebarCounts() {
+            try {
+                const response = await fetch(sellerSidebarCountsApi, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success' || !data.counts) {
+                    return;
+                }
+
+                const listingsTotal = Number(data.counts.listings_total || 0);
+                const inquiriesCount = Number(data.counts.accepted_inquiries || 0);
+                const messagesCount = Number(data.counts.unread_messages || 0);
+
+                const listingsBadge = document.getElementById('seller-nav-listings-count');
+                const inquiriesBadge = document.getElementById('seller-nav-inquiries-count');
+                const messagesBadge = document.getElementById('seller-nav-messages-count');
+
+                if (listingsBadge) listingsBadge.textContent = String(listingsTotal);
+                if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+                if (messagesBadge) messagesBadge.textContent = String(messagesCount);
+            } catch (error) {
+            }
+        }
+
+        function openNotificationsDropdown() {
+            notificationDropdown.hidden = false;
+            notificationBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeNotificationsDropdown() {
+            notificationDropdown.hidden = true;
+            notificationBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        notificationBtn?.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const isHidden = notificationDropdown.hidden;
+            if (isHidden) {
+                openNotificationsDropdown();
+                await fetchNotifications();
+                return;
+            }
+
+            closeNotificationsDropdown();
+        });
+
+        notificationReadAllBtn?.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await markAllNotificationsRead();
+        });
+
+        notificationList?.addEventListener('click', async (event) => {
+            const item = event.target.closest('.notification-item');
+            if (!item) return;
+
+            item.classList.toggle('expanded');
+
+            if (item.dataset.read === '0') {
+                item.dataset.read = '1';
+                item.classList.remove('unread');
+                const notificationId = Number(item.dataset.id || 0);
+                if (notificationId > 0) {
+                    await markNotificationRead(notificationId);
+                    const target = notificationState.items.find((stateItem) => Number(stateItem.notification_id) === notificationId);
+                    if (target) target.is_read = 1;
+                    renderNotifications();
+                }
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!notificationDropdown || notificationDropdown.hidden) {
+                return;
+            }
+
+            if (!event.target.closest('.notification-wrapper')) {
+                closeNotificationsDropdown();
+            }
+        });
+
+        fetchNotifications();
+        refreshSellerSidebarCounts();
+        setInterval(pollNotificationsRealtime, 5000);
 
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {

@@ -4,6 +4,7 @@ namespace App\Controllers\Seller;
 
 use App\Controllers\BaseController;
 use App\Models\LandListings;
+use App\Models\SellerVerificationModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Database;
 
@@ -12,7 +13,8 @@ class DashboardController extends BaseController
     public function index(): ResponseInterface|string
     {
         $userId = $this->getCurrentUserId();
-        $Fullname = $this->getCurrentUserFullName();
+        $userProfile = $this->getCurrentUserProfile($userId);
+        $Fullname = (string) ($userProfile['full_name'] ?? $this->getCurrentUserFullName());
 
         if ($userId <= 0) {
             return $this->response->setStatusCode(401)->setJSON([
@@ -23,13 +25,136 @@ class DashboardController extends BaseController
 
         [$sellerListings, $listingCounts] = $this->getSellerListingsPayload($userId);
         $sellerInquiries = $this->getSellerInquiriesPayload($userId);
+        $sidebarCounts = $this->getSellerSidebarCounts($userId);
 
         return view('Pages/Seller/Dashboard_Seller', [
             'fullname' => $Fullname,
+            'userProfile' => $userProfile,
             'sellerListings' => $sellerListings,
             'listingCounts' => $listingCounts,
             'sellerInquiries' => $sellerInquiries,
+            'sidebarCounts' => $sidebarCounts,
         ]);
+    }
+
+    public function sidebarCounts(): ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid request.',
+            ]);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if ($userId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'counts' => $this->getSellerSidebarCounts($userId),
+        ]);
+    }
+
+    private function getCurrentUserProfile(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [
+                'full_name' => 'Seller',
+                'email' => 'N/A',
+                'avatar_url' => '',
+                'initials' => 'NA',
+                'account_status_label' => 'Inactive Seller',
+                'account_status_class' => 'inactive',
+                'verification_label' => 'Not Verified',
+                'verification_class' => 'pending',
+            ];
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId) ?? [];
+        $fullName = trim((string) (($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
+        $fullName = $fullName !== '' ? $fullName : 'Seller';
+        $isActive = (int) ($user['is_active'] ?? 0) === 1;
+
+        $verificationModel = new SellerVerificationModel();
+        $totalDocuments = $verificationModel->where('seller_id', $userId)->countAllResults();
+        $verifiedDocuments = $verificationModel
+            ->where('seller_id', $userId)
+            ->where('is_verified', 1)
+            ->countAllResults();
+
+        $verificationLabel = 'Not Verified';
+        $verificationClass = 'pending';
+
+        if ($verifiedDocuments > 0) {
+            $verificationLabel = 'Verified Seller';
+            $verificationClass = 'verified';
+        } elseif ($totalDocuments > 0) {
+            $verificationLabel = 'Pending Verification';
+            $verificationClass = 'pending';
+        }
+
+        return [
+            'full_name' => $fullName,
+            'email' => trim((string) ($user['email'] ?? 'N/A')),
+            'avatar_url' => $this->resolveUserProfilePictureUrl((string) ($user['profile_picture'] ?? '')),
+            'initials' => $this->formatInitials($fullName),
+            'account_status_label' => $isActive ? 'Active Seller' : 'Inactive Seller',
+            'account_status_class' => $isActive ? 'active' : 'inactive',
+            'verification_label' => $verificationLabel,
+            'verification_class' => $verificationClass,
+        ];
+    }
+
+    private function resolveUserProfilePictureUrl(string $profilePicture): string
+    {
+        $profilePicture = trim($profilePicture);
+        if ($profilePicture === '') {
+            return '';
+        }
+
+        if (preg_match('#^(?:https?:)?//#i', $profilePicture) === 1 || str_starts_with($profilePicture, 'data:')) {
+            return $profilePicture;
+        }
+
+        return base_url('media/profile?path=' . rawurlencode($profilePicture));
+    }
+
+    private function getSellerSidebarCounts(int $sellerId): array
+    {
+        $db = Database::connect();
+
+        $listingsTotal = $db->table('land_listings')
+            ->where('seller_id', $sellerId)
+            ->countAllResults();
+
+        $acceptedInquiries = $db->table('inquiries')
+            ->where('seller_id', $sellerId)
+            ->where('inquiry_status', 'accepted')
+            ->countAllResults();
+
+        $unreadMessages = $db->table('messages m')
+            ->select('COUNT(*) AS total_unread')
+            ->join('message_sessions ms', 'ms.session_id = m.session_id', 'inner')
+            ->groupStart()
+            ->where('ms.seller_id', $sellerId)
+            ->orWhere('ms.buyer_id', $sellerId)
+            ->groupEnd()
+            ->where('m.sender_id !=', $sellerId)
+            ->where('m.is_read', 0)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'listings_total' => (int) $listingsTotal,
+            'accepted_inquiries' => (int) $acceptedInquiries,
+            'unread_messages' => (int) ($unreadMessages['total_unread'] ?? 0),
+        ];
     }
 
     private function getCurrentUserFullName(): string

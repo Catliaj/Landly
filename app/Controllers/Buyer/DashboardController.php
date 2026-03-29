@@ -13,7 +13,8 @@ class DashboardController extends BaseController
     public function index(): ResponseInterface|string
     {
         $userId = $this->getCurrentUserId();
-        $Fullname = $this->getCurrentUserFullName();
+        $userProfile = $this->getCurrentUserProfile($userId);
+        $Fullname = (string) ($userProfile['full_name'] ?? $this->getCurrentUserFullName());
 
         if ($userId <= 0) {
             return $this->response->setStatusCode(401)->setJSON([
@@ -24,13 +25,135 @@ class DashboardController extends BaseController
 
         [$browseListings, $browsePropertyData] = $this->getBrowseListingsPayload();
         $buyerInquiries = $this->getBuyerInquiriesPayload($userId);
+        $sidebarCounts = $this->getBuyerSidebarCounts($userId);
 
         return view('Pages/Buyer/Dashboard_Buyer', [
             'fullname' => $Fullname,
+            'userProfile' => $userProfile,
             'browseListings' => $browseListings,
             'browsePropertyData' => $browsePropertyData,
             'buyerInquiries' => $buyerInquiries,
+            'sidebarCounts' => $sidebarCounts,
+            'geoapifyApiKey' => $this->resolveGeoapifyApiKey(),
         ]);
+    }
+
+    private function resolveGeoapifyApiKey(): string
+    {
+        $candidates = [
+            env('GEOAPIFY_API_KEY'),
+            $_ENV['GEOAPIFY_API_KEY'] ?? null,
+            $_SERVER['GEOAPIFY_API_KEY'] ?? null,
+            getenv('GEOAPIFY_API_KEY') ?: null,
+        ];
+
+        foreach ($candidates as $value) {
+            $key = trim((string) ($value ?? ''));
+            if ($key !== '') {
+                return $key;
+            }
+        }
+
+        return '';
+    }
+
+    public function sidebarCounts(): ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid request.',
+            ]);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if ($userId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'counts' => $this->getBuyerSidebarCounts($userId),
+        ]);
+    }
+
+    private function getCurrentUserProfile(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [
+                'full_name' => 'Buyer',
+                'email' => 'N/A',
+                'avatar_url' => '',
+                'initials' => 'NA',
+                'status_label' => 'Inactive Buyer',
+                'status_class' => 'inactive',
+            ];
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId) ?? [];
+
+        $fullName = trim((string) (($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
+        $fullName = $fullName !== '' ? $fullName : 'Buyer';
+        $isActive = (int) ($user['is_active'] ?? 0) === 1;
+
+        return [
+            'full_name' => $fullName,
+            'email' => trim((string) ($user['email'] ?? 'N/A')),
+            'avatar_url' => $this->resolveUserProfilePictureUrl((string) ($user['profile_picture'] ?? '')),
+            'initials' => $this->formatInitials($fullName),
+            'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+            'status_class' => $isActive ? 'active' : 'inactive',
+        ];
+    }
+
+    private function resolveUserProfilePictureUrl(string $profilePicture): string
+    {
+        $profilePicture = trim($profilePicture);
+        if ($profilePicture === '') {
+            return '';
+        }
+
+        if (preg_match('#^(?:https?:)?//#i', $profilePicture) === 1 || str_starts_with($profilePicture, 'data:')) {
+            return $profilePicture;
+        }
+
+        return base_url('media/profile?path=' . rawurlencode($profilePicture));
+    }
+
+    private function getBuyerSidebarCounts(int $buyerId): array
+    {
+        $db = Database::connect();
+
+        $savedProperties = $db->table('buyer_favorites')
+            ->where('buyer_id', $buyerId)
+            ->countAllResults();
+
+        $acceptedInquiries = $db->table('inquiries')
+            ->where('buyer_id', $buyerId)
+            ->where('inquiry_status', 'accepted')
+            ->countAllResults();
+
+        $unreadMessages = $db->table('messages m')
+            ->select('COUNT(*) AS total_unread')
+            ->join('message_sessions ms', 'ms.session_id = m.session_id', 'inner')
+            ->groupStart()
+            ->where('ms.buyer_id', $buyerId)
+            ->orWhere('ms.seller_id', $buyerId)
+            ->groupEnd()
+            ->where('m.sender_id !=', $buyerId)
+            ->where('m.is_read', 0)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'saved_properties' => (int) $savedProperties,
+            'accepted_inquiries' => (int) $acceptedInquiries,
+            'unread_messages' => (int) ($unreadMessages['total_unread'] ?? 0),
+        ];
     }
 
     private function getCurrentUserFullName(): string
@@ -87,8 +210,14 @@ class DashboardController extends BaseController
             $propertyTypeLabel = $this->formatPropertyType((string) ($row['property_type'] ?? ''));
             $documentStatusLabel = $this->formatDocumentStatus($row);
             $roadAccessLabel = $this->formatRoadAccess((string) ($row['road_access_type'] ?? ''));
+            $viewTypeLabel = $this->formatViewType((string) ($row['view_type'] ?? ''));
             $sellerName = $this->formatSellerName($row);
             $sellerInitials = $this->formatInitials($sellerName);
+            $areaRaw = trim((string) ($row['developing_area'] ?? ''));
+            $areaLabel = $areaRaw !== '' ? $areaRaw . ' sqm' : 'N/A';
+            $priceValue = (float) ($row['price'] ?? 0);
+            $areaNumeric = is_numeric($areaRaw) ? (float) $areaRaw : 0.0;
+            $pricePerSqm = $areaNumeric > 0 ? $this->formatPeso($priceValue / $areaNumeric) . ' / sqm' : 'N/A';
 
             $browseListings[] = [
                 'listing_id' => $listingId,
@@ -107,13 +236,28 @@ class DashboardController extends BaseController
 
             $browsePropertyData[$listingId] = [
                 'title' => $title,
-                'price' => $this->formatPeso((float) ($row['price'] ?? 0)),
-                'pricePerSqm' => 'N/A',
-                'area' => 'N/A',
+                'listingId' => $listingId,
+                'price' => $this->formatPeso($priceValue),
+                'pricePerSqm' => $pricePerSqm,
+                'area' => $areaLabel,
                 'type' => $propertyTypeLabel,
                 'titleStatus' => $documentStatusLabel,
                 'location' => $locationLabel,
-                'coordinates' => ['lat' => 14.5995, 'lng' => 120.9842],
+                'address' => $locationLabel,
+                'barangay' => trim((string) ($row['barangay'] ?? '')),
+                'city' => trim((string) ($row['city'] ?? '')),
+                'province' => trim((string) ($row['province'] ?? '')),
+                'roadAccess' => $roadAccessLabel,
+                'viewType' => $viewTypeLabel,
+                'investmentReady' => $this->formatBooleanLabel($row['investment_ready'] ?? null),
+                'isTitled' => $this->formatBooleanLabel($row['is_titled'] ?? null),
+                'hasTaxDeclaration' => $this->formatBooleanLabel($row['has_tax_declaration'] ?? null),
+                'hasLraApprovedPlan' => $this->formatBooleanLabel($row['has_lra_approved_plan'] ?? null),
+                'motherTitleDisclosed' => $this->formatBooleanLabel($row['mother_titled_disclosed'] ?? null),
+                'documentStatus' => $documentStatusLabel,
+                'listingStatus' => $statusMeta['label'],
+                'mapAddress' => $locationLabel !== 'Location unavailable' ? $locationLabel . ', Philippines' : 'Nasugbu, Batangas, Philippines',
+                'coordinates' => ['lat' => null, 'lng' => null],
                 'images' => [$imageUrl],
                 'description' => trim((string) ($row['description'] ?? 'No description provided.')),
                 'features' => $this->buildFeatureTags($row),
@@ -249,6 +393,27 @@ class DashboardController extends BaseController
             'none' => 'No Road Access',
             default => 'Road Access N/A',
         };
+    }
+
+    private function formatViewType(string $viewType): string
+    {
+        return match ($viewType) {
+            'mountain', 'mountain_view' => 'Mountain View',
+            'sea', 'sea_view', 'ocean_view' => 'Sea View',
+            'city', 'city_view' => 'City View',
+            'farm', 'farm_view' => 'Farm View',
+            default => $viewType !== '' ? ucwords(str_replace('_', ' ', $viewType)) : 'Not specified',
+        };
+    }
+
+    private function formatBooleanLabel(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        $normalized = strtolower(trim((string) $value));
+        return in_array($normalized, ['1', 'true', 'yes', 'y'], true) ? 'Yes' : 'No';
     }
 
     private function formatSellerName(array $listing): string

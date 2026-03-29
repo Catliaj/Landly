@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 $routes->get('auth', 'Home::auth');
+$routes->get('media/profile', 'MediaController::profile');
 
 $routes->group('auth', function ($routes) {
     $routes->post('login', 'Auth\AuthController::login');
@@ -19,6 +20,7 @@ $routes->group('seller', function ($routes) {
 
     // Dashboard route
     $routes->get('dashboard', 'Seller\DashboardController::index');
+    $routes->get('sidebar-counts', 'Seller\DashboardController::sidebarCounts');
 
     // Land listing CRUD routes for sellers
     $routes->post('listings', 'Seller\LandListingCRUDController::createLandListing');
@@ -31,11 +33,17 @@ $routes->group('seller', function ($routes) {
 $routes->group('buyer', function ($routes) {
     // Dashboard route
     $routes->get('dashboard', 'Buyer\DashboardController::index');
+    $routes->get('sidebar-counts', 'Buyer\DashboardController::sidebarCounts');
 
     // Land listing routes for buyers
     $routes->get('listings', 'Buyer\LandListingController::listAll');
     $routes->get('listings/(:num)', 'Buyer\LandListingController::view/$1');
     
+    // Favorites routes
+    $routes->get('favorites', 'Buyer\Favorites::index');
+    $routes->post('favorites/toggle', 'Buyer\Favorites::toggle');
+    $routes->post('favorites/is-favorited', 'Buyer\Favorites::isFavorited');
+    $routes->get('favorites/get-all', 'Buyer\Favorites::getBuyerFavorites');
 });
 
 //testing controller for auth routes
@@ -76,6 +84,16 @@ $routes->group('messages', function ($routes) {
     $routes->get('inquiries/(:num)', 'Messages\InquriesController::viewInquiry/$1');
     $routes->post('inquiries', 'Messages\InquriesController::createInquiry');
     $routes->put('inquiries/(:num)/status', 'Messages\InquriesController::updateInquiryStatus/$1');
+});
+
+// Notifications routes (shared by buyer and seller)
+$routes->group('notifications', function ($routes) {
+    $routes->get('/', 'Notification\NotificationController::getNotifications');
+    $routes->get('unread-count', 'Notification\NotificationController::getUnreadCount');
+    $routes->get('changes', 'Notification\NotificationController::checkChanges');
+    $routes->patch('read-all', 'Notification\NotificationController::markAllAsRead');
+    $routes->patch('(:num)/read', 'Notification\NotificationController::markAsRead/$1');
+    $routes->patch('(:num)/archive', 'Notification\NotificationController::archiveNotification/$1');
 });
 
 
