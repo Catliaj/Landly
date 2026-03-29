@@ -54,6 +54,46 @@ class NotificationController extends BaseController
         ]);
     }
 
+    public function checkChanges(): ResponseInterface
+    {
+        $userId = $this->getCurrentUserId();
+        if ($userId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        $lastNotificationId = (int) ($this->request->getGet('last_notification_id') ?? 0);
+        $lastUnreadCount = (int) ($this->request->getGet('last_unread_count') ?? -1);
+
+        $notificationModel = new NotificationModel();
+
+        $latest = $notificationModel
+            ->select('notification_id')
+            ->where('user_id', $userId)
+            ->where('notification_status', 'active')
+            ->orderBy('notification_id', 'DESC')
+            ->first();
+
+        $latestNotificationId = (int) ($latest['notification_id'] ?? 0);
+
+        $currentUnreadCount = $notificationModel
+            ->where('user_id', $userId)
+            ->where('notification_status', 'active')
+            ->where('is_read', 0)
+            ->countAllResults();
+
+        $hasUpdates = $latestNotificationId !== $lastNotificationId || $currentUnreadCount !== $lastUnreadCount;
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'has_updates' => $hasUpdates,
+            'latest_notification_id' => $latestNotificationId,
+            'unread_count' => (int) $currentUnreadCount,
+        ]);
+    }
+
     public function markAsRead($notificationId): ResponseInterface
     {
         $userId = $this->getCurrentUserId();

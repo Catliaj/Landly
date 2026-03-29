@@ -1,3 +1,18 @@
+<?php
+$sidebarCounts = $sidebarCounts ?? [
+    'saved_properties' => 0,
+    'accepted_inquiries' => 0,
+    'unread_messages' => 0,
+];
+$userProfile = $userProfile ?? [
+    'full_name' => 'Buyer',
+    'email' => 'N/A',
+    'avatar_url' => '',
+    'initials' => 'NA',
+    'status_label' => 'Inactive Buyer',
+    'status_class' => 'inactive',
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,6 +173,14 @@
             font-size: 1.1rem;
         }
 
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
         .user-details h4 {
             font-size: 0.95rem;
             font-weight: 600;
@@ -180,6 +203,12 @@
             font-size: 0.65rem;
             color: var(--accent);
             margin-top: 6px;
+        }
+
+        .member-badge.inactive {
+            background: rgba(229, 57, 53, 0.2);
+            border-color: rgba(229, 57, 53, 0.4);
+            color: #ffb4a9;
         }
 
         /* Navigation */
@@ -2126,15 +2155,21 @@
 
             <div class="user-profile">
                 <div class="user-info">
-                    <div class="user-avatar">JB</div>
+                    <div class="user-avatar">
+                        <?php if (! empty($userProfile['avatar_url'])): ?>
+                            <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
+                        <?php else: ?>
+                            <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
+                        <?php endif; ?>
+                    </div>
                     <div class="user-details">
-                        <h4>John Buyer</h4>
-                        <span>buyer@example.com</span>
-                        <div class="member-badge">
+                        <h4><?= esc((string) ($userProfile['full_name'] ?? 'Buyer')) ?></h4>
+                        <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?></span>
+                        <div class="member-badge <?= esc((string) ($userProfile['status_class'] ?? 'inactive')) ?>">
                             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
-                            Active Buyer
+                            <?= esc((string) ($userProfile['status_label'] ?? 'Inactive Buyer')) ?>
                         </div>
                     </div>
                 </div>
@@ -2154,7 +2189,7 @@
                     <a href="#" class="nav-item" data-section="saved">
                         <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                         <span>Saved Properties</span>
-                        <span class="nav-badge">5</span>
+                        <span class="nav-badge" id="buyer-nav-saved-count"><?= (int) ($sidebarCounts['saved_properties'] ?? 0) ?></span>
                     </a>
                 </div>
 
@@ -2163,12 +2198,12 @@
                     <a href="#" class="nav-item" data-section="inquiries">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span>My Inquiries</span>
-                        <span class="nav-badge">3</span>
+                        <span class="nav-badge" id="buyer-nav-inquiries-count"><?= (int) ($sidebarCounts['accepted_inquiries'] ?? 0) ?></span>
                     </a>
                     <a href="#" class="nav-item" data-section="messages">
                         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         <span>Messages</span>
-                        <span class="nav-badge">2</span>
+                        <span class="nav-badge" id="buyer-nav-messages-count"><?= (int) ($sidebarCounts['unread_messages'] ?? 0) ?></span>
                     </a>
                 </div>
 
@@ -2258,6 +2293,7 @@
         const notificationDot = document.getElementById('header-notification-dot');
         const notificationCount = document.getElementById('header-notification-count');
         const notificationApiBase = '<?= base_url('notifications') ?>';
+        const buyerSidebarCountsApi = '<?= base_url('buyer/sidebar-counts') ?>';
 
         const sectionInfo = {
             'dashboard': {
@@ -2289,6 +2325,11 @@
         const notificationState = {
             items: [],
             loading: false,
+        };
+
+        const notificationSyncState = {
+            latestNotificationId: 0,
+            unreadCount: 0,
         };
 
         function formatNotificationType(type) {
@@ -2358,11 +2399,71 @@
                 });
                 const data = await response.json();
                 notificationState.items = Array.isArray(data.notifications) ? data.notifications : [];
+                notificationSyncState.latestNotificationId = Number(notificationState.items[0]?.notification_id || 0);
+                notificationSyncState.unreadCount = notificationState.items.filter((item) => !Number(item.is_read)).length;
             } catch (error) {
                 notificationState.items = [];
+                notificationSyncState.latestNotificationId = 0;
+                notificationSyncState.unreadCount = 0;
             } finally {
                 notificationState.loading = false;
                 renderNotifications();
+            }
+        }
+
+        async function checkNotificationChanges() {
+            try {
+                const lastNotificationId = encodeURIComponent(String(notificationSyncState.latestNotificationId || 0));
+                const lastUnreadCount = encodeURIComponent(String(notificationSyncState.unreadCount ?? -1));
+                const response = await fetch(`${notificationApiBase}/changes?last_notification_id=${lastNotificationId}&last_unread_count=${lastUnreadCount}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    return false;
+                }
+
+                setUnreadIndicator(Number(data.unread_count || 0));
+                notificationSyncState.latestNotificationId = Number(data.latest_notification_id || 0);
+                notificationSyncState.unreadCount = Number(data.unread_count || 0);
+
+                return Boolean(data.has_updates);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function applyBuyerSidebarCounts(counts) {
+            const savedCount = Number(counts.saved_properties || 0);
+            const inquiriesCount = Number(counts.accepted_inquiries || 0);
+            const messagesCount = Number(counts.unread_messages || 0);
+
+            const savedBadge = document.getElementById('buyer-nav-saved-count');
+            const inquiriesBadge = document.getElementById('buyer-nav-inquiries-count');
+            const messagesBadge = document.getElementById('buyer-nav-messages-count');
+            const savedSectionCount = document.getElementById('favorites-count');
+
+            if (savedBadge) savedBadge.textContent = String(savedCount);
+            if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+            if (messagesBadge) messagesBadge.textContent = String(messagesCount);
+            if (savedSectionCount) savedSectionCount.textContent = String(savedCount);
+        }
+
+        async function pollNotificationsRealtime() {
+            if (document.hidden) {
+                return;
+            }
+
+            const hasUpdates = await checkNotificationChanges();
+            if (!hasUpdates) {
+                return;
+            }
+
+            await refreshBuyerSidebarCounts();
+
+            if (notificationDropdown && !notificationDropdown.hidden) {
+                await fetchNotifications();
+                return;
             }
         }
 
@@ -2384,6 +2485,33 @@
                 });
                 notificationState.items = notificationState.items.map((item) => ({ ...item, is_read: 1 }));
                 renderNotifications();
+            } catch (error) {
+            }
+        }
+
+        async function refreshBuyerSidebarCounts() {
+            try {
+                const response = await fetch(buyerSidebarCountsApi, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success' || !data.counts) {
+                    return;
+                }
+
+                const savedCount = Number(data.counts.saved_properties || 0);
+                const inquiriesCount = Number(data.counts.accepted_inquiries || 0);
+                const messagesCount = Number(data.counts.unread_messages || 0);
+
+                const savedBadge = document.getElementById('buyer-nav-saved-count');
+                const inquiriesBadge = document.getElementById('buyer-nav-inquiries-count');
+                const messagesBadge = document.getElementById('buyer-nav-messages-count');
+                const savedSectionCount = document.getElementById('favorites-count');
+
+                if (savedBadge) savedBadge.textContent = String(savedCount);
+                if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+                if (messagesBadge) messagesBadge.textContent = String(messagesCount);
+                if (savedSectionCount) savedSectionCount.textContent = String(savedCount);
             } catch (error) {
             }
         }
@@ -2445,6 +2573,8 @@
         });
 
         fetchNotifications();
+        refreshBuyerSidebarCounts();
+        setInterval(pollNotificationsRealtime, 8000);
 
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {
@@ -2700,6 +2830,11 @@
                     // Reload saved properties section if it exists
                     if (typeof loadSavedProperties === 'function') {
                         loadSavedProperties();
+                    }
+
+                    // Refresh sidebar counters immediately (no wait for polling interval)
+                    if (typeof refreshBuyerSidebarCounts === 'function') {
+                        refreshBuyerSidebarCounts();
                     }
                 } else {
                     showNotification(data.message || 'Unable to update favorite', 'error');

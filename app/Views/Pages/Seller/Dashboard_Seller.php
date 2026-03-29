@@ -1,3 +1,20 @@
+<?php
+$sidebarCounts = $sidebarCounts ?? [
+    'listings_total' => 0,
+    'accepted_inquiries' => 0,
+    'unread_messages' => 0,
+];
+$listingCounts = $listingCounts ?? ['all' => 0];
+$userProfile = $userProfile ?? [
+    'full_name' => 'Seller',
+    'email' => 'N/A',
+    'avatar_url' => '',
+    'initials' => 'NA',
+    'account_status_label' => 'Inactive Seller',
+    'verification_label' => 'Not Verified',
+    'verification_class' => 'pending',
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,6 +171,14 @@
             font-weight: 600;
             color: var(--green-900);
             font-size: 1.1rem;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
 
         .user-details h4 {
@@ -2156,16 +2181,22 @@
 
             <div class="user-profile">
                 <div class="user-info">
-                    <div class="user-avatar">JS</div>
+                    <div class="user-avatar">
+                        <?php if (! empty($userProfile['avatar_url'])): ?>
+                            <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
+                        <?php else: ?>
+                            <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
+                        <?php endif; ?>
+                    </div>
                     <div class="user-details">
-                        <h4>John Seller</h4>
-                        <span>john@example.com</span>
-                        <div class="verification-badge">
+                        <h4><?= esc((string) ($userProfile['full_name'] ?? 'Seller')) ?></h4>
+                        <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?> • <?= esc((string) ($userProfile['account_status_label'] ?? 'Inactive Seller')) ?></span>
+                        <div class="verification-badge <?= esc((string) ($userProfile['verification_class'] ?? 'pending')) ?>">
                             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
-                            Verified Seller
+                            <?= esc((string) ($userProfile['verification_label'] ?? 'Not Verified')) ?>
                         </div>
                     </div>
                 </div>
@@ -2181,7 +2212,7 @@
                     <a href="#" class="nav-item" data-section="listings">
                         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                         <span>My Listings</span>
-                        <span class="nav-badge">12</span>
+                        <span class="nav-badge" id="seller-nav-listings-count"><?= (int) ($listingCounts['all'] ?? 0) ?></span>
                     </a>
                     <a href="#" class="nav-item" data-section="add-listing">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
@@ -2194,12 +2225,12 @@
                     <a href="#" class="nav-item" data-section="messages">
                         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         <span>Messages</span>
-                        <span class="nav-badge">5</span>
+                        <span class="nav-badge" id="seller-nav-messages-count"><?= (int) ($sidebarCounts['unread_messages'] ?? 0) ?></span>
                     </a>
                     <a href="#" class="nav-item" data-section="inquiries">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         <span>Inquiries</span>
-                        <span class="nav-badge">3</span>
+                        <span class="nav-badge" id="seller-nav-inquiries-count"><?= (int) ($sidebarCounts['accepted_inquiries'] ?? 0) ?></span>
                     </a>
                 </div>
 
@@ -2411,6 +2442,7 @@
         const notificationDot = document.getElementById('header-notification-dot');
         const notificationCount = document.getElementById('header-notification-count');
         const notificationApiBase = '<?= base_url('notifications') ?>';
+        const sellerSidebarCountsApi = '<?= base_url('seller/sidebar-counts') ?>';
 
         const sectionInfo = {
             'dashboard': {
@@ -2446,6 +2478,11 @@
         const notificationState = {
             items: [],
             loading: false,
+        };
+
+        const notificationSyncState = {
+            latestNotificationId: 0,
+            unreadCount: 0,
         };
 
         function formatNotificationType(type) {
@@ -2515,11 +2552,69 @@
                 });
                 const data = await response.json();
                 notificationState.items = Array.isArray(data.notifications) ? data.notifications : [];
+                notificationSyncState.latestNotificationId = Number(notificationState.items[0]?.notification_id || 0);
+                notificationSyncState.unreadCount = notificationState.items.filter((item) => !Number(item.is_read)).length;
             } catch (error) {
                 notificationState.items = [];
+                notificationSyncState.latestNotificationId = 0;
+                notificationSyncState.unreadCount = 0;
             } finally {
                 notificationState.loading = false;
                 renderNotifications();
+            }
+        }
+
+        async function checkNotificationChanges() {
+            try {
+                const lastNotificationId = encodeURIComponent(String(notificationSyncState.latestNotificationId || 0));
+                const lastUnreadCount = encodeURIComponent(String(notificationSyncState.unreadCount ?? -1));
+                const response = await fetch(`${notificationApiBase}/changes?last_notification_id=${lastNotificationId}&last_unread_count=${lastUnreadCount}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    return false;
+                }
+
+                setUnreadIndicator(Number(data.unread_count || 0));
+                notificationSyncState.latestNotificationId = Number(data.latest_notification_id || 0);
+                notificationSyncState.unreadCount = Number(data.unread_count || 0);
+
+                return Boolean(data.has_updates);
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function applySellerSidebarCounts(counts) {
+            const listingsTotal = Number(counts.listings_total || 0);
+            const inquiriesCount = Number(counts.accepted_inquiries || 0);
+            const messagesCount = Number(counts.unread_messages || 0);
+
+            const listingsBadge = document.getElementById('seller-nav-listings-count');
+            const inquiriesBadge = document.getElementById('seller-nav-inquiries-count');
+            const messagesBadge = document.getElementById('seller-nav-messages-count');
+
+            if (listingsBadge) listingsBadge.textContent = String(listingsTotal);
+            if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+            if (messagesBadge) messagesBadge.textContent = String(messagesCount);
+        }
+
+        async function pollNotificationsRealtime() {
+            if (document.hidden) {
+                return;
+            }
+
+            const hasUpdates = await checkNotificationChanges();
+            if (!hasUpdates) {
+                return;
+            }
+
+            await refreshSellerSidebarCounts();
+
+            if (notificationDropdown && !notificationDropdown.hidden) {
+                await fetchNotifications();
+                return;
             }
         }
 
@@ -2541,6 +2636,31 @@
                 });
                 notificationState.items = notificationState.items.map((item) => ({ ...item, is_read: 1 }));
                 renderNotifications();
+            } catch (error) {
+            }
+        }
+
+        async function refreshSellerSidebarCounts() {
+            try {
+                const response = await fetch(sellerSidebarCountsApi, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success' || !data.counts) {
+                    return;
+                }
+
+                const listingsTotal = Number(data.counts.listings_total || 0);
+                const inquiriesCount = Number(data.counts.accepted_inquiries || 0);
+                const messagesCount = Number(data.counts.unread_messages || 0);
+
+                const listingsBadge = document.getElementById('seller-nav-listings-count');
+                const inquiriesBadge = document.getElementById('seller-nav-inquiries-count');
+                const messagesBadge = document.getElementById('seller-nav-messages-count');
+
+                if (listingsBadge) listingsBadge.textContent = String(listingsTotal);
+                if (inquiriesBadge) inquiriesBadge.textContent = String(inquiriesCount);
+                if (messagesBadge) messagesBadge.textContent = String(messagesCount);
             } catch (error) {
             }
         }
@@ -2602,6 +2722,8 @@
         });
 
         fetchNotifications();
+        refreshSellerSidebarCounts();
+        setInterval(pollNotificationsRealtime, 5000);
 
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {

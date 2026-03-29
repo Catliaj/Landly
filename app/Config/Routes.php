@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 $routes->get('auth', 'Home::auth');
+$routes->get('media/profile', 'MediaController::profile');
 
 $routes->group('auth', function ($routes) {
     $routes->post('login', 'Auth\AuthController::login');
@@ -19,6 +20,7 @@ $routes->group('seller', function ($routes) {
 
     // Dashboard route
     $routes->get('dashboard', 'Seller\DashboardController::index');
+    $routes->get('sidebar-counts', 'Seller\DashboardController::sidebarCounts');
 
     // Land listing CRUD routes for sellers
     $routes->post('listings', 'Seller\LandListingCRUDController::createLandListing');
@@ -31,6 +33,7 @@ $routes->group('seller', function ($routes) {
 $routes->group('buyer', function ($routes) {
     // Dashboard route
     $routes->get('dashboard', 'Buyer\DashboardController::index');
+    $routes->get('sidebar-counts', 'Buyer\DashboardController::sidebarCounts');
 
     // Land listing routes for buyers
     $routes->get('listings', 'Buyer\LandListingController::listAll');
@@ -87,6 +90,7 @@ $routes->group('messages', function ($routes) {
 $routes->group('notifications', function ($routes) {
     $routes->get('/', 'Notification\NotificationController::getNotifications');
     $routes->get('unread-count', 'Notification\NotificationController::getUnreadCount');
+    $routes->get('changes', 'Notification\NotificationController::checkChanges');
     $routes->patch('read-all', 'Notification\NotificationController::markAllAsRead');
     $routes->patch('(:num)/read', 'Notification\NotificationController::markAsRead/$1');
     $routes->patch('(:num)/archive', 'Notification\NotificationController::archiveNotification/$1');

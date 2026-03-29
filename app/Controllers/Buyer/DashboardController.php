@@ -13,7 +13,8 @@ class DashboardController extends BaseController
     public function index(): ResponseInterface|string
     {
         $userId = $this->getCurrentUserId();
-        $Fullname = $this->getCurrentUserFullName();
+        $userProfile = $this->getCurrentUserProfile($userId);
+        $Fullname = (string) ($userProfile['full_name'] ?? $this->getCurrentUserFullName());
 
         if ($userId <= 0) {
             return $this->response->setStatusCode(401)->setJSON([
@@ -24,13 +25,115 @@ class DashboardController extends BaseController
 
         [$browseListings, $browsePropertyData] = $this->getBrowseListingsPayload();
         $buyerInquiries = $this->getBuyerInquiriesPayload($userId);
+        $sidebarCounts = $this->getBuyerSidebarCounts($userId);
 
         return view('Pages/Buyer/Dashboard_Buyer', [
             'fullname' => $Fullname,
+            'userProfile' => $userProfile,
             'browseListings' => $browseListings,
             'browsePropertyData' => $browsePropertyData,
             'buyerInquiries' => $buyerInquiries,
+            'sidebarCounts' => $sidebarCounts,
         ]);
+    }
+
+    public function sidebarCounts(): ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid request.',
+            ]);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if ($userId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'counts' => $this->getBuyerSidebarCounts($userId),
+        ]);
+    }
+
+    private function getCurrentUserProfile(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [
+                'full_name' => 'Buyer',
+                'email' => 'N/A',
+                'avatar_url' => '',
+                'initials' => 'NA',
+                'status_label' => 'Inactive Buyer',
+                'status_class' => 'inactive',
+            ];
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId) ?? [];
+
+        $fullName = trim((string) (($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
+        $fullName = $fullName !== '' ? $fullName : 'Buyer';
+        $isActive = (int) ($user['is_active'] ?? 0) === 1;
+
+        return [
+            'full_name' => $fullName,
+            'email' => trim((string) ($user['email'] ?? 'N/A')),
+            'avatar_url' => $this->resolveUserProfilePictureUrl((string) ($user['profile_picture'] ?? '')),
+            'initials' => $this->formatInitials($fullName),
+            'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+            'status_class' => $isActive ? 'active' : 'inactive',
+        ];
+    }
+
+    private function resolveUserProfilePictureUrl(string $profilePicture): string
+    {
+        $profilePicture = trim($profilePicture);
+        if ($profilePicture === '') {
+            return '';
+        }
+
+        if (preg_match('#^(?:https?:)?//#i', $profilePicture) === 1 || str_starts_with($profilePicture, 'data:')) {
+            return $profilePicture;
+        }
+
+        return base_url('media/profile?path=' . rawurlencode($profilePicture));
+    }
+
+    private function getBuyerSidebarCounts(int $buyerId): array
+    {
+        $db = Database::connect();
+
+        $savedProperties = $db->table('buyer_favorites')
+            ->where('buyer_id', $buyerId)
+            ->countAllResults();
+
+        $acceptedInquiries = $db->table('inquiries')
+            ->where('buyer_id', $buyerId)
+            ->where('inquiry_status', 'accepted')
+            ->countAllResults();
+
+        $unreadMessages = $db->table('messages m')
+            ->select('COUNT(*) AS total_unread')
+            ->join('message_sessions ms', 'ms.session_id = m.session_id', 'inner')
+            ->groupStart()
+            ->where('ms.buyer_id', $buyerId)
+            ->orWhere('ms.seller_id', $buyerId)
+            ->groupEnd()
+            ->where('m.sender_id !=', $buyerId)
+            ->where('m.is_read', 0)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'saved_properties' => (int) $savedProperties,
+            'accepted_inquiries' => (int) $acceptedInquiries,
+            'unread_messages' => (int) ($unreadMessages['total_unread'] ?? 0),
+        ];
     }
 
     private function getCurrentUserFullName(): string
