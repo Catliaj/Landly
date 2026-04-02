@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard | Landly</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-900: #0f1b1b;
+            --green-800: #14312c;
+            --green-700: #1f4f48;
+            --green-600: #2a6c62;
+            --cream-100: #f5f5dc;
+            --cream-200: #efe7d8;
+            --accent: #d2b48c;
+            --accent-dark: #bea074;
+            --sidebar-width: 280px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", system-ui, sans-serif; }
+
+        body { background-color: var(--green-900); color: var(--cream-100); min-height: 100vh; overflow-x: hidden; }
+
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: linear-gradient(180deg, rgba(45, 106, 79, 0.95), rgba(13, 40, 24, 0.98)); padding-top: 20px; position: fixed; height: 100vh; }
+        .sidebar .brand { margin: 0 20px 18px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--cream-100); }
+        .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--green-900); display: grid; place-items: center; font-weight: 700; }
+        .brand-text { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
+        .sidebar-nav { margin-top: 16px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease; }
+        .nav-item:hover, .nav-item.active { background: rgba(149, 213, 178, 0.2); color: var(--accent); }
+        .main-content { margin-left: var(--sidebar-width); padding: 28px; width: calc(100% - var(--sidebar-width)); }
+        .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .page-title h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-style: italic; color: var(--cream-100); }
+        .page-title p { color: rgba(245,245,220,0.85); margin-top: 6px; }
+        .section-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .section-links a { text-decoration: none; padding: 8px 14px; border-radius: 999px; background: rgba(210, 180, 140, 0.25); color: var(--green-900); font-weight: 600; border: 1px solid rgba(210,180,140,.4); }
+        .section-links a:hover { background: rgba(210, 180, 140, 0.4); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 16px; }
+        .stat-card h3 { font-size: 1rem; color: rgba(254,250,224,.8); margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+        .content-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
+        .content-card h3 { margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        .section-content { display: none; }
+        .section-content.active { display: block; }
+        .section-links a.active { background: var(--cream-200); border-color: var(--cream-200); }
+        .sidebar-nav a.active { background: rgba(210, 180, 140, 0.26); color: var(--green-900); }
+        table th, table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid rgba(149,213,178,.15); font-size: .9rem; }
+        table th { color: rgba(254,250,224,.8); font-weight:600; }
+        table td { color: rgba(254,250,224,.65); }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 0.74rem; font-weight: 600; }
+        .badge.available { background: rgba(46,204,113,.15); color: #2ecc71; }
+        .badge.pending { background: rgba(241,196,15,.15); color: #f1c40f; }
+        .badge.reserved { background: rgba(52,152,219,.15); color: #3498db; }
+        .badge.closed { background: rgba(231, 76, 60,.15); color: #e74c3c; }
+        .btn { border: none; color: var(--green-900); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: .8rem; margin-right: 6px; transition: all .15s ease; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 0 12px rgba(0,0,0,.15); }
+        .btn-success { background: var(--accent); }
+        .btn-warning { background: #efc46a; }
+        .btn-danger { background: #d96f5b; color: #fff; }
+
+        @media (max-width: 980px) {
+            .dashboard-container { display: block; }
+            .sidebar { position: relative; width: 100%; height: auto; }
+            .main-content { margin-left: 0; width: 100%; padding: 16px; }
+            .top-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .page-title h1 { font-size: 1.6rem; }
+            .section-links { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .section-links a { padding: 8px 10px; font-size: 0.82rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            table { font-size: 0.78rem; }
+            .table-wrapper, .content-card { overflow-x: auto; }
+            table th, table td { white-space: nowrap; }
+            .badge { font-size: 0.72rem; }
+            .chatbot { right: 12px; bottom: 12px; width: 260px; }
+            .chatbot-content { height: 340px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <a class="brand" href="/admin/dashboard">
+                <div class="brand-badge">A</div>
+                <div>
+                    <div class="brand-text">Landly</div>
+                    <div style="font-size:.65rem;color:var(--accent);letter-spacing:1.2px;">Admin Panel</div>
+                </div>
+            </a>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" href="#dashboard">Dashboard</a>
+                <a class="nav-item" href="#users">Users</a>
+                <a class="nav-item" href="#listings">Land Listings</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar" id="dashboard">
+                <div class="page-title">
+                    <h1>Admin Dashboard</h1>
+                    <p>Welcome back, <?= esc($fullname ?? 'Administrator') ?>. Overview of key platform metrics.</p>
+                </div>
+                <div class="section-links">
+                    <a href="#dashboard">Dashboard</a>
+                    <a href="#users">Users</a>
+                    <a href="#listings">Land Listings</a>
+                </div>
+            </div>
+
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="content-card" style="border-color:#2ecc71;background:rgba(46,204,113,.08);color:#2ecc71;"><?= esc(session()->getFlashdata('success')) ?></div>
+            <?php endif; ?>
+            <?php if (session()->getFlashdata('warning')): ?>
+                <div class="content-card" style="border-color:#f1c40f;background:rgba(241,196,15,.08);color:#f1c40f;"><?= esc(session()->getFlashdata('warning')) ?></div>
+            <?php endif; ?>
+
+            <section id="dashboard-section" class="section-content active">
+                <div class="stats-grid">
+                <div class="stat-card"><h3>Total Users</h3><div class="stat-value"><?= number_format($totalUsers ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Total Buyers</h3><div class="stat-value"><?= number_format($totalBuyers ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Total Sellers</h3><div class="stat-value"><?= number_format($totalSellers ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Total Admins</h3><div class="stat-value"><?= number_format($totalAdmins ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Total Listings</h3><div class="stat-value"><?= number_format($totalListings ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Pending Verifications</h3><div class="stat-value"><?= number_format($listingStats['pending'] ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Verified Listings</h3><div class="stat-value"><?= number_format($listingStats['verified'] ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Rejected Listings</h3><div class="stat-value"><?= number_format($listingStats['rejected'] ?? 0) ?></div></div>
+                </div>
+            </section>
+
+            <section id="users-section" class="section-content">
+                <div class="content-card">
+                <h3>Users Management</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (! empty($users) && is_array($users)): ?>
+                            <?php foreach ($users as $user): ?>
+                                <tr>
+                                    <td><?= esc($user['user_id']) ?></td>
+                                    <td><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
+                                    <td><?= esc($user['email']) ?></td>
+                                    <td><?= esc(ucfirst($user['roles'] ?? 'buyer')) ?></td>
+                                    <td><span class="badge <?= ($user['is_active'] ?? 0) ? 'available' : 'closed' ?>"><?= ($user['is_active'] ?? 0) ? 'Active' : 'Inactive' ?></span></td>
+                                    <td>
+                                        <?php if (! empty($user['is_active'])): ?>
+                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/deactivate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning" type="submit">Deactivate</button></form>
+                                        <?php else: ?>
+                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/activate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success" type="submit">Activate</button></form>
+                                        <?php endif; ?>
+                                        <form action="/admin/users/<?= esc($user['user_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><?= csrf_field() ?><button class="btn btn-danger" type="submit">Delete</button></form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr><td colspan="6">No users found.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            </section>
+
+            <section id="listings-section" class="section-content">
+                <div class="content-card">
+                <h3>Land Listings Management</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Seller</th>
+                            <th>Location</th>
+                            <th>Price</th>
+                            <th>Verified</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (! empty($listings) && is_array($listings)): ?>
+                            <?php foreach ($listings as $listing): ?>
+                                <tr>
+                                    <td><?= esc($listing['listing_id']) ?></td>
+                                    <td><?= esc($listing['title']) ?></td>
+                                    <td><?= esc($listing['seller_id']) ?></td>
+                                    <td><?= esc(trim(($listing['city'] ?? '') . ', ' . ($listing['province'] ?? ''))) ?></td>
+                                    <td><?= '₱' . number_format((float) ($listing['price'] ?? 0), 0) ?></td>
+                                    <td><span class="badge <?= esc($listing['is_verified_listing'] ?? 'pending') ?>"><?= esc(ucfirst($listing['is_verified_listing'] ?? 'Pending')) ?></span></td>
+                                    <td><span class="badge <?= esc($listing['listing_status'] ?? 'pending') ?>"><?= esc(ucfirst($listing['listing_status'] ?? 'Pending')) ?></span></td>
+                                    <td>
+                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/verify" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success" type="submit">Verify</button></form>
+                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/reject" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning" type="submit">Reject</button></form>
+                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete listing?')"><?= csrf_field() ?><button class="btn btn-danger" type="submit">Delete</button></form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr><td colspan="8">No listings found.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        function setSection(sectionId) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(el => el.classList.remove('active'));
+            const section = document.getElementById(sectionId + '-section');
+            if (section) section.classList.add('active');
+            document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(el => {
+                if (el.getAttribute('href') === '#' + sectionId) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('href').replace('#', '');
+                setSection(target);
+                history.replaceState(null, null, '#'+target);
+            });
+        });
+
+        const initial = window.location.hash.replace('#', '') || 'dashboard';
+        setSection(initial);
+    </script>
+</body>
+</html>
