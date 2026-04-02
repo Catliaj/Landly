@@ -34,7 +34,27 @@ class DashboardController extends BaseController
             'listingCounts' => $listingCounts,
             'sellerInquiries' => $sellerInquiries,
             'sidebarCounts' => $sidebarCounts,
+            'geoapifyApiKey' => $this->resolveGeoapifyApiKey(),
         ]);
+    }
+
+    private function resolveGeoapifyApiKey(): string
+    {
+        $candidates = [
+            env('GEOAPIFY_API_KEY'),
+            $_ENV['GEOAPIFY_API_KEY'] ?? null,
+            $_SERVER['GEOAPIFY_API_KEY'] ?? null,
+            getenv('GEOAPIFY_API_KEY') ?: null,
+        ];
+
+        foreach ($candidates as $value) {
+            $key = trim((string) ($value ?? ''));
+            if ($key !== '') {
+                return $key;
+            }
+        }
+
+        return '';
     }
 
     public function sidebarCounts(): ResponseInterface
