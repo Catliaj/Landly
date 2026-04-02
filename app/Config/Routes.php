@@ -96,4 +96,15 @@ $routes->group('notifications', function ($routes) {
     $routes->patch('(:num)/archive', 'Notification\NotificationController::archiveNotification/$1');
 });
 
+// Admin routes
+$routes->group('admin', function ($routes) {
+    $routes->get('dashboard', 'Admin\DashboardController::index');
+    $routes->post('users/(:num)/activate', 'Admin\DashboardController::activateUser/$1');
+    $routes->post('users/(:num)/deactivate', 'Admin\DashboardController::deactivateUser/$1');
+    $routes->post('users/(:num)/delete', 'Admin\DashboardController::deleteUser/$1');
+
+    $routes->post('listings/(:num)/verify', 'Admin\DashboardController::verifyListing/$1');
+    $routes->post('listings/(:num)/reject', 'Admin\DashboardController::rejectListing/$1');
+    $routes->post('listings/(:num)/delete', 'Admin\DashboardController::deleteListing/$1');
+});
 

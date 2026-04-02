@@ -1772,16 +1772,18 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         }
 
         .property-modal {
-            background: linear-gradient(145deg, var(--green-800), var(--green-900));
-            border: 1px solid rgba(149, 213, 178, 0.2);
+            background: radial-gradient(circle at top left, #0d2818 0%, #fefae0 100%);
+            color: #123a25;
+            border: 1px solid rgba(149, 213, 178, 0.4);
             border-radius: 24px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 960px;
             max-height: 90vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             animation: modalSlideIn 0.4s ease;
+            box-shadow: 0 18px 36px rgba(12, 42, 28, 0.28);
         }
 
         @keyframes modalSlideIn {
@@ -1799,16 +1801,37 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+            padding: 16px 18px;
+            border-bottom: 1px dotted rgba(54, 92, 71, 0.35);
+            background: rgba(254, 250, 224, 0.55);
+            backdrop-filter: blur(4px);
         }
 
         .modal-header h2 {
             font-family: 'Playfair Display', Georgia, serif;
             font-style: italic;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--cream-100);
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #1b3f28;
+            margin: 0;
+        }
+
+        .modal-header .modal-price-section {
+            text-align: right;
+        }
+
+        .modal-price {
+            font-size: 1.42rem;
+            color: #1b3f28;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        .modal-price-sqm {
+            font-size: 0.82rem;
+            color: rgba(13, 40, 24, 0.68);
+            display: block;
         }
 
         .modal-close {
@@ -1837,9 +1860,21 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         .modal-body {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.05fr 1fr;
             flex: 1;
             overflow-y: auto;
+            min-height: 0;
+        }
+
+        .modal-gallery {
+            padding: 18px;
+            border-right: 1px solid rgba(150, 196, 160, 0.35);
+            background: rgba(254, 250, 224, 0.28);
+        }
+
+        .modal-content {
+            background: rgba(254, 250, 224, 0.95);
+            color: #113822;
         }
 
         .modal-gallery {
@@ -2025,6 +2060,30 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
             margin-bottom: 16px;
+        }
+
+        .modal-quick-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 0 0 14px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(13, 40, 24, 0.09);
+            border: 1px solid rgba(149, 213, 178, 0.4);
+        }
+
+        .quick-item {
+            font-size: 0.85rem;
+            color: #143f2b;
+        }
+
+        .quick-item strong {
+            color: #0b3a27;
+        }
+
+        .quick-value {
+            font-weight: 600;
         }
 
         .detail-label {
@@ -2515,7 +2574,244 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             .modal-footer {
                 flex-direction: column;
             }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 14px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .sidebar-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nav-item {
+                flex: 1 1 calc(50% - 8px);
+            }
+
+            .content-section {
+                padding: 0;
+            }
+
+            .user-profile {
+                padding: 12px 10px;
+            }
+
+            .chatbot {
+                width: 260px;
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .chatbot-content {
+                height: 320px;
+            }
         }
+
+        .chatbot {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 76px;
+            max-height: 480px;
+            z-index: 2000;
+            font-family: "Inter", system-ui, sans-serif;
+            transition: width 0.24s ease;
+            overflow: visible;
+        }
+
+        .chatbot.open {
+            width: 320px;
+        }
+
+        .chatbot-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--cream-100);
+            border: 1px solid var(--accent);
+            border-radius: 18px;
+            padding: 10px 12px;
+            color: var(--green-900);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .chatbot-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform-origin: left;
+        }
+
+        .chatbot.open .chatbot-header {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chatbot:not(.open) .chatbot-title {
+            display: none;
+        }
+
+        .chatbot-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chatbot-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green-900);
+            font-size: 1.1rem;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+        }
+
+        .chatbot-title {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.84rem;
+            line-height: 1.1;
+            color: var(--green-900);
+        }
+
+        .chatbot-title strong {
+            font-size: 0.93rem;
+            line-height: 1.1;
+        }
+
+        .chatbot-title span {
+            font-size: 0.74rem;
+            color: rgba(13, 40, 24, 0.8);
+        }
+
+        .chatbot-toggle h4 {
+            margin: 0;
+            font-size: 0.93rem;
+            display: none;
+        }
+
+        .chatbot-close {
+            display: none;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            color: var(--green-900);
+            cursor: pointer;
+        }
+
+        .chatbot.open .chatbot-close {
+            display: inline-flex;
+        }
+
+        .chatbot-footer {
+            display: block;
+            text-align: center;
+            font-size: 0.72rem;
+            color: rgba(13, 40, 24, 0.75);
+            padding: 6px 0 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+        }
+
+        .chatbot-content {
+            display: none;
+            flex-direction: column;
+            background: var(--cream-100);
+            border: 1px solid var(--accent);
+            border-radius: 18px;
+            margin-top: 8px;
+            overflow: hidden;
+            height: 400px;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+        }
+
+        .chatbot-content.active {
+            display: flex;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #faf4df;
+        }
+
+        .chatbot-message {
+            padding: 9px 11px;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.3;
+        }
+
+        .chatbot-message.user {
+            background: #d2b48c;
+            color: #0f1b1b;
+            align-self: flex-end;
+        }
+
+        .chatbot-message.bot {
+            background: #ece4d4;
+            color: #1c3e3a;
+            align-self: flex-start;
+        }
+
+        .chatbot-input-wrap {
+            display: flex;
+            border-top: 1px solid rgba(0,0,0,.12);
+        }
+
+        .chatbot-input {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #fbf7ec;
+            color: #1f3f3a;
+        }
+
+        .chatbot-send {
+            background: var(--green-700);
+            color: var(--cream-100);
+            border: none;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 <body>
@@ -2656,6 +2952,29 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             <!-- Profile Section -->
             <?= view('Pages/Buyer/Components/ProfileSection') ?>
         </main>
+    </div>
+
+    <div class="chatbot" id="buyerChatbot">
+        <div class="chatbot-toggle" id="buyerChatbotToggle" role="button" aria-label="Open chat with LandlyBot">
+            <div class="chatbot-header">
+                <div class="chatbot-icon" aria-hidden="true">🤖</div>
+                <div class="chatbot-title">
+                    <strong>LandlyBot</strong>
+                    <span>Real estate assistant</span>
+                </div>
+            </div>
+            <button class="chatbot-close" id="buyerChatbotClose" aria-label="Close chat">✕</button>
+        </div>
+        <div class="chatbot-content" id="buyerChatbotContent" aria-live="polite" aria-atomic="true">
+            <div class="chatbot-messages" id="buyerChatbotMessages">
+                <div class="chatbot-message bot">Hello! Need help finding property or tracking your inquiry?</div>
+            </div>
+            <div class="chatbot-input-wrap">
+                <input type="text" id="buyerChatbotInput" class="chatbot-input" placeholder="Type your message..." aria-label="Type your message" />
+                <button class="chatbot-send" id="buyerChatbotSend">Send</button>
+            </div>
+        </div>
+        <div class="chatbot-footer">LandlyBot</div>
     </div>
 
     <script>
@@ -3028,6 +3347,68 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         showSection(initialSection || 'dashboard');
 
+        // Buyer Chatbot controls
+        const buyerChatbot = document.getElementById('buyerChatbot');
+        const buyerChatbotToggle = document.getElementById('buyerChatbotToggle');
+        const buyerChatbotContent = document.getElementById('buyerChatbotContent');
+        const buyerChatbotClose = document.getElementById('buyerChatbotClose');
+        const buyerChatbotSend = document.getElementById('buyerChatbotSend');
+        const buyerChatbotInput = document.getElementById('buyerChatbotInput');
+        const buyerChatbotMessages = document.getElementById('buyerChatbotMessages');
+
+        function addBuyerChatbotMessage(text, cls) {
+            const msg = document.createElement('div');
+            msg.className = 'chatbot-message ' + cls;
+            msg.textContent = text;
+            buyerChatbotMessages.appendChild(msg);
+            buyerChatbotMessages.scrollTop = buyerChatbotMessages.scrollHeight;
+        }
+
+        function updateBuyerChatbotState() {
+            const isOpen = buyerChatbotContent.classList.contains('active');
+            if (isOpen) {
+                buyerChatbot?.classList.add('open');
+            } else {
+                buyerChatbot?.classList.remove('open');
+            }
+        }
+
+        buyerChatbotToggle?.addEventListener('click', () => {
+            buyerChatbotContent.classList.toggle('active');
+            updateBuyerChatbotState();
+        });
+
+        buyerChatbotClose?.addEventListener('click', () => {
+            buyerChatbotContent.classList.remove('active');
+            updateBuyerChatbotState();
+        });
+
+        // init right state
+        updateBuyerChatbotState();
+
+        function sendBuyerChatbotMessage() {
+            const text = (buyerChatbotInput?.value || '').trim();
+            if (!text) return;
+            addBuyerChatbotMessage(text, 'user');
+            buyerChatbotInput.value = '';
+
+            setTimeout(() => {
+                addBuyerChatbotMessage('Thanks for your message! We will respond shortly.', 'bot');
+            }, 750);
+        }
+
+        buyerChatbotSend?.addEventListener('click', (e) => {
+            e.preventDefault();
+            sendBuyerChatbotMessage();
+        });
+
+        buyerChatbotInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendBuyerChatbotMessage();
+            }
+        });
+
         // Mobile menu toggle
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
@@ -3382,15 +3763,17 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         // Open Property Modal
         async function openPropertyModal(propertyId) {
             const property = propertyData[propertyId];
-            if (!property) return;
-
-            showDetailsLoadingState();
+            if (!property) {
+                alert('Sorry, property details are unavailable for this listing.');
+                return;
+            }
 
             const modal = document.getElementById('propertyModal');
 
             try {
                 // Set main image
-                document.getElementById('modalMainImage').src = property.images[0];
+                const primaryImage = property.images && property.images.length > 0 ? property.images[0] : '';
+                document.getElementById('modalMainImage').src = primaryImage || 'https://via.placeholder.com/640x400?text=No+Image';
 
                 // Set thumbnails
                 const thumbsContainer = document.getElementById('modalThumbnails');
@@ -3430,12 +3813,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 const coordinates = await getListingCoordinates(propertyId, property);
                 const mapIframe = document.getElementById('modalMap');
                 const mapUrl = createMapEmbedUrl(coordinates.lat, coordinates.lng);
-                let geoapifyLoaded = false;
 
                 if (mapUrl) {
                     mapIframe.removeAttribute('srcdoc');
-                    console.info('[Landly Map] Geoapify static map request:', mapUrl);
-                    geoapifyLoaded = await loadIframeSource(mapIframe, mapUrl);
+                    mapIframe.src = mapUrl;
                 } else {
                     mapIframe.src = 'about:blank';
                     mapIframe.srcdoc = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#475467;background:#f8fafc;">Map is currently unavailable.</div>';
@@ -3739,7 +4120,14 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                         <span id="modalLocation"></span>
                     </div>
                 </div>
-                
+
+                <div class="modal-quick-info">
+                    <div class="quick-item"><strong>Area:</strong> <span id="modalArea" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Type:</strong> <span id="modalType" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Status:</strong> <span id="modalStatus" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Title:</strong> <span id="modalTitleStatus" class="quick-value"></span></div>
+                </div>
+
                 <div class="modal-details-grid">
                     <div class="detail-item">
                         <span class="detail-label">Land Area</span>
