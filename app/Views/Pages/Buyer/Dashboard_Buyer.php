@@ -1501,6 +1501,14 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             color: var(--green-900);
             font-size: 2.5rem;
             margin: 0 auto 20px;
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .profile-name {

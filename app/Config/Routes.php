@@ -35,6 +35,14 @@ $routes->group('buyer', function ($routes) {
     $routes->get('dashboard', 'Buyer\DashboardController::index');
     $routes->get('sidebar-counts', 'Buyer\DashboardController::sidebarCounts');
 
+    // Buyer profile CRUD routes
+    $routes->get('profile', 'Buyer\BuyerProfileController::index');
+    $routes->get('profile/(:num)', 'Buyer\BuyerProfileController::show/$1');
+    $routes->post('profile', 'Buyer\BuyerProfileController::store');
+    $routes->put('profile/(:num)', 'Buyer\BuyerProfileController::update/$1');
+    $routes->delete('profile/(:num)', 'Buyer\BuyerProfileController::delete/$1');
+    $routes->post('profile/reset', 'Buyer\BuyerProfileController::delete');
+
     // Land listing routes for buyers
     $routes->get('listings', 'Buyer\LandListingController::listAll');
     $routes->get('listings/(:num)', 'Buyer\LandListingController::view/$1');
