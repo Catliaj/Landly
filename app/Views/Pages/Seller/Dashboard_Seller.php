@@ -2293,7 +2293,7 @@ $userProfile = $userProfile ?? [
             <?= view('Pages/Seller/Components/ListingSection', ['sellerListings' => $sellerListings ?? [], 'listingCounts' => $listingCounts ?? []]) ?>
 
             <!-- Add Listing Section -->
-            <?= view('Pages/Seller/Components/AddListingSection') ?>
+            <?= view('Pages/Seller/Components/AddListingSection', ['geoapifyApiKey' => $geoapifyApiKey ?? '']) ?>
 
             <!-- Messages Section -->
             <?= view('Pages/Seller/Components/MessagesSection') ?>

@@ -171,8 +171,9 @@ class DashboardController extends BaseController
     {
         $listingModel = new LandListings();
         $rows = $listingModel
-            ->select('land_listings.*, users.first_name, users.last_name, users.email, users.created_at AS seller_created_at')
+            ->select('land_listings.*, users.first_name, users.last_name, users.email, users.created_at AS seller_created_at, listing_locations.latitude AS listing_latitude, listing_locations.longitude AS listing_longitude')
             ->join('users', 'users.user_id = land_listings.seller_id', 'left')
+            ->join('listing_locations', 'listing_locations.listing_id = land_listings.listing_id', 'left')
             ->where('land_listings.is_verified_listing', 'true')
             ->orderBy('land_listings.created_at', 'DESC')
             ->findAll();
@@ -257,7 +258,10 @@ class DashboardController extends BaseController
                 'documentStatus' => $documentStatusLabel,
                 'listingStatus' => $statusMeta['label'],
                 'mapAddress' => $locationLabel !== 'Location unavailable' ? $locationLabel . ', Philippines' : 'Nasugbu, Batangas, Philippines',
-                'coordinates' => ['lat' => null, 'lng' => null],
+                'coordinates' => [
+                    'lat' => $this->normalizeCoordinateValue($row['listing_latitude'] ?? null),
+                    'lng' => $this->normalizeCoordinateValue($row['listing_longitude'] ?? null),
+                ],
                 'images' => [$imageUrl],
                 'description' => trim((string) ($row['description'] ?? 'No description provided.')),
                 'features' => $this->buildFeatureTags($row),
@@ -356,6 +360,15 @@ class DashboardController extends BaseController
         ]);
 
         return $parts !== [] ? implode(', ', $parts) : 'Location unavailable';
+    }
+
+    private function normalizeCoordinateValue(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     private function formatPropertyType(string $propertyType): string

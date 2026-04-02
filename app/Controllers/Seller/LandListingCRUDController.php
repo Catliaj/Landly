@@ -3,6 +3,7 @@
 namespace App\Controllers\Seller;
 
 use App\Controllers\BaseController;
+use App\Models\ListingLocationsModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use Config\Database;
 
@@ -13,7 +14,7 @@ class LandListingCRUDController extends BaseController
 
     public function createLandListing()
     {
-        $sellerId = (int) (session()->get('user_id') ?? 0);
+        $sellerId = $this->getCurrentUserId();
         if ($sellerId <= 0) {
             return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized.']);
         }
@@ -69,6 +70,8 @@ class LandListingCRUDController extends BaseController
                 throw new \RuntimeException('Failed to create listing.');
             }
 
+            $location = $this->saveListingLocation($listingId);
+
             $this->insertListingImages($listingId, $storedImages);
             $this->insertListingDocuments($listingId, $storedDocs);
 
@@ -81,6 +84,7 @@ class LandListingCRUDController extends BaseController
             return $this->response->setStatusCode(201)->setJSON([
                 'status' => 'success',
                 'listing_id' => $listingId,
+                'location' => $location,
                 'images' => $storedImages,
                 'documents' => $storedDocs,
             ]);
@@ -91,6 +95,53 @@ class LandListingCRUDController extends BaseController
                 'message' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function saveListingLocation(int $listingId): ?array
+    {
+        $latitudeInput = $this->request->getPost('latitude');
+        if ($latitudeInput === null || $latitudeInput === '') {
+            $latitudeInput = $this->request->getPost('Latitude');
+        }
+
+        $longitudeInput = $this->request->getPost('longitude');
+        if ($longitudeInput === null || $longitudeInput === '') {
+            $longitudeInput = $this->request->getPost('Longitude');
+        }
+
+        $hasLatitude = $latitudeInput !== null && $latitudeInput !== '';
+        $hasLongitude = $longitudeInput !== null && $longitudeInput !== '';
+
+        if (! $hasLatitude && ! $hasLongitude) {
+            return null;
+        }
+
+        if (! $hasLatitude || ! $hasLongitude) {
+            throw new \RuntimeException('Both latitude and longitude are required when location is provided.');
+        }
+
+        if (! is_numeric($latitudeInput) || ! is_numeric($longitudeInput)) {
+            throw new \RuntimeException('Latitude and longitude must be numeric values.');
+        }
+
+        $db = Database::connect();
+        if (! $db->tableExists('listing_locations')) {
+            throw new \RuntimeException('listing_locations table does not exist. Run migrations first.');
+        }
+
+        $location = [
+            'listing_id' => $listingId,
+            'latitude' => (float) $latitudeInput,
+            'longitude' => (float) $longitudeInput,
+        ];
+
+        $locationModel = new ListingLocationsModel();
+        if (! $locationModel->insert($location, false)) {
+            $error = implode(' ', $locationModel->errors() ?: ['Failed to save listing location.']);
+            throw new \RuntimeException($error);
+        }
+
+        return $location;
     }
 
     /**

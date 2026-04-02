@@ -1776,7 +1776,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             border: 1px solid rgba(149, 213, 178, 0.2);
             border-radius: 24px;
             width: 100%;
-            max-width: 1000px;
+            max-width: min(96vw, 1500px);
             max-height: 90vh;
             overflow: hidden;
             display: flex;
@@ -1845,6 +1845,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         .modal-gallery {
             padding: 24px;
             border-right: 1px solid rgba(149, 213, 178, 0.1);
+            min-width: 0;
         }
 
         .gallery-main {
@@ -1912,6 +1913,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             min-height: 0;
             overflow-y: auto;
             padding: 24px;
+            min-width: 0;
         }
 
         .modal-content::-webkit-scrollbar {
@@ -2077,6 +2079,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             width: 100%;
             max-width: 100%;
             display: block;
+            min-height: 320px;
         }
 
         .expand-map-btn {
@@ -2395,8 +2398,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         .map-modal {
             width: 100%;
-            max-width: 1200px;
-            height: 80vh;
+            max-width: min(95vw, 1400px);
+            height: 84vh;
             background: var(--green-900);
             border-radius: 20px;
             overflow: hidden;
@@ -3117,9 +3120,9 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 return '';
             }
 
-            const zoom = 14;
+            const zoom = 16;
             const cacheBust = Date.now();
-            return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=1400&height=900&center=lonlat:${safeLng},${safeLat}&zoom=${zoom}&marker=lonlat:${safeLng},${safeLat};type:awesome;color:%23d62828;size:large&apiKey=${encodeURIComponent(geoapifyApiKey)}&cb=${cacheBust}`;
+            return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=1800&height=1100&center=lonlat:${safeLng},${safeLat}&zoom=${zoom}&marker=lonlat:${safeLng},${safeLat};type:awesome;color:%23d62828;size:large&apiKey=${encodeURIComponent(geoapifyApiKey)}&cb=${cacheBust}`;
         }
 
         function showDetailsLoadingState() {
@@ -3438,7 +3441,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     geoapifyLoaded = await loadIframeSource(mapIframe, mapUrl);
                 } else {
                     mapIframe.src = 'about:blank';
-                    mapIframe.srcdoc = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#475467;background:#f8fafc;">Map is currently unavailable.</div>';
+                    mapIframe.srcdoc = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#475467;background:#f8fafc;">Map preview unavailable.</div>';
                 }
 
                 // Store coordinates for full map
@@ -3468,21 +3471,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 closeDetailsLoadingState();
 
                 if (hasSwal()) {
-                    if (geoapifyLoaded) {
-                        await fireAppAlert({
-                            icon: 'success',
-                            title: 'Details Loaded',
-                            text: 'Property details are ready.',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        await fireAppAlert({
-                            icon: 'warning',
-                            title: 'Details Loaded',
-                            text: 'Property details are ready, but the map is not available right now.',
-                            confirmButtonText: 'OK'
-                        });
-                    }
+                    await fireAppAlert({
+                        icon: 'success',
+                        title: 'Details Loaded',
+                        text: 'Property details are ready.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             } catch (error) {
                 closeDetailsLoadingState();
