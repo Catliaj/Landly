@@ -34,7 +34,9 @@ class LandListings extends Model
         'developing_area',
         'listing_status',
         'is_verified_listing',
-        'price'
+        'price',
+        'Latitude',
+        'Longitude',
     ];
 
     // timestamps

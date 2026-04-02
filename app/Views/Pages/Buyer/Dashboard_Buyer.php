@@ -1776,7 +1776,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             border: 1px solid rgba(149, 213, 178, 0.2);
             border-radius: 24px;
             width: 100%;
-            max-width: 1000px;
+            max-width: min(96vw, 1500px);
             max-height: 90vh;
             overflow: hidden;
             display: flex;
@@ -1845,6 +1845,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         .modal-gallery {
             padding: 24px;
             border-right: 1px solid rgba(149, 213, 178, 0.1);
+            min-width: 0;
         }
 
         .gallery-main {
@@ -1912,6 +1913,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             min-height: 0;
             overflow-y: auto;
             padding: 24px;
+            min-width: 0;
         }
 
         .modal-content::-webkit-scrollbar {
@@ -2077,6 +2079,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             width: 100%;
             max-width: 100%;
             display: block;
+            min-height: 320px;
         }
 
         .expand-map-btn {
@@ -2393,38 +2396,68 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             display: flex;
         }
 
-        .map-modal {
+        .map-modal,
+        .full-map-modal {
             width: 100%;
-            max-width: 1200px;
-            height: 80vh;
+            max-width: min(95vw, 1400px);
+            height: 84vh;
             background: var(--green-900);
             border-radius: 20px;
             overflow: hidden;
             border: 1px solid rgba(149, 213, 178, 0.2);
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
-        .map-modal-header {
+        .map-modal-header,
+        .full-map-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
             background: var(--green-800);
             border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+            flex: 0 0 auto;
         }
 
-        .map-modal-header h3 {
+        .map-modal-header h3,
+        .full-map-header h3 {
             font-size: 1rem;
             color: var(--cream-100);
         }
 
         .map-modal-body {
             height: calc(100% - 60px);
+            position: relative;
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
-        .map-modal-body iframe {
+        .full-map-canvas {
             width: 100%;
             height: 100%;
             border: none;
+            background: var(--green-900);
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .map-loading-state {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 40, 24, 0.92);
+            color: var(--cream-100);
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            z-index: 2;
+        }
+
+        .map-loading-state.visible {
+            display: flex;
         }
 
         /* Unified SweetAlert theme aligned with system Auth style */
@@ -3069,6 +3102,11 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         const logoutRedirectUrl = <?= json_encode(base_url('/'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         console.info('[Landly Map] Geoapify key loaded:', Boolean(geoapifyApiKey));
+        const leafletCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        const leafletCssCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+
+        let fullMapInstance = null;
+        let fullMapMarker = null;
 
         const defaultAlertConfig = {
             confirmButtonText: 'OK',
@@ -3117,9 +3155,9 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 return '';
             }
 
-            const zoom = 14;
+            const zoom = 16;
             const cacheBust = Date.now();
-            return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=1400&height=900&center=lonlat:${safeLng},${safeLat}&zoom=${zoom}&marker=lonlat:${safeLng},${safeLat};type:awesome;color:%23d62828;size:large&apiKey=${encodeURIComponent(geoapifyApiKey)}&cb=${cacheBust}`;
+            return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=1800&height=1100&center=lonlat:${safeLng},${safeLat}&zoom=${zoom}&marker=lonlat:${safeLng},${safeLat};type:awesome;color:%23d62828;size:large&apiKey=${encodeURIComponent(geoapifyApiKey)}&cb=${cacheBust}`;
         }
 
         function showDetailsLoadingState() {
@@ -3200,6 +3238,151 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
                 window.setTimeout(() => finish(false), timeoutMs);
             });
+        }
+
+        function buildMapFrameSrcdoc(mapUrl, altText) {
+            const safeMapUrl = String(mapUrl || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            const safeAltText = String(altText || 'Property map').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+            return `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #0d2818;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <img src="${safeMapUrl}" alt="${safeAltText}">
+</body>
+</html>`;
+        }
+
+        function ensureLeaflet() {
+            if (window.L && typeof window.L.map === 'function') {
+                return Promise.resolve(window.L);
+            }
+
+            const existingScript = document.querySelector('script[data-leaflet="true"]');
+            const existingCss = document.querySelector('link[data-leaflet="true"]');
+
+            return new Promise((resolve) => {
+                const loadScript = () => {
+                    const script = existingScript || document.createElement('script');
+                    if (!existingScript) {
+                        script.src = leafletCdn;
+                        script.async = true;
+                        script.dataset.leaflet = 'true';
+                        script.onload = () => resolve(window.L || null);
+                        script.onerror = () => resolve(null);
+                        document.head.appendChild(script);
+                    } else if (window.L && typeof window.L.map === 'function') {
+                        resolve(window.L);
+                    } else {
+                        existingScript.addEventListener('load', () => resolve(window.L || null), { once: true });
+                        existingScript.addEventListener('error', () => resolve(null), { once: true });
+                    }
+                };
+
+                if (!existingCss) {
+                    const css = document.createElement('link');
+                    css.rel = 'stylesheet';
+                    css.href = leafletCssCdn;
+                    css.dataset.leaflet = 'true';
+                    document.head.appendChild(css);
+                }
+
+                loadScript();
+            });
+        }
+
+        function setFullMapLoading(isLoading, message = 'Loading interactive map...') {
+            const loadingNode = document.getElementById('fullMapLoading');
+            if (!loadingNode) {
+                return;
+            }
+
+            loadingNode.textContent = message;
+            loadingNode.classList.toggle('visible', Boolean(isLoading));
+        }
+
+        function destroyFullMap() {
+            if (fullMapInstance && typeof fullMapInstance.remove === 'function') {
+                fullMapInstance.remove();
+            }
+
+            fullMapInstance = null;
+            fullMapMarker = null;
+        }
+
+        async function renderFullMap(lat, lng, title) {
+            const mapCanvas = document.getElementById('fullMapCanvas');
+            const propertyModal = document.getElementById('propertyModal');
+            if (!mapCanvas) {
+                return false;
+            }
+
+            setFullMapLoading(true);
+            const leaflet = await ensureLeaflet();
+            if (!leaflet) {
+                setFullMapLoading(true, 'Unable to load interactive map.');
+                return false;
+            }
+
+            const safeLat = Number(lat);
+            const safeLng = Number(lng);
+            if (!Number.isFinite(safeLat) || !Number.isFinite(safeLng)) {
+                setFullMapLoading(true, 'Map coordinates are unavailable.');
+                return false;
+            }
+
+            destroyFullMap();
+
+            fullMapInstance = leaflet.map(mapCanvas, {
+                zoomControl: true,
+                scrollWheelZoom: true,
+                dragging: true,
+                doubleClickZoom: true,
+                touchZoom: true,
+                tap: true,
+            });
+
+            leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(fullMapInstance);
+
+            fullMapMarker = leaflet.marker([safeLat, safeLng], {
+                draggable: true,
+            }).addTo(fullMapInstance);
+
+            fullMapMarker.on('dragend', () => {
+                const markerPosition = fullMapMarker.getLatLng();
+                if (propertyModal) {
+                    propertyModal.dataset.lat = String(markerPosition.lat);
+                    propertyModal.dataset.lng = String(markerPosition.lng);
+                }
+                fullMapInstance.setView(markerPosition, fullMapInstance.getZoom(), { animate: true });
+            });
+
+            fullMapInstance.setView([safeLat, safeLng], 16);
+            window.setTimeout(() => fullMapInstance?.invalidateSize(), 250);
+            setFullMapLoading(false);
+            return true;
         }
 
         async function geocodeListingAddress(addressText) {
@@ -3430,15 +3613,14 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 const coordinates = await getListingCoordinates(propertyId, property);
                 const mapIframe = document.getElementById('modalMap');
                 const mapUrl = createMapEmbedUrl(coordinates.lat, coordinates.lng);
-                let geoapifyLoaded = false;
 
                 if (mapUrl) {
-                    mapIframe.removeAttribute('srcdoc');
+                    mapIframe.removeAttribute('src');
                     console.info('[Landly Map] Geoapify static map request:', mapUrl);
-                    geoapifyLoaded = await loadIframeSource(mapIframe, mapUrl);
+                    mapIframe.srcdoc = buildMapFrameSrcdoc(mapUrl, property.title || 'Property map');
                 } else {
-                    mapIframe.src = 'about:blank';
-                    mapIframe.srcdoc = '<div style="height:100%;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;color:#475467;background:#f8fafc;">Map is currently unavailable.</div>';
+                    mapIframe.removeAttribute('src');
+                    mapIframe.srcdoc = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f8fafc;color:#475467;font-family:Arial,sans-serif;}body{display:flex;align-items:center;justify-content:center;}</style></head><body>Map preview unavailable.</body></html>';
                 }
 
                 // Store coordinates for full map
@@ -3468,21 +3650,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 closeDetailsLoadingState();
 
                 if (hasSwal()) {
-                    if (geoapifyLoaded) {
-                        await fireAppAlert({
-                            icon: 'success',
-                            title: 'Details Loaded',
-                            text: 'Property details are ready.',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        await fireAppAlert({
-                            icon: 'warning',
-                            title: 'Details Loaded',
-                            text: 'Property details are ready, but the map is not available right now.',
-                            confirmButtonText: 'OK'
-                        });
-                    }
+                    await fireAppAlert({
+                        icon: 'success',
+                        title: 'Details Loaded',
+                        text: 'Property details are ready.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             } catch (error) {
                 closeDetailsLoadingState();
@@ -3685,14 +3858,17 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             
             const mapModal = document.getElementById('mapModal');
             document.getElementById('fullMapTitle').textContent = title;
-            document.getElementById('fullMapIframe').src = createMapEmbedUrl(parseFloat(lat), parseFloat(lng), 0.02);
+            setFullMapLoading(true);
             
             mapModal.classList.add('active');
+            window.setTimeout(() => renderFullMap(parseFloat(lat), parseFloat(lng), title || 'Property map'), 0);
         }
 
         // Close Map Modal
         function closeMapModal() {
             document.getElementById('mapModal').classList.remove('active');
+            destroyFullMap();
+            setFullMapLoading(false);
         }
 
         // Close modals on overlay click
@@ -3837,7 +4013,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </button>
             </div>
-            <iframe id="fullMapIframe" class="full-map-iframe" frameborder="0" scrolling="no"></iframe>
+            <div id="fullMapCanvas" class="full-map-canvas"></div>
+            <div id="fullMapLoading" class="map-loading-state">Loading interactive map...</div>
         </div>
     </div>
 </body>

@@ -1,3 +1,5 @@
+<?php $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? '')); ?>
+
 <section id="section-add-listing" class="content-section">
                 <div class="content-card">
                     <div class="card-header">
@@ -66,7 +68,24 @@
                             <div class="form-group full-width">
                                 <label>Complete Address</label>
                                 <input type="text" id="complete-address" class="form-control" placeholder="e.g., Brgy. San Jose, Lipa City, Batangas">
+                                <div id="address-suggestions" class="address-suggestions" style="display:none;"></div>
+                                <small class="address-hint">Only addresses within Nasugbu, Batangas are allowed.</small>
                             </div>
+
+
+                           
+
+                            <div class="  form-group full-width" style="display:none;">
+                                <input type="hidden" name="latitude" id="latitude">
+                                <input type="hidden" name="longitude" id="longitude">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Pin Location on Map</label>
+                                <div id="map" style="width: 100%; height: 300px; border: 1px solid #ccc; border-radius: 8px;"></div>
+                            </div>
+
+
 
                             <div class="form-group full-width">
                                 <label>Description <span>*</span></label>
@@ -189,6 +208,47 @@
                 .landly-swal-hide {
                     animation: landlyFadeOutDown 0.2s ease-in;
                 }
+
+                .address-hint {
+                    display: block;
+                    margin-top: 8px;
+                    color: rgba(245, 245, 220, 0.72);
+                    font-size: 0.8rem;
+                }
+
+                .address-suggestions {
+                    margin-top: 8px;
+                    border: 1px solid rgba(149, 213, 178, 0.35);
+                    border-radius: 10px;
+                    overflow: hidden;
+                    background: rgba(15, 27, 27, 0.96);
+                }
+
+                .address-suggestion-item {
+                    width: 100%;
+                    border: 0;
+                    border-bottom: 1px solid rgba(149, 213, 178, 0.12);
+                    background: transparent;
+                    color: var(--cream-100);
+                    text-align: left;
+                    cursor: pointer;
+                    padding: 10px 12px;
+                    font-size: 0.92rem;
+                }
+
+                .address-suggestion-item:last-child {
+                    border-bottom: 0;
+                }
+
+                .address-suggestion-item:hover {
+                    background: rgba(149, 213, 178, 0.16);
+                }
+
+                .address-suggestion-empty {
+                    padding: 10px 12px;
+                    color: rgba(245, 245, 220, 0.7);
+                    font-size: 0.9rem;
+                }
             </style>
 
             <script>
@@ -202,14 +262,407 @@
                     const documentStatus = document.getElementById('document-status');
                     const city = document.getElementById('listing-city');
                     const address = document.getElementById('complete-address');
+                    const addressSuggestions = document.getElementById('address-suggestions');
                     const barangay = document.getElementById('listing-barangay');
+                    const province = form.querySelector('select[name="province"]');
+                    const latitudeInput = document.getElementById('latitude');
+                    const longitudeInput = document.getElementById('longitude');
+                    const mapElement = document.getElementById('map');
                     const price = document.getElementById('listing-price');
                     const area = document.getElementById('land-area');
                     const pricePerSqm = document.getElementById('price-per-sqm');
                     const feedback = document.getElementById('add-listing-feedback');
                     const submitBtn = document.getElementById('publish-listing-btn');
                     const saveDraftBtn = document.getElementById('save-draft-btn');
+                    const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+                    const nasugbuCenter = { lat: 14.0722, lng: 120.6319 };
+                    const maxDistanceFromNasugbuKm = 35;
                     const swalCdn = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                    const leafletCssCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    const leafletJsCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+
+                    let listingMap = null;
+                    let listingMarker = null;
+                    let autocompleteTimer = null;
+                    let autocompleteRequestId = 0;
+
+                    const toRadians = (value) => (value * Math.PI) / 180;
+
+                    const getDistanceKm = (latA, lngA, latB, lngB) => {
+                        const earthRadiusKm = 6371;
+                        const dLat = toRadians(latB - latA);
+                        const dLng = toRadians(lngB - lngA);
+
+                        const a =
+                            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                            Math.cos(toRadians(latA)) * Math.cos(toRadians(latB)) *
+                            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                        return earthRadiusKm * c;
+                    };
+
+                    const isWithinNasugbuBounds = (lat, lng) => {
+                        const distance = getDistanceKm(lat, lng, nasugbuCenter.lat, nasugbuCenter.lng);
+                        return distance <= maxDistanceFromNasugbuKm;
+                    };
+
+                    const isNasugbuResult = (feature) => {
+                        if (!feature) return false;
+
+                        const textParts = [
+                            feature.city,
+                            feature.town,
+                            feature.village,
+                            feature.municipality,
+                            feature.county,
+                            feature.state_district,
+                            feature.formatted,
+                        ]
+                            .map((value) => (value || '').toString().trim().toLowerCase())
+                            .filter(Boolean);
+
+                        return textParts.some((value) => value.includes('nasugbu'));
+                    };
+
+                    const clearMapPin = () => {
+                        if (listingMarker && listingMap) {
+                            listingMap.removeLayer(listingMarker);
+                            listingMarker = null;
+                        }
+
+                        if (latitudeInput) latitudeInput.value = '';
+                        if (longitudeInput) longitudeInput.value = '';
+                    };
+
+                    const hideAddressSuggestions = () => {
+                        if (!addressSuggestions) return;
+                        addressSuggestions.style.display = 'none';
+                        addressSuggestions.innerHTML = '';
+                    };
+
+                    const enforceNasugbuInputValidity = (isValid) => {
+                        if (!address) return;
+                        const message = isValid ? '' : 'Address must be within Nasugbu, Batangas.';
+                        address.setCustomValidity(message);
+                    };
+
+                    const ensureLeaflet = () => {
+                        if (window.L?.map) return window.Promise.resolve(window.L);
+
+                        const existingScript = document.querySelector('script[data-leaflet="true"]');
+                        const existingCss = document.querySelector('link[data-leaflet="true"]');
+
+                        if (!existingCss) {
+                            const css = document.createElement('link');
+                            css.rel = 'stylesheet';
+                            css.href = leafletCssCdn;
+                            css.dataset.leaflet = 'true';
+                            document.head.appendChild(css);
+                        }
+
+                        if (existingScript) {
+                            return new window.Promise((resolve) => {
+                                existingScript.addEventListener('load', () => resolve(window.L || null), { once: true });
+                                existingScript.addEventListener('error', () => resolve(null), { once: true });
+                            });
+                        }
+
+                        return new window.Promise((resolve) => {
+                            const script = document.createElement('script');
+                            script.src = leafletJsCdn;
+                            script.async = true;
+                            script.dataset.leaflet = 'true';
+                            script.onload = () => resolve(window.L || null);
+                            script.onerror = () => resolve(null);
+                            document.head.appendChild(script);
+                        });
+                    };
+
+                    const updateMapPin = (lat, lng, zoomLevel = 16) => {
+                        if (!listingMap || !window.L) return;
+
+                        if (!listingMarker) {
+                            listingMarker = window.L.marker([lat, lng]).addTo(listingMap);
+                        } else {
+                            listingMarker.setLatLng([lat, lng]);
+                        }
+
+                        listingMap.setView([lat, lng], zoomLevel);
+                        if (latitudeInput) latitudeInput.value = Number(lat).toFixed(8);
+                        if (longitudeInput) longitudeInput.value = Number(lng).toFixed(8);
+                    };
+
+                    const applyAddressFromGeoapify = (feature) => {
+                        if (!feature) return;
+
+                        const formatted = (feature.formatted || '').trim();
+                        if (formatted && address) {
+                            address.value = formatted;
+                        }
+
+                        const nextCity = (
+                            feature.city ||
+                            feature.town ||
+                            feature.village ||
+                            feature.municipality ||
+                            feature.county ||
+                            ''
+                        ).trim();
+
+                        if (nextCity && city) {
+                            city.value = nextCity;
+                        }
+
+                        const nextProvince = (feature.state || feature.region || '').trim();
+                        if (nextProvince && province) {
+                            const match = Array.from(province.options || []).find((option) =>
+                                (option.value || '').trim().toLowerCase() === nextProvince.toLowerCase()
+                            );
+
+                            if (match) {
+                                province.value = match.value;
+                            }
+                        }
+
+                        syncBarangay();
+                    };
+
+                    const geocodeAddress = async (addressText) => {
+                        if (!geoapifyApiKey || !addressText) {
+                            return null;
+                        }
+
+                        const endpoint = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addressText)}&limit=1&format=json&filter=countrycode:ph&bias=proximity:${nasugbuCenter.lng},${nasugbuCenter.lat}&apiKey=${encodeURIComponent(geoapifyApiKey)}`;
+
+                        try {
+                            const response = await window.fetch(endpoint);
+                            if (!response.ok) return null;
+
+                            const payload = await response.json();
+                            return payload?.results?.[0] || null;
+                        } catch (_error) {
+                            return null;
+                        }
+                    };
+
+                    const reverseGeocodePin = async (lat, lng) => {
+                        if (!geoapifyApiKey) return;
+
+                        const endpoint = `https://api.geoapify.com/v1/geocode/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&format=json&apiKey=${encodeURIComponent(geoapifyApiKey)}`;
+
+                        try {
+                            const response = await window.fetch(endpoint);
+                            if (!response.ok) return;
+
+                            const payload = await response.json();
+                            const feature = payload?.results?.[0] || null;
+                            return feature;
+                        } catch (_error) {
+                            // Silent fail to keep map interaction smooth when geocoding is unavailable.
+                            return null;
+                        }
+                    };
+
+                    const renderAddressSuggestions = (items) => {
+                        if (!addressSuggestions) return;
+
+                        if (!Array.isArray(items) || items.length === 0) {
+                            addressSuggestions.innerHTML = '<div class="address-suggestion-empty">No Nasugbu matches found.</div>';
+                            addressSuggestions.style.display = 'block';
+                            return;
+                        }
+
+                        addressSuggestions.innerHTML = items.map((item, index) => {
+                            const label = (item.formatted || '').replace(/"/g, '&quot;');
+                            return `<button type="button" class="address-suggestion-item" data-index="${index}">${label}</button>`;
+                        }).join('');
+
+                        addressSuggestions.style.display = 'block';
+
+                        addressSuggestions.querySelectorAll('.address-suggestion-item').forEach((button) => {
+                            button.addEventListener('click', () => {
+                                const index = Number(button.getAttribute('data-index'));
+                                const selected = items[index] || null;
+                                if (!selected) return;
+
+                                applyAddressFromGeoapify(selected);
+                                if (typeof selected.lat === 'number' && typeof selected.lon === 'number') {
+                                    updateMapPin(selected.lat, selected.lon, 16);
+                                }
+
+                                enforceNasugbuInputValidity(true);
+                                hideAddressSuggestions();
+                            });
+                        });
+                    };
+
+                    const fetchAddressSuggestions = async (query) => {
+                        if (!geoapifyApiKey || !query || query.length < 3) {
+                            hideAddressSuggestions();
+                            return;
+                        }
+
+                        const currentRequestId = ++autocompleteRequestId;
+                        const endpoint = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&limit=6&format=json&filter=countrycode:ph&bias=proximity:${nasugbuCenter.lng},${nasugbuCenter.lat}&apiKey=${encodeURIComponent(geoapifyApiKey)}`;
+
+                        try {
+                            const response = await window.fetch(endpoint);
+                            if (!response.ok) {
+                                hideAddressSuggestions();
+                                return;
+                            }
+
+                            const payload = await response.json();
+                            if (currentRequestId !== autocompleteRequestId) {
+                                return;
+                            }
+
+                            const allResults = Array.isArray(payload?.results) ? payload.results : [];
+                            const nasugbuOnly = allResults.filter((item) => isNasugbuResult(item));
+                            renderAddressSuggestions(nasugbuOnly);
+                        } catch (_error) {
+                            hideAddressSuggestions();
+                        }
+                    };
+
+                    const ensureNasugbuLocation = async () => {
+                        const lat = parseFloat(latitudeInput?.value || '');
+                        const lng = parseFloat(longitudeInput?.value || '');
+                        const addressText = (address?.value || '').trim();
+
+                        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                            if (!isWithinNasugbuBounds(lat, lng)) {
+                                clearMapPin();
+                                enforceNasugbuInputValidity(false);
+                                await notify({
+                                    title: 'Invalid Location',
+                                    message: 'Pinned location must be within Nasugbu, Batangas.',
+                                    icon: 'error'
+                                });
+                                return false;
+                            }
+
+                            if (geoapifyApiKey) {
+                                const reversed = await reverseGeocodePin(lat, lng);
+                                if (!isNasugbuResult(reversed)) {
+                                    clearMapPin();
+                                    enforceNasugbuInputValidity(false);
+                                    await notify({
+                                        title: 'Invalid Location',
+                                        message: 'Only Nasugbu, Batangas addresses are allowed.',
+                                        icon: 'error'
+                                    });
+                                    return false;
+                                }
+
+                                applyAddressFromGeoapify(reversed);
+                            }
+
+                            enforceNasugbuInputValidity(true);
+                            return true;
+                        }
+
+                        if (addressText === '') {
+                            return true;
+                        }
+
+                        if (!geoapifyApiKey) {
+                            const localCheck = addressText.toLowerCase().includes('nasugbu');
+                            enforceNasugbuInputValidity(localCheck);
+                            if (!localCheck) {
+                                await notify({
+                                    title: 'Invalid Address',
+                                    message: 'Address must include Nasugbu, Batangas.',
+                                    icon: 'error'
+                                });
+                            }
+                            return localCheck;
+                        }
+
+                        const geocoded = await geocodeAddress(addressText);
+                        if (!isNasugbuResult(geocoded)) {
+                            enforceNasugbuInputValidity(false);
+                            await notify({
+                                title: 'Invalid Address',
+                                message: 'Only addresses within Nasugbu, Batangas are allowed.',
+                                icon: 'error'
+                            });
+                            return false;
+                        }
+
+                        if (typeof geocoded.lat === 'number' && typeof geocoded.lon === 'number') {
+                            updateMapPin(geocoded.lat, geocoded.lon, 16);
+                            applyAddressFromGeoapify(geocoded);
+                        }
+
+                        enforceNasugbuInputValidity(true);
+                        return true;
+                    };
+
+                    const initMap = async () => {
+                        if (!mapElement || listingMap) return;
+
+                        const L = await ensureLeaflet();
+                        if (!L) return;
+
+                        listingMap = L.map(mapElement, {
+                            zoomControl: true,
+                            scrollWheelZoom: true,
+                        }).setView([nasugbuCenter.lat, nasugbuCenter.lng], 12);
+
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(listingMap);
+
+                        listingMap.on('click', async (event) => {
+                            const lat = event?.latlng?.lat;
+                            const lng = event?.latlng?.lng;
+                            if (typeof lat !== 'number' || typeof lng !== 'number') return;
+
+                            if (!isWithinNasugbuBounds(lat, lng)) {
+                                clearMapPin();
+                                enforceNasugbuInputValidity(false);
+                                await notify({
+                                    title: 'Invalid Location',
+                                    message: 'Please pin a location within Nasugbu, Batangas only.',
+                                    icon: 'error'
+                                });
+                                return;
+                            }
+
+                            if (geoapifyApiKey) {
+                                const feature = await reverseGeocodePin(lat, lng);
+                                if (!isNasugbuResult(feature)) {
+                                    clearMapPin();
+                                    enforceNasugbuInputValidity(false);
+                                    await notify({
+                                        title: 'Invalid Location',
+                                        message: 'Pinned location is outside Nasugbu, Batangas.',
+                                        icon: 'error'
+                                    });
+                                    return;
+                                }
+
+                                updateMapPin(lat, lng);
+                                applyAddressFromGeoapify(feature);
+                                enforceNasugbuInputValidity(true);
+                                return;
+                            }
+
+                            updateMapPin(lat, lng);
+                            enforceNasugbuInputValidity(true);
+                        });
+
+                        const hasLat = latitudeInput && latitudeInput.value !== '';
+                        const hasLng = longitudeInput && longitudeInput.value !== '';
+                        if (hasLat && hasLng) {
+                            updateMapPin(parseFloat(latitudeInput.value), parseFloat(longitudeInput.value), 15);
+                        }
+
+                        setTimeout(() => listingMap?.invalidateSize(), 200);
+                    };
 
                     const ensureSwal = () => {
                         if (window.Swal) return window.Promise.resolve(window.Swal);
@@ -313,7 +766,23 @@
                     area?.addEventListener('input', updatePricePerSqm);
                     titleStatus?.addEventListener('change', syncStatusFields);
                     city?.addEventListener('input', syncBarangay);
-                    address?.addEventListener('input', syncBarangay);
+                    address?.addEventListener('input', () => {
+                        syncBarangay();
+                        enforceNasugbuInputValidity(true);
+
+                        const query = (address.value || '').trim();
+                        if (autocompleteTimer) {
+                            clearTimeout(autocompleteTimer);
+                        }
+
+                        autocompleteTimer = setTimeout(() => {
+                            fetchAddressSuggestions(query);
+                        }, 300);
+                    });
+
+                    address?.addEventListener('blur', () => {
+                        setTimeout(() => hideAddressSuggestions(), 120);
+                    });
 
                     saveDraftBtn?.addEventListener('click', () => {
                         const listingStatusInput = form.querySelector('input[name="listing_status"]');
@@ -337,9 +806,15 @@
                         submitBtn.innerHTML = 'Publishing...';
 
                         try {
+                            const isNasugbuValid = await ensureNasugbuLocation();
+                            if (!isNasugbuValid) {
+                                throw new Error('Only Nasugbu, Batangas locations are allowed.');
+                            }
+
                             const formData = new window.FormData(form);
                             const response = await window.fetch(form.action, {
                                 method: 'POST',
+                                credentials: 'same-origin',
                                 body: formData,
                                 headers: {
                                     'X-Requested-With': 'XMLHttpRequest'
@@ -358,6 +833,12 @@
                                 icon: 'success'
                             });
                             form.reset();
+                            if (listingMarker && listingMap) {
+                                listingMap.removeLayer(listingMarker);
+                                listingMarker = null;
+                            }
+                            enforceNasugbuInputValidity(true);
+                            hideAddressSuggestions();
                             updatePricePerSqm();
                         } catch (error) {
                             await notify({
@@ -369,6 +850,20 @@
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalText;
                         }
+                    });
+
+                    initMap();
+
+                    document.querySelectorAll('.nav-item[data-section="add-listing"]').forEach((item) => {
+                        item.addEventListener('click', () => {
+                            setTimeout(() => {
+                                if (listingMap) {
+                                    listingMap.invalidateSize();
+                                } else {
+                                    initMap();
+                                }
+                            }, 180);
+                        });
                     });
                 })();
             </script>
