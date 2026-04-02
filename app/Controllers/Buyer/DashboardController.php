@@ -4,6 +4,7 @@ namespace App\Controllers\Buyer;
 
 use App\Controllers\BaseController;
 use App\Models\LandListings;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Database;
 
@@ -30,6 +31,7 @@ class DashboardController extends BaseController
         return view('Pages/Buyer/Dashboard_Buyer', [
             'fullname' => $Fullname,
             'userProfile' => $userProfile,
+            'buyerProfile' => $this->getBuyerProfilePayload($userId),
             'browseListings' => $browseListings,
             'browsePropertyData' => $browsePropertyData,
             'buyerInquiries' => $buyerInquiries,
@@ -53,7 +55,6 @@ class DashboardController extends BaseController
                 return $key;
             }
         }
-
         return '';
     }
 
@@ -107,6 +108,60 @@ class DashboardController extends BaseController
             'initials' => $this->formatInitials($fullName),
             'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
             'status_class' => $isActive ? 'active' : 'inactive',
+        ];
+    }
+
+    private function getBuyerProfilePayload(int $buyerId): array
+    {
+        $userModel = new UserModel();
+        $user = $userModel->find($buyerId) ?? [];
+
+        $fullName = trim((string) (($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
+        $fullName = $fullName !== '' ? $fullName : 'Buyer';
+        $isActive = (int) ($user['is_active'] ?? 0) === 1;
+
+        return [
+            'full_name' => $fullName,
+            'email' => trim((string) ($user['email'] ?? 'N/A')),
+            'avatar_url' => $this->resolveUserProfilePictureUrl((string) ($user['profile_picture'] ?? '')),
+            'initials' => $this->formatInitials($fullName),
+            'first_name' => trim((string) ($user['first_name'] ?? '')),
+            'last_name' => trim((string) ($user['last_name'] ?? '')),
+            'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+            'status_class' => $isActive ? 'active' : 'inactive',
+            'stats' => $this->getBuyerProfileStats($buyerId),
+        ];
+    }
+
+    private function getBuyerProfileStats(int $buyerId): array
+    {
+        $db = Database::connect();
+
+        $savedProperties = $db->table('buyer_favorites')
+            ->where('buyer_id', $buyerId)
+            ->countAllResults();
+
+        $acceptedInquiries = $db->table('inquiries')
+            ->where('buyer_id', $buyerId)
+            ->where('inquiry_status', 'accepted')
+            ->countAllResults();
+
+        $unreadMessages = $db->table('messages m')
+            ->select('COUNT(*) AS total_unread')
+            ->join('message_sessions ms', 'ms.session_id = m.session_id', 'inner')
+            ->groupStart()
+            ->where('ms.buyer_id', $buyerId)
+            ->orWhere('ms.seller_id', $buyerId)
+            ->groupEnd()
+            ->where('m.sender_id !=', $buyerId)
+            ->where('m.is_read', 0)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'saved_properties' => (int) $savedProperties,
+            'accepted_inquiries' => (int) $acceptedInquiries,
+            'unread_messages' => (int) ($unreadMessages['total_unread'] ?? 0),
         ];
     }
 
