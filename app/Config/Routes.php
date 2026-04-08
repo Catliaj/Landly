@@ -21,6 +21,7 @@ $routes->group('seller', function ($routes) {
     // Dashboard route
     $routes->get('dashboard', 'Seller\DashboardController::index');
     $routes->get('sidebar-counts', 'Seller\DashboardController::sidebarCounts');
+    $routes->get('dashboard-section', 'Seller\DashboardController::dashboardSection');
 
     // Land listing CRUD routes for sellers
     $routes->post('listings', 'Seller\LandListingCRUDController::createLandListing');

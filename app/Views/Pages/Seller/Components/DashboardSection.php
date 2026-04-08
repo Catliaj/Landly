@@ -1,157 +1,508 @@
+<?php
+$sellerListings = is_array($sellerListings ?? null) ? $sellerListings : [];
+$sellerInquiries = is_array($sellerInquiries ?? null) ? $sellerInquiries : [];
+
+$totalListings = count($sellerListings);
+$totalViews = 0;
+
+$listingInquiryCounts = [];
+$listingAcceptedCounts = [];
+
+$inquiriesTotal = count($sellerInquiries);
+$inquiriesAccepted = 0;
+$inquiriesReserved = 0;
+$inquiriesClosed = 0;
+
+$responseSecondsTotal = 0;
+$responseSamples = 0;
+
+$dayKeys = [];
+$dayLabels = [];
+$dailyInquiries = [];
+$dailyResolved = [];
+
+for ($i = 6; $i >= 0; $i--) {
+    $key = date('Y-m-d', strtotime("-$i days"));
+    $dayKeys[] = $key;
+    $dayLabels[] = date('M d', strtotime($key));
+    $dailyInquiries[$key] = 0;
+    $dailyResolved[$key] = 0;
+}
+
+foreach ($sellerListings as $listing) {
+    $listingId = (int) ($listing['listing_id'] ?? 0);
+    $totalViews += (int) ($listing['view_count'] ?? 0);
+
+    if ($listingId > 0) {
+        $listingInquiryCounts[$listingId] = 0;
+        $listingAcceptedCounts[$listingId] = 0;
+    }
+}
+
+foreach ($sellerInquiries as $inquiry) {
+    $listingId = (int) ($inquiry['listing_id'] ?? 0);
+    $status = strtolower(trim((string) ($inquiry['status_label'] ?? 'pending')));
+
+    if ($listingId > 0) {
+        if (! isset($listingInquiryCounts[$listingId])) {
+            $listingInquiryCounts[$listingId] = 0;
+        }
+
+        if (! isset($listingAcceptedCounts[$listingId])) {
+            $listingAcceptedCounts[$listingId] = 0;
+        }
+
+        $listingInquiryCounts[$listingId]++;
+    }
+
+    if ($status === 'accepted') {
+        $inquiriesAccepted++;
+        if ($listingId > 0) {
+            $listingAcceptedCounts[$listingId]++;
+        }
+    }
+
+    if ($status === 'reserved') {
+        $inquiriesReserved++;
+    }
+
+    if ($status === 'closed') {
+        $inquiriesClosed++;
+    }
+
+    $rawCreatedAt = (string) ($inquiry['created_at'] ?? '');
+    $rawUpdatedAt = (string) ($inquiry['updated_at'] ?? '');
+
+    if ($rawCreatedAt !== '') {
+        $createdDay = date('Y-m-d', strtotime($rawCreatedAt));
+        if (isset($dailyInquiries[$createdDay])) {
+            $dailyInquiries[$createdDay]++;
+        }
+    }
+
+    if ($rawUpdatedAt !== '' && in_array($status, ['accepted', 'rejected', 'reserved', 'closed'], true)) {
+        $updatedDay = date('Y-m-d', strtotime($rawUpdatedAt));
+        if (isset($dailyResolved[$updatedDay])) {
+            $dailyResolved[$updatedDay]++;
+        }
+    }
+
+    $createdTs = $rawCreatedAt !== '' ? strtotime($rawCreatedAt) : false;
+    $updatedTs = $rawUpdatedAt !== '' ? strtotime($rawUpdatedAt) : false;
+
+    if (
+        $createdTs !== false
+        && $updatedTs !== false
+        && $updatedTs > $createdTs
+        && in_array($status, ['accepted', 'rejected', 'reserved', 'closed'], true)
+    ) {
+        $responseSecondsTotal += ($updatedTs - $createdTs);
+        $responseSamples++;
+    }
+}
+
+$avgResponseHours = $responseSamples > 0 ? ($responseSecondsTotal / $responseSamples) / 3600 : 0;
+$avgResponseLabel = $responseSamples > 0
+    ? ($avgResponseHours < 24
+        ? number_format($avgResponseHours, 1) . 'h'
+        : number_format($avgResponseHours / 24, 1) . 'd')
+    : 'N/A';
+
+$conversionInquiryRate = $totalViews > 0 ? ($inquiriesTotal / $totalViews) * 100 : 0;
+$conversionAcceptRate = $inquiriesTotal > 0 ? ($inquiriesAccepted / $inquiriesTotal) * 100 : 0;
+$conversionCloseRate = $inquiriesTotal > 0 ? (($inquiriesReserved + $inquiriesClosed) / $inquiriesTotal) * 100 : 0;
+
+$performanceRows = [];
+foreach ($sellerListings as $listing) {
+    $listingId = (int) ($listing['listing_id'] ?? 0);
+    $views = (int) ($listing['view_count'] ?? 0);
+    $inquiryCount = (int) ($listingInquiryCounts[$listingId] ?? 0);
+    $acceptedCount = (int) ($listingAcceptedCounts[$listingId] ?? 0);
+
+    $score = ($views * 0.35) + ($inquiryCount * 12) + ($acceptedCount * 20);
+
+    $performanceRows[] = [
+        'title' => (string) ($listing['title'] ?? 'Untitled Listing'),
+        'location_label' => (string) ($listing['location_label'] ?? 'Location unavailable'),
+        'views' => $views,
+        'inquiries' => $inquiryCount,
+        'accepted' => $acceptedCount,
+        'score' => (int) round($score),
+    ];
+}
+
+usort($performanceRows, static fn(array $a, array $b): int => $b['score'] <=> $a['score']);
+$topPerformanceRows = array_slice($performanceRows, 0, 5);
+
+$maxSeriesValue = max(1, max($dailyInquiries), max($dailyResolved));
+$pointCount = max(1, count($dayKeys) - 1);
+
+$inquiryPoints = [];
+$resolvedPoints = [];
+
+foreach ($dayKeys as $index => $key) {
+    $x = (int) round(($index / $pointCount) * 100);
+    $inquiryY = (int) round(100 - (($dailyInquiries[$key] / $maxSeriesValue) * 100));
+    $resolvedY = (int) round(100 - (($dailyResolved[$key] / $maxSeriesValue) * 100));
+
+    $inquiryPoints[] = $x . ',' . $inquiryY;
+    $resolvedPoints[] = $x . ',' . $resolvedY;
+}
+?>
+
+<style>
+    .seller-analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+        margin-top: 24px;
+    }
+
+    .seller-analytics-card {
+        background: rgba(20, 30, 45, 0.65);
+        border: 1px solid rgba(210, 180, 140, 0.22);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.22);
+    }
+
+    .seller-analytics-card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        color: #fefae0;
+        font-weight: 700;
+    }
+
+    .seller-analytics-subtitle {
+        margin-top: 6px;
+        color: rgba(254, 250, 224, 0.7);
+        font-size: 0.82rem;
+    }
+
+    .seller-kpi-row {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .seller-kpi {
+        background: rgba(11, 22, 34, 0.78);
+        border: 1px solid rgba(254, 250, 224, 0.12);
+        border-radius: 14px;
+        padding: 12px;
+    }
+
+    .seller-kpi-label {
+        color: rgba(254, 250, 224, 0.68);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .seller-kpi-value {
+        margin-top: 8px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fefae0;
+    }
+
+    .seller-funnel {
+        margin-top: 14px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .seller-funnel-item {
+        display: grid;
+        grid-template-columns: 116px 1fr auto;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .seller-funnel-label,
+    .seller-funnel-value {
+        color: rgba(254, 250, 224, 0.85);
+        font-size: 0.8rem;
+    }
+
+    .seller-funnel-track {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(254, 250, 224, 0.1);
+        overflow: hidden;
+    }
+
+    .seller-funnel-bar {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #d2b48c, #c9a86c);
+    }
+
+    .seller-line-chart-wrap {
+        margin-top: 14px;
+        background: rgba(11, 22, 34, 0.78);
+        border: 1px solid rgba(254, 250, 224, 0.12);
+        border-radius: 14px;
+        padding: 12px;
+    }
+
+    .seller-line-legend {
+        display: flex;
+        gap: 16px;
+        font-size: 0.78rem;
+        color: rgba(254, 250, 224, 0.8);
+        margin-bottom: 8px;
+    }
+
+    .seller-line-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    .seller-line-dot.inquiries {
+        background: #d2b48c;
+    }
+
+    .seller-line-dot.resolved {
+        background: #5fc9a8;
+    }
+
+    .seller-line-axis {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .seller-line-axis span {
+        color: rgba(254, 250, 224, 0.66);
+        font-size: 0.7rem;
+        text-align: center;
+    }
+
+    .seller-response-main {
+        margin-top: 14px;
+        display: flex;
+        align-items: end;
+        gap: 10px;
+    }
+
+    .seller-response-main .value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #fefae0;
+        line-height: 1;
+    }
+
+    .seller-response-main .meta {
+        color: rgba(254, 250, 224, 0.72);
+        font-size: 0.82rem;
+    }
+
+    .seller-performance-table {
+        margin-top: 14px;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }
+
+    .seller-performance-table th,
+    .seller-performance-table td {
+        padding: 9px 8px;
+        text-align: left;
+        border-bottom: 1px solid rgba(254, 250, 224, 0.1);
+    }
+
+    .seller-performance-table th {
+        color: rgba(254, 250, 224, 0.72);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .seller-performance-table td {
+        color: rgba(254, 250, 224, 0.9);
+    }
+
+    .seller-score-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(210, 180, 140, 0.16);
+        border: 1px solid rgba(210, 180, 140, 0.38);
+        color: #fefae0;
+        font-weight: 700;
+    }
+
+    @media (max-width: 1200px) {
+        .seller-analytics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .seller-funnel-item {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+
+        .seller-kpi-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <section id="section-dashboard" class="content-section active">
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                            </div>
-                            <span class="stat-trend up">+12%</span>
-                        </div>
-                        <div class="stat-value">12</div>
-                        <div class="stat-label">Active Listings</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon">
-                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            </div>
-                            <span class="stat-trend up">+8%</span>
-                        </div>
-                        <div class="stat-value">2,847</div>
-                        <div class="stat-label">Total Views</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            </div>
-                            <span class="stat-trend up">+23%</span>
-                        </div>
-                        <div class="stat-value">48</div>
-                        <div class="stat-label">Inquiries</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-icon">
-                                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                            </div>
-                            <span class="stat-trend down">-3%</span>
-                        </div>
-                        <div class="stat-value">₱2.4M</div>
-                        <div class="stat-label">Total Value</div>
-                    </div>
-                </div>
+    <div class="seller-analytics-grid">
+        <article class="seller-analytics-card">
+            <h3>Inquiry Conversion Funnel</h3>
+            <p class="seller-analytics-subtitle">Seller lead flow from views to closed outcomes.</p>
 
-                <!-- Dashboard Grid -->
-                <div class="dashboard-grid">
-                    <!-- Recent Listings -->
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3>Recent Listings</h3>
-                            <a href="#" class="card-header-action" onclick="showSection('listings')">View All</a>
-                        </div>
-                        <div class="card-body">
-                            <div class="listing-item">
-                                <div class="listing-thumb">
-                                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200" alt="Land">
-                                </div>
-                                <div class="listing-info">
-                                    <h4>Agricultural Land in Batangas</h4>
-                                    <div class="listing-meta">
-                                        <span>5,000 sqm</span>
-                                        <span>•</span>
-                                        <span>245 views</span>
-                                    </div>
-                                </div>
-                                <div class="listing-price">₱4.5M</div>
-                                <span class="listing-status active">Active</span>
-                            </div>
-                            <div class="listing-item">
-                                <div class="listing-thumb">
-                                    <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=200" alt="Land">
-                                </div>
-                                <div class="listing-info">
-                                    <h4>Commercial Lot in Tagaytay</h4>
-                                    <div class="listing-meta">
-                                        <span>1,200 sqm</span>
-                                        <span>•</span>
-                                        <span>189 views</span>
-                                    </div>
-                                </div>
-                                <div class="listing-price">₱8.2M</div>
-                                <span class="listing-status pending">Pending</span>
-                            </div>
-                            <div class="listing-item">
-                                <div class="listing-thumb">
-                                    <img src="https://images.unsplash.com/photo-1500076656116-558758c991c1?w=200" alt="Land">
-                                </div>
-                                <div class="listing-info">
-                                    <h4>Residential Lot in Laguna</h4>
-                                    <div class="listing-meta">
-                                        <span>800 sqm</span>
-                                        <span>•</span>
-                                        <span>412 views</span>
-                                    </div>
-                                </div>
-                                <div class="listing-price">₱2.8M</div>
-                                <span class="listing-status sold">Sold</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3>Recent Activity</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </div>
-                                <div class="activity-content">
-                                    <p>New view on <strong>Agricultural Land</strong></p>
-                                    <span>2 minutes ago</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                </div>
-                                <div class="activity-content">
-                                    <p>New inquiry from <strong>Maria Santos</strong></p>
-                                    <span>1 hour ago</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                </div>
-                                <div class="activity-content">
-                                    <p>Message from <strong>Juan Cruz</strong></p>
-                                    <span>3 hours ago</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                </div>
-                                <div class="activity-content">
-                                    <p>Listing <strong>approved</strong> by admin</p>
-                                    <span>Yesterday</span>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                                </div>
-                                <div class="activity-content">
-                                    <p><strong>5 users</strong> saved your listing</p>
-                                    <span>2 days ago</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="seller-kpi-row">
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Inquiry Rate</div>
+                    <div class="seller-kpi-value"><?= number_format($conversionInquiryRate, 1) ?>%</div>
                 </div>
-            </section>
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Accept Rate</div>
+                    <div class="seller-kpi-value"><?= number_format($conversionAcceptRate, 1) ?>%</div>
+                </div>
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Close/Reserve Rate</div>
+                    <div class="seller-kpi-value"><?= number_format($conversionCloseRate, 1) ?>%</div>
+                </div>
+            </div>
+
+            <?php
+            $funnelMax = max(1, $totalViews, $inquiriesTotal, $inquiriesAccepted, ($inquiriesReserved + $inquiriesClosed));
+            ?>
+            <div class="seller-funnel">
+                <div class="seller-funnel-item">
+                    <span class="seller-funnel-label">Views</span>
+                    <div class="seller-funnel-track"><div class="seller-funnel-bar" style="width: <?= ($totalViews / $funnelMax) * 100 ?>%"></div></div>
+                    <span class="seller-funnel-value"><?= number_format($totalViews) ?></span>
+                </div>
+                <div class="seller-funnel-item">
+                    <span class="seller-funnel-label">Inquiries</span>
+                    <div class="seller-funnel-track"><div class="seller-funnel-bar" style="width: <?= ($inquiriesTotal / $funnelMax) * 100 ?>%"></div></div>
+                    <span class="seller-funnel-value"><?= number_format($inquiriesTotal) ?></span>
+                </div>
+                <div class="seller-funnel-item">
+                    <span class="seller-funnel-label">Accepted</span>
+                    <div class="seller-funnel-track"><div class="seller-funnel-bar" style="width: <?= ($inquiriesAccepted / $funnelMax) * 100 ?>%"></div></div>
+                    <span class="seller-funnel-value"><?= number_format($inquiriesAccepted) ?></span>
+                </div>
+                <div class="seller-funnel-item">
+                    <span class="seller-funnel-label">Reserved/Closed</span>
+                    <div class="seller-funnel-track"><div class="seller-funnel-bar" style="width: <?= (($inquiriesReserved + $inquiriesClosed) / $funnelMax) * 100 ?>%"></div></div>
+                    <span class="seller-funnel-value"><?= number_format($inquiriesReserved + $inquiriesClosed) ?></span>
+                </div>
+            </div>
+        </article>
+
+        <article class="seller-analytics-card">
+            <h3>7-Day Engagement Trend</h3>
+            <p class="seller-analytics-subtitle">Line chart for incoming inquiries and resolved actions.</p>
+
+            <div class="seller-line-chart-wrap">
+                <div class="seller-line-legend">
+                    <span><span class="seller-line-dot inquiries"></span>Inquiries</span>
+                    <span><span class="seller-line-dot resolved"></span>Resolved (accepted/rejected/reserved/closed)</span>
+                </div>
+                <svg viewBox="0 0 100 100" width="100%" height="210" preserveAspectRatio="none" role="img" aria-label="Seller analytics line chart">
+                    <defs>
+                        <linearGradient id="sellerInquiriesStroke" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#d2b48c" />
+                            <stop offset="100%" stop-color="#f3d9b5" />
+                        </linearGradient>
+                        <linearGradient id="sellerResolvedStroke" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#5fc9a8" />
+                            <stop offset="100%" stop-color="#93e7cf" />
+                        </linearGradient>
+                    </defs>
+                    <g stroke="rgba(254, 250, 224, 0.14)" stroke-width="0.5">
+                        <line x1="0" y1="0" x2="100" y2="0" />
+                        <line x1="0" y1="25" x2="100" y2="25" />
+                        <line x1="0" y1="50" x2="100" y2="50" />
+                        <line x1="0" y1="75" x2="100" y2="75" />
+                        <line x1="0" y1="100" x2="100" y2="100" />
+                    </g>
+                    <polyline fill="none" stroke="url(#sellerInquiriesStroke)" stroke-width="2.2" points="<?= esc(implode(' ', $inquiryPoints)) ?>" />
+                    <polyline fill="none" stroke="url(#sellerResolvedStroke)" stroke-width="2.2" points="<?= esc(implode(' ', $resolvedPoints)) ?>" />
+                </svg>
+                <div class="seller-line-axis">
+                    <?php foreach ($dayLabels as $label): ?>
+                        <span><?= esc($label) ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </article>
+
+        <article class="seller-analytics-card">
+            <h3>Average Seller Response Time</h3>
+            <p class="seller-analytics-subtitle">Time from inquiry created to your first status action.</p>
+
+            <div class="seller-response-main">
+                <div class="value"><?= esc($avgResponseLabel) ?></div>
+                <div class="meta">Based on <?= number_format($responseSamples) ?> resolved inquiries</div>
+            </div>
+
+            <div class="seller-kpi-row">
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Total Listings</div>
+                    <div class="seller-kpi-value"><?= number_format($totalListings) ?></div>
+                </div>
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Total Views</div>
+                    <div class="seller-kpi-value"><?= number_format($totalViews) ?></div>
+                </div>
+                <div class="seller-kpi">
+                    <div class="seller-kpi-label">Total Inquiries</div>
+                    <div class="seller-kpi-value"><?= number_format($inquiriesTotal) ?></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="seller-analytics-card">
+            <h3>Listing Performance Score</h3>
+            <p class="seller-analytics-subtitle">Top-performing listings based on views, inquiries, and accepted leads.</p>
+
+            <?php if ($topPerformanceRows === []): ?>
+                <div class="seller-analytics-subtitle" style="margin-top: 16px;">No listings available yet to compute a score.</div>
+            <?php else: ?>
+                <table class="seller-performance-table" aria-label="Top listing performance table">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th>Views</th>
+                            <th>Inquiries</th>
+                            <th>Accepted</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($topPerformanceRows as $row): ?>
+                            <tr>
+                                <td>
+                                    <div><?= esc($row['title']) ?></div>
+                                    <div style="color: rgba(254, 250, 224, 0.58); font-size: 0.72rem; margin-top: 2px;"><?= esc($row['location_label']) ?></div>
+                                </td>
+                                <td><?= number_format($row['views']) ?></td>
+                                <td><?= number_format($row['inquiries']) ?></td>
+                                <td><?= number_format($row['accepted']) ?></td>
+                                <td><span class="seller-score-badge"><?= number_format($row['score']) ?></span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </article>
+    </div>
+</section>

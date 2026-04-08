@@ -2443,6 +2443,48 @@ $userProfile = $userProfile ?? [
         const notificationCount = document.getElementById('header-notification-count');
         const notificationApiBase = '<?= base_url('notifications') ?>';
         const sellerSidebarCountsApi = '<?= base_url('seller/sidebar-counts') ?>';
+        const sellerDashboardSectionApi = '<?= base_url('seller/dashboard-section') ?>';
+        const sessionExpiredRedirectUrl = '<?= base_url('auth') ?>';
+        let hasHandledSessionExpiry = false;
+
+        function hasSwalReady() {
+            return Boolean(window.Swal && typeof window.Swal.fire === 'function');
+        }
+
+        async function handleSessionExpired() {
+            if (hasHandledSessionExpiry) {
+                return;
+            }
+
+            hasHandledSessionExpiry = true;
+
+            const message = 'Your session has expired due to inactivity. Please sign in again to continue.';
+
+            if (hasSwalReady()) {
+                await window.Swal.fire({
+                    icon: 'warning',
+                    title: 'Session Expired',
+                    text: message,
+                    confirmButtonText: 'Go to Sign In',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+            } else {
+                window.alert(message);
+            }
+
+            window.location.href = sessionExpiredRedirectUrl;
+        }
+
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = async (...args) => {
+            const response = await nativeFetch(...args);
+            if (response && response.status === 401) {
+                handleSessionExpired();
+            }
+
+            return response;
+        };
 
         const sectionInfo = {
             'dashboard': {
@@ -2483,6 +2525,12 @@ $userProfile = $userProfile ?? [
         const notificationSyncState = {
             latestNotificationId: 0,
             unreadCount: 0,
+        };
+
+        const dashboardRefreshState = {
+            inFlight: false,
+            lastRefreshAt: 0,
+            minIntervalMs: 2500,
         };
 
         function formatNotificationType(type) {
@@ -2721,9 +2769,59 @@ $userProfile = $userProfile ?? [
             }
         });
 
+        async function refreshSellerDashboardSection(force = false) {
+            const dashboardSection = document.getElementById('section-dashboard');
+            if (!dashboardSection || dashboardRefreshState.inFlight) {
+                return;
+            }
+
+            const now = Date.now();
+            if (!force && (now - dashboardRefreshState.lastRefreshAt) < dashboardRefreshState.minIntervalMs) {
+                return;
+            }
+
+            dashboardRefreshState.inFlight = true;
+            try {
+                const response = await fetch(sellerDashboardSectionApi, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const nextDoc = parser.parseFromString(html, 'text/html');
+                const nextSection = nextDoc.getElementById('section-dashboard');
+
+                if (!nextSection) {
+                    return;
+                }
+
+                dashboardSection.innerHTML = nextSection.innerHTML;
+                dashboardRefreshState.lastRefreshAt = Date.now();
+            } catch (error) {
+            } finally {
+                dashboardRefreshState.inFlight = false;
+            }
+        }
+
+        async function refreshRealtimeOnSectionChange(sectionName) {
+            await refreshSellerSidebarCounts();
+
+            if (sectionName === 'dashboard') {
+                await refreshSellerDashboardSection(true);
+            }
+
+            if (sectionName === 'inquiries' || sectionName === 'messages') {
+                await checkNotificationChanges();
+            }
+        }
+
         fetchNotifications();
         refreshSellerSidebarCounts();
-        setInterval(pollNotificationsRealtime, 5000);
 
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {
@@ -2767,6 +2865,8 @@ $userProfile = $userProfile ?? [
                 detail: { sectionName }
             }));
 
+            refreshRealtimeOnSectionChange(sectionName);
+
             // Close mobile sidebar
             document.querySelector('.sidebar').classList.remove('open');
         }
@@ -2792,6 +2892,16 @@ $userProfile = $userProfile ?? [
         }
 
         showSection(initialSection || 'dashboard');
+
+        window.addEventListener('seller:inquiry-updated', () => {
+            refreshSellerSidebarCounts();
+            refreshSellerDashboardSection(true);
+        });
+
+        window.addEventListener('seller:listing-updated', () => {
+            refreshSellerSidebarCounts();
+            refreshSellerDashboardSection(true);
+        });
 
         // Mobile menu toggle
         function toggleSidebar() {

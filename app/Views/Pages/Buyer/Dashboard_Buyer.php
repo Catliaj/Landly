@@ -2894,11 +2894,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="#" class="nav-item active" data-section="dashboard">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="browse">
+                    <a href="#" class="nav-item active" data-section="browse">
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         <span>Browse Listings</span>
                     </a>
@@ -2945,8 +2941,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             <!-- Top Bar -->
             <div class="top-bar">
                 <div class="page-title">
-                    <h1 id="page-heading">Dashboard</h1>
-                    <p id="page-subheading">Welcome back! Discover your perfect land investment.</p>
+                    <h1 id="page-heading">Browse Listings</h1>
+                    <p id="page-subheading">Find the perfect property from our curated listings.</p>
                 </div>
                 <div class="top-actions">
                     <button class="mobile-menu-btn" onclick="toggleSidebar()">
@@ -2974,9 +2970,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     </div>
                 </div>
             </div>
-
-            <!-- Dashboard Section -->
-            <?= view('Pages/Buyer/Components/DashboardSection') ?>
 
             <!-- Browse Listings Section -->
             <?= view('Pages/Buyer/Components/BrowseListingSection') ?>
@@ -3033,12 +3026,49 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         const notificationCount = document.getElementById('header-notification-count');
         const notificationApiBase = '<?= base_url('notifications') ?>';
         const buyerSidebarCountsApi = '<?= base_url('buyer/sidebar-counts') ?>';
+        const sessionExpiredRedirectUrl = <?= json_encode(base_url('auth'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        let hasHandledSessionExpiry = false;
+
+        function hasSwalReady() {
+            return Boolean(window.Swal && typeof window.Swal.fire === 'function');
+        }
+
+        async function handleSessionExpired() {
+            if (hasHandledSessionExpiry) {
+                return;
+            }
+
+            hasHandledSessionExpiry = true;
+
+            const message = 'Your session has expired due to inactivity. Please sign in again to continue.';
+
+            if (hasSwalReady()) {
+                await window.Swal.fire({
+                    icon: 'warning',
+                    title: 'Session Expired',
+                    text: message,
+                    confirmButtonText: 'Go to Sign In',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+            } else {
+                window.alert(message);
+            }
+
+            window.location.href = sessionExpiredRedirectUrl;
+        }
+
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = async (...args) => {
+            const response = await nativeFetch(...args);
+            if (response && response.status === 401) {
+                handleSessionExpired();
+            }
+
+            return response;
+        };
 
         const sectionInfo = {
-            'dashboard': {
-                title: 'Dashboard',
-                subtitle: 'Welcome back! Discover your perfect land investment.'
-            },
             'browse': {
                 title: 'Browse Listings',
                 subtitle: 'Find the perfect property from our curated listings.'
@@ -3069,6 +3099,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         const notificationSyncState = {
             latestNotificationId: 0,
             unreadCount: 0,
+        };
+
+        const buyerRefreshState = {
+            inFlight: false,
+            lastRefreshAt: 0,
+            minIntervalMs: 2500,
         };
 
         function formatNotificationType(type) {
@@ -3311,13 +3347,50 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             }
         });
 
+        async function refreshRealtimeOnBuyerSectionChange(sectionName) {
+            if (buyerRefreshState.inFlight) {
+                return;
+            }
+
+            const now = Date.now();
+            if ((now - buyerRefreshState.lastRefreshAt) < buyerRefreshState.minIntervalMs) {
+                return;
+            }
+
+            buyerRefreshState.inFlight = true;
+            try {
+                await refreshBuyerSidebarCounts();
+
+                if (sectionName === 'messages' || sectionName === 'inquiries') {
+                    await checkNotificationChanges();
+                }
+
+                if (notificationDropdown && !notificationDropdown.hidden) {
+                    await fetchNotifications();
+                }
+
+                buyerRefreshState.lastRefreshAt = Date.now();
+            } finally {
+                buyerRefreshState.inFlight = false;
+            }
+        }
+
         fetchNotifications();
         refreshBuyerSidebarCounts();
-        setInterval(pollNotificationsRealtime, 8000);
+
+        function normalizeBuyerSectionName(value) {
+            return String(value || '').replace('#', '').trim().toLowerCase();
+        }
+
+        function getActiveBuyerSectionFromNav() {
+            const activeNavItem = document.querySelector('.nav-item.active[data-section]');
+            return normalizeBuyerSectionName(activeNavItem?.dataset?.section || '');
+        }
 
         function showSection(sectionName) {
+            sectionName = normalizeBuyerSectionName(sectionName);
             if (!sectionInfo[sectionName]) {
-                sectionName = 'dashboard';
+                sectionName = 'browse';
             }
 
             // Update navigation
@@ -3346,6 +3419,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
             try {
                 localStorage.setItem(BUYER_SECTION_STORAGE_KEY, sectionName);
+                sessionStorage.setItem(BUYER_SECTION_STORAGE_KEY, sectionName);
             } catch (error) {
             }
 
@@ -3356,6 +3430,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             window.dispatchEvent(new window.CustomEvent('buyer:section-changed', {
                 detail: { sectionName }
             }));
+
+            refreshRealtimeOnBuyerSectionChange(sectionName);
 
             // Close mobile sidebar
             document.querySelector('.sidebar').classList.remove('open');
@@ -3374,19 +3450,31 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             confirmBuyerLogout();
         });
 
-        const initialSectionFromHash = (window.location.hash || '').replace('#', '').trim();
+        const initialSectionFromHash = normalizeBuyerSectionName(window.location.hash || '');
         let initialSection = sectionInfo[initialSectionFromHash] ? initialSectionFromHash : '';
 
         if (!initialSection) {
             try {
-                const savedSection = localStorage.getItem(BUYER_SECTION_STORAGE_KEY) || '';
+                const savedSection = normalizeBuyerSectionName(
+                    sessionStorage.getItem(BUYER_SECTION_STORAGE_KEY)
+                    || localStorage.getItem(BUYER_SECTION_STORAGE_KEY)
+                    || ''
+                );
                 initialSection = sectionInfo[savedSection] ? savedSection : '';
             } catch (error) {
                 initialSection = '';
             }
         }
 
-        showSection(initialSection || 'dashboard');
+        showSection(initialSection || getActiveBuyerSectionFromNav() || 'browse');
+
+        window.addEventListener('buyer:inquiry-updated', () => {
+            refreshBuyerSidebarCounts();
+        });
+
+        window.addEventListener('buyer:favorite-updated', () => {
+            refreshBuyerSidebarCounts();
+        });
 
         // Buyer Chatbot controls
         const buyerChatbot = document.getElementById('buyerChatbot');
@@ -3489,7 +3577,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         // Property data for modal
         const propertyData = <?= json_encode($browsePropertyData ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-        const logoutRedirectUrl = <?= json_encode(base_url('/'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const logoutRedirectUrl = <?= json_encode(base_url('/#listings'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         console.info('[Landly Map] Geoapify key loaded:', Boolean(geoapifyApiKey));
         const leafletCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         const leafletCssCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -4179,6 +4267,13 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     if (typeof refreshBuyerSidebarCounts === 'function') {
                         refreshBuyerSidebarCounts();
                     }
+
+                    window.dispatchEvent(new window.CustomEvent('buyer:favorite-updated', {
+                        detail: {
+                            listingId: Number(listingId || 0),
+                            action: String(data.action || '')
+                        }
+                    }));
                 } else {
                     showNotification(data.message || 'Unable to update favorite', 'error');
                 }

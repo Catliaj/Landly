@@ -80,6 +80,32 @@ class DashboardController extends BaseController
         ]);
     }
 
+    public function dashboardSection(): ResponseInterface|string
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid request.',
+            ]);
+        }
+
+        $userId = $this->getCurrentUserId();
+        if ($userId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        [$sellerListings] = $this->getSellerListingsPayload($userId);
+        $sellerInquiries = $this->getSellerInquiriesPayload($userId);
+
+        return view('Pages/Seller/Components/DashboardSection', [
+            'sellerListings' => $sellerListings,
+            'sellerInquiries' => $sellerInquiries,
+        ]);
+    }
+
     private function getCurrentUserProfile(int $userId): array
     {
         if ($userId <= 0) {
@@ -455,6 +481,8 @@ class DashboardController extends BaseController
                 'inquiry_id' => (int) ($row['inquiry_id'] ?? 0),
                 'session_id' => (int) ($row['session_id'] ?? 0),
                 'listing_id' => $listingId,
+                'created_at' => (string) ($row['created_at'] ?? ''),
+                'updated_at' => (string) ($row['updated_at'] ?? ''),
                 'buyer_id' => (int) ($row['buyer_id'] ?? 0),
                 'buyer_name' => $buyerName,
                 'buyer_initials' => $this->formatInitials($buyerName),
