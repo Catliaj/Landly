@@ -837,6 +837,11 @@
                                 listingMap.removeLayer(listingMarker);
                                 listingMarker = null;
                             }
+                            window.dispatchEvent(new window.CustomEvent('seller:listing-updated', {
+                                detail: {
+                                    listingId: Number(result.listing_id || 0)
+                                }
+                            }));
                             enforceNasugbuInputValidity(true);
                             hideAddressSuggestions();
                             updatePricePerSqm();
