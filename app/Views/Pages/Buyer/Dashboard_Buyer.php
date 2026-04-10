@@ -2853,6 +2853,34 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             font-weight: 600;
         }
 
+        .chatbot-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .chatbot-listing-card {
+            margin: 6px 0;
+            padding: 8px;
+            background: #fbf7ec;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,.1);
+            transition: all 0.2s ease;
+        }
+
+        .chatbot-listing-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,.15);
+            transform: translateY(-2px);
+        }
+
+        .chatbot-listing-card img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
     </style>
 </head>
 <body>
@@ -3515,15 +3543,100 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         // init right state
         updateBuyerChatbotState();
 
-        function sendBuyerChatbotMessage() {
+        const chatbotApiUrl = <?= json_encode(base_url('buyer/chatbot/send-message'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        let chatbotLoading = false;
+
+        function addBuyerChatbotListing(listing) {
+            const card = document.createElement('div');
+            card.className = 'chatbot-listing-card';
+            card.style.cssText = 'margin: 6px 0; padding: 8px; background: #fbf7ec; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,.1); transition: all 0.2s ease;';
+            
+            const imageHtml = listing.image ? `<img src="${listing.image}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px; margin-bottom: 6px;">` : '';
+            
+            card.innerHTML = `
+                <div>${imageHtml}</div>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #1c3e3a; margin: 4px 0;">${listing.title}</div>
+                <div style="font-size: 0.75rem; color: #1c3e3a; margin: 2px 0;">📍 ${listing.location}</div>
+                <div style="font-size: 0.78rem; color: #2d6b5f; font-weight: 600;">₱${Number(listing.price || 0).toLocaleString()} • ${listing.size} sqm</div>
+            `;
+
+            card.addEventListener('click', () => {
+                showPropertyDetailsFromChatbot(listing.id);
+            });
+
+            card.addEventListener('mouseover', () => {
+                card.style.boxShadow = '0 4px 8px rgba(0,0,0,.15)';
+                card.style.transform = 'translateY(-2px)';
+            });
+
+            card.addEventListener('mouseout', () => {
+                card.style.boxShadow = 'none';
+                card.style.transform = 'translateY(0)';
+            });
+
+            buyerChatbotMessages.appendChild(card);
+            buyerChatbotMessages.scrollTop = buyerChatbotMessages.scrollHeight;
+        }
+
+        async function sendBuyerChatbotMessage() {
             const text = (buyerChatbotInput?.value || '').trim();
-            if (!text) return;
+            if (!text || chatbotLoading) return;
+            
             addBuyerChatbotMessage(text, 'user');
             buyerChatbotInput.value = '';
 
-            setTimeout(() => {
-                addBuyerChatbotMessage('Thanks for your message! We will respond shortly.', 'bot');
-            }, 750);
+            chatbotLoading = true;
+            buyerChatbotSend.disabled = true;
+            buyerChatbotSend.textContent = '...';
+
+            try {
+                const response = await fetch(chatbotApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({ message: text })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.status !== 'success') {
+                    addBuyerChatbotMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                    return;
+                }
+
+                addBuyerChatbotMessage(data.message || 'I\'m here to help with land listings!', 'bot');
+
+                // Display listings if available
+                if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
+                    data.listings.forEach(listing => {
+                        addBuyerChatbotListing(listing);
+                    });
+                }
+            } catch (error) {
+                console.error('Chatbot error:', error);
+                addBuyerChatbotMessage('Sorry, something went wrong. Please try again.', 'bot');
+            } finally {
+                chatbotLoading = false;
+                buyerChatbotSend.disabled = false;
+                buyerChatbotSend.textContent = 'Send';
+            }
+        }
+
+        function showPropertyDetailsFromChatbot(listingId) {
+            if (!propertyData || propertyData.length === 0) {
+                alert('Property data not available.');
+                return;
+            }
+
+            const property = propertyData.find(p => p.id === listingId);
+            if (!property) {
+                alert('Property details not found.');
+                return;
+            }
+
+            showPropertyDetailsModal(property);
         }
 
         buyerChatbotSend?.addEventListener('click', (e) => {

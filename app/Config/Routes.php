@@ -53,6 +53,9 @@ $routes->group('buyer', function ($routes) {
     $routes->post('favorites/toggle', 'Buyer\Favorites::toggle');
     $routes->post('favorites/is-favorited', 'Buyer\Favorites::isFavorited');
     $routes->get('favorites/get-all', 'Buyer\Favorites::getBuyerFavorites');
+
+    // Chatbot routes
+    $routes->post('chatbot/send-message', 'Buyer\ChatbotController::sendMessage');
 });
 
 //testing controller for auth routes
