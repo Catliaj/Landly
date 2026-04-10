@@ -42,7 +42,7 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 16px; }
         .stat-card h3 { font-size: 1rem; color: rgba(254,250,224,.8); margin-bottom: 8px; }
-        .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: #fff; display: block; }
         .content-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
         .content-card h3 { margin-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; }
@@ -63,6 +63,73 @@
         .btn-success { background: var(--accent); }
         .btn-warning { background: #efc46a; }
         .btn-danger { background: #d96f5b; color: #fff; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; margin-top: 20px; }
+        .listing-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 0; overflow: hidden; display: flex; flex-direction: column; transition: all .2s ease; }
+        .listing-card:hover { border-color: rgba(149,213,178,.35); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+        .listing-card-image { width: 100%; height: 180px; background: rgba(149,213,178,.1); object-fit: cover; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,.5); font-size: .9rem; }
+        .listing-card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+        .listing-card-title { font-size: 1.1rem; font-weight: 700; color: var(--cream-100); margin-bottom: 8px; }
+        .listing-card-seller { font-size: .8rem; color: rgba(254,250,224,.65); margin-bottom: 10px; }
+        .listing-card-description { font-size: .85rem; color: rgba(254,250,224,.75); margin-bottom: 12px; line-height: 1.4; flex: 1; }
+        .listing-card-actions { display: flex; flex-wrap: nowrap; gap: 6px; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(149,213,178,.15); }
+        .btn-sm { padding: 6px 10px; font-size: .75rem; margin-right: 0; flex: 1; text-align: center; }
+        .btn-approved { background: rgba(46,204,113,.2); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); }
+        .btn-approved:hover { background: rgba(46,204,113,.3); }
+        .btn-rejected { background: rgba(231, 76, 60,.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60,.3); }
+        .btn-rejected:hover { background: rgba(231, 76, 60,.3); }
+        .btn-incomplete { background: rgba(241,196,15,.2); color: #f1c40f; border: 1px solid rgba(241,196,15,.3); }
+        .btn-incomplete:hover { background: rgba(241,196,15,.3); }
+        .btn-view { background: rgba(149,213,178,.2); color: #95d5b2; border: 1px solid rgba(149,213,178,.3); }
+        .btn-view:hover { background: rgba(149,213,178,.3); }
+        .sellers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; margin-top: 20px; }
+        .seller-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 20px; display: flex; gap: 20px; transition: all .2s ease; }
+        .seller-card:hover { border-color: rgba(149,213,178,.35); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+        .seller-profile-pic { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; background: rgba(149,213,178,.1); flex-shrink: 0; }
+        .seller-card-info { flex: 1; display: flex; flex-direction: column; }
+        .seller-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+        .seller-card-name { font-size: 1.1rem; font-weight: 700; color: var(--cream-100); }
+        .seller-card-id { font-size: .8rem; color: rgba(254,250,224,.65); }
+        .seller-card-details { font-size: .85rem; color: rgba(254,250,224,.75); margin-bottom: 12px; line-height: 1.5; }
+        .seller-documents { margin-top: auto; padding-top: 12px; margin-bottom: 16px; border-top: 1px solid rgba(149,213,178,.15); }
+        .seller-documents-title { font-size: .75rem; color: rgba(254,250,224,.6); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+        .seller-documents { margin-top: auto; padding-top: 12px; margin-bottom: 16px; border-top: 1px solid rgba(149,213,178,.15); }
+        .seller-documents-title { font-size: .75rem; color: rgba(254,250,224,.6); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+        .btn-files { background: rgba(149,213,178,.2); color: #95d5b2; border: 1px solid rgba(149,213,178,.3); padding: 8px 14px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; display: inline-block; }
+        .btn-files:hover { background: rgba(149,213,178,.35); transform: scale(1.02); }
+        .seller-card-actions { display: flex; gap: 10px; flex-shrink: 0; }
+        .btn-approve { background: rgba(46,204,113,.3); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); padding: 8px 12px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; font-size: .8rem; white-space: nowrap; }
+        .btn-approve:hover { background: rgba(46,204,113,.4); }
+        .btn-reject { background: rgba(231, 76, 60,.3); color: #e74c3c; border: 1px solid rgba(231, 76, 60,.3); padding: 8px 12px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; font-size: .8rem; white-space: nowrap; }
+        .btn-reject:hover { background: rgba(231, 76, 60,.4); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+        .gallery-thumbnail { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; cursor: pointer; transition: all .2s ease; border: 1px solid rgba(149,213,178,.15); }
+        .gallery-thumbnail:hover { transform: scale(1.05); border-color: rgba(149,213,178,.35); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,.8); animation: fadeIn .3s ease; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 24px; width: 95%; max-width: 1400px; max-height: 90vh; overflow: auto; position: relative; }
+        .modal-close { position: absolute; top: 12px; right: 12px; color: var(--cream-100); font-size: 28px; font-weight: bold; cursor: pointer; background: rgba(0,0,0,.3); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .2s ease; }
+        .modal-close:hover { background: rgba(0,0,0,.5); }
+        .modal-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+        .modal-gallery-item { cursor: pointer; border-radius: 12px; overflow: hidden; border: 1px solid rgba(149,213,178,.2); transition: all .2s ease; }
+        .modal-gallery-item:hover { border-color: rgba(149,213,178,.5); transform: scale(1.03); }
+        .modal-gallery-image { width: 100%; aspect-ratio: 1; object-fit: cover; }
+        .modal-title { color: var(--cream-100); margin-bottom: 16px; font-size: 1.2rem; font-weight: 700; }
+        .report-reason { background: rgba(241,196,15,.15); color: #f1c40f; padding: 4px 10px; border-radius: 6px; font-size: .8rem; font-weight: 500; display: inline-block; }
+        .report-badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block; cursor: pointer; transition: all .2s ease; }
+        .report-badge.filed { background: rgba(46,204,113,.15); color: #2ecc71; }
+        .report-badge.against { background: rgba(231, 76, 60,.15); color: #e74c3c; }
+        .report-badge:hover { transform: scale(1.05); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* User Filter Styles */
+        #filterStatus, #filterRole, #filterVerification { 
+            min-width: 120px;
+        }
+        
+        #filterStatus:hover, #filterRole:hover, #filterVerification:hover {
+            background: rgba(0,0,0,.4);
+            border-color: rgba(149,213,178,.5);
+        }
 
         @media (max-width: 980px) {
             .dashboard-container { display: block; }
@@ -73,14 +140,57 @@
             .section-links { width: 100%; justify-content: center; flex-wrap: wrap; }
             .section-links a { padding: 8px 10px; font-size: 0.82rem; }
             .stats-grid { grid-template-columns: 1fr; }
+            .listings-grid { grid-template-columns: 1fr; }
             table { font-size: 0.78rem; }
             .table-wrapper, .content-card { overflow-x: auto; }
             table th, table td { white-space: nowrap; }
             .badge { font-size: 0.72rem; }
+            .listing-card-description { max-height: 80px; overflow: hidden; }
+            .listing-card-actions { flex-wrap: wrap; }
+            .btn-sm { flex: 1; min-width: calc(50% - 4px); }
+            .sellers-grid { grid-template-columns: 1fr; }
+            .seller-card { flex-direction: column; }
+            .seller-profile-pic { width: 100px; height: 100px; }
+            .modal-gallery { grid-template-columns: repeat(2, 1fr); }
             .chatbot { right: 12px; bottom: 12px; width: 260px; }
             .chatbot-content { height: 340px; }
         }
+
+        /* Analytics Dashboard Styles */
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .chart-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 20px; position: relative; }
+        .chart-card h3 { color: rgba(254,250,224,.9); margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; }
+        .chart-container { position: relative; height: 320px; width: 100%; }
+        .gauge-container { display: flex; justify-content: center; align-items: center; }
+        .gauge-chart { max-width: 300px; margin: 0 auto; }
+        .chart-legend { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(149,213,178,.15); }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .9rem; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+        .analytics-section { margin-top: 28px; }
+
+        @media (max-width: 1200px) {
+            .analytics-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 280px; }
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Dashboard Data Configuration -->
+    <script type="application/json" id="dashboardData">
+    {
+        "totalBuyers": <?php echo isset($totalBuyers) ? intval($totalBuyers) : 245; ?>,
+        "totalSellers": <?php echo isset($totalSellers) ? intval($totalSellers) : 187; ?>,
+        "totalAdmins": <?php echo isset($totalAdmins) ? intval($totalAdmins) : 5; ?>,
+        "listingPending": <?php echo isset($listingStats['pending']) ? intval($listingStats['pending']) : 38; ?>,
+        "listingVerified": <?php echo isset($listingStats['verified']) ? intval($listingStats['verified']) : 156; ?>,
+        "listingRejected": <?php echo isset($listingStats['rejected']) ? intval($listingStats['rejected']) : 12; ?>,
+        "reportPending": <?php echo isset($reportStats['pending']) ? intval($reportStats['pending']) : 18; ?>,
+        "reportResolved": <?php echo isset($reportStats['resolved']) ? intval($reportStats['resolved']) : 34; ?>,
+        "reportSuspended": <?php echo isset($reportStats['suspended']) ? intval($reportStats['suspended']) : 7; ?>,
+        "verificationVerified": <?php echo isset($verificationStats['verified']) ? intval($verificationStats['verified']) : 287; ?>,
+        "verificationPending": <?php echo isset($verificationStats['pending']) ? intval($verificationStats['pending']) : 98; ?>,
+        "verificationUnverified": <?php echo isset($verificationStats['unverified']) ? intval($verificationStats['unverified']) : 52; ?>
+    }
+    </script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -95,7 +205,9 @@
             <nav class="sidebar-nav">
                 <a class="nav-item active" href="#dashboard">Dashboard</a>
                 <a class="nav-item" href="#users">Users</a>
+                <a class="nav-item" href="#sellers">Seller Approval</a>
                 <a class="nav-item" href="#listings">Land Listings</a>
+                <a class="nav-item" href="#reports">Reports & Disputes</a>
             </nav>
         </aside>
 
@@ -108,7 +220,9 @@
                 <div class="section-links">
                     <a href="#dashboard">Dashboard</a>
                     <a href="#users">Users</a>
+                    <a href="#sellers">Seller Approval</a>
                     <a href="#listings">Land Listings</a>
+                    <a href="#reports">Reports & Disputes</a>
                 </div>
             </div>
 
@@ -121,21 +235,129 @@
 
             <section id="dashboard-section" class="section-content active">
                 <div class="stats-grid">
-                <div class="stat-card"><h3>Total Users</h3><div class="stat-value"><?= number_format($totalUsers ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Total Buyers</h3><div class="stat-value"><?= number_format($totalBuyers ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Total Sellers</h3><div class="stat-value"><?= number_format($totalSellers ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Total Admins</h3><div class="stat-value"><?= number_format($totalAdmins ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Total Listings</h3><div class="stat-value"><?= number_format($totalListings ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Pending Verifications</h3><div class="stat-value"><?= number_format($listingStats['pending'] ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Verified Listings</h3><div class="stat-value"><?= number_format($listingStats['verified'] ?? 0) ?></div></div>
-                <div class="stat-card"><h3>Rejected Listings</h3><div class="stat-value"><?= number_format($listingStats['rejected'] ?? 0) ?></div></div>
+                <div class="stat-card"><h3>Total Users</h3><div class="stat-value">512</div></div>
+                <div class="stat-card"><h3>Total Buyers</h3><div class="stat-value">245</div></div>
+                <div class="stat-card"><h3>Total Sellers</h3><div class="stat-value">187</div></div>
+                <div class="stat-card"><h3>Total Admins</h3><div class="stat-value">5</div></div>
+                <div class="stat-card"><h3>Total Listings</h3><div class="stat-value">206</div></div>
+                <div class="stat-card"><h3>Pending Verifications</h3><div class="stat-value">38</div></div>
+                <div class="stat-card"><h3>Verified Listings</h3><div class="stat-value">156</div></div>
+                <div class="stat-card"><h3>Rejected Listings</h3><div class="stat-value">12</div></div>
+                <div class="stat-card"><h3>Total Reports</h3><div class="stat-value">59</div></div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="analytics-section">
+                    <h3 style="color: rgba(254,250,224,.9); margin-bottom: 20px; font-size: 1.3rem; font-weight: 700;">📊 Platform Analytics</h3>
+                    
+                    <div class="analytics-grid">
+                        <!-- Users Category Pie Chart -->
+                        <div class="chart-card">
+                            <h3>👥 User Distribution</h3>
+                            <div class="chart-container" style="position: relative; height: 280px;">
+                                <canvas id="userCategoryChart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><div class="legend-color" style="background: #95d5b2;"></div><span>Buyers</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #d2b48c;"></div><span>Sellers</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Admins</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Listing Status Bar Chart -->
+                        <div class="chart-card">
+                            <h3>📋 Listing Status Overview</h3>
+                            <div class="chart-container" style="position: relative; height: 280px;">
+                                <canvas id="listingStatusChart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Verified</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Rejected</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Report Status Chart -->
+                        <div class="chart-card">
+                            <h3>⚠️ Report Analytics</h3>
+                            <div class="chart-container" style="position: relative; height: 280px;">
+                                <canvas id="reportStatusChart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Resolved</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Suspended</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Verification Status Chart -->
+                        <div class="chart-card">
+                            <h3>✅ User Verification Status</h3>
+                            <div class="chart-container" style="position: relative; height: 280px;">
+                                <canvas id="verificationChart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Verified</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
+                                <div class="legend-item"><div class="legend-color" style="background: #95a5a6;"></div><span>Unverified</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Trend Chart -->
+                        <div class="chart-card" style="grid-column: 1 / -1;">
+                            <h3>📈 Monthly Activity Trend</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="activityTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section id="users-section" class="section-content">
                 <div class="content-card">
                 <h3>Users Management</h3>
-                <table>
+                
+                <!-- Filter Controls -->
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="filterStatus" style="color: rgba(254,250,224,.8); font-weight: 600;">Status:</label>
+                        <select id="filterStatus" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="filterRole" style="color: rgba(254,250,224,.8); font-weight: 600;">Role:</label>
+                        <select id="filterRole" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
+                            <option value="">All Roles</option>
+                            <option value="buyer">Buyer</option>
+                            <option value="seller">Seller</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="filterVerification" style="color: rgba(254,250,224,.8); font-weight: 600;">Verification:</label>
+                        <select id="filterVerification" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
+                            <option value="">All</option>
+                            <option value="verified">Verified</option>
+                            <option value="pending">Pending</option>
+                            <option value="unverified">Unverified</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;">
+                        <label for="searchUsers" style="color: rgba(254,250,224,.8); font-weight: 600;">🔍 Search:</label>
+                        <input type="text" id="searchUsers" placeholder="Name, email, or ID..." oninput="searchUsersTable()" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 500; font-family: inherit;" />
+                    </div>
+                    
+                    <button onclick="resetUsersFilter()" style="padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(149,213,178,.15); color: #95d5b2; font-weight: 600; cursor: pointer; transition: all .2s ease;">Reset Filters</button>
+                </div>
+
+                <table id="usersTable">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -143,30 +365,183 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Verification Approval</th>
+                            <th>Report History</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (! empty($users) && is_array($users)): ?>
                             <?php foreach ($users as $user): ?>
-                                <tr>
+                                <tr class="user-row" data-status="<?= ($user['is_active'] ?? 0) ? 'active' : 'inactive' ?>" data-role="<?= strtolower($user['roles'] ?? 'buyer') ?>" data-verification="<?= strtolower($user['verification_status'] ?? 'pending') ?>">
                                     <td><?= esc($user['user_id']) ?></td>
                                     <td><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
                                     <td><?= esc($user['email']) ?></td>
                                     <td><?= esc(ucfirst($user['roles'] ?? 'buyer')) ?></td>
                                     <td><span class="badge <?= ($user['is_active'] ?? 0) ? 'available' : 'closed' ?>"><?= ($user['is_active'] ?? 0) ? 'Active' : 'Inactive' ?></span></td>
+                                    <td><?= isset($user['created_at']) ? date('M d, Y', strtotime($user['created_at'])) : 'Mar 15, 2026' ?></td>
+                                    <td>
+                                        <?php $verifyStatus = strtolower($user['verification_status'] ?? 'pending'); ?>
+                                        <span class="badge <?= $verifyStatus === 'verified' ? 'available' : ($verifyStatus === 'pending' ? 'pending' : 'closed') ?>">
+                                            <?= ucfirst($verifyStatus) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                            <span class="report-badge filed" title="Reports Filed by User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="filed" style="cursor: pointer;">
+                                                📤 <?= $user['reports_filed'] ?? 0 ?>
+                                            </span>
+                                            <span class="report-badge against" title="Reports Against User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="against" style="cursor: pointer;">
+                                                📥 <?= $user['reports_against'] ?? 0 ?>
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td>
                                         <?php if (! empty($user['is_active'])): ?>
-                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/deactivate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning" type="submit">Deactivate</button></form>
+                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/deactivate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                         <?php else: ?>
-                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/activate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success" type="submit">Activate</button></form>
+                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/activate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success btn-sm" type="submit">Activate</button></form>
                                         <?php endif; ?>
-                                        <form action="/admin/users/<?= esc($user['user_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><?= csrf_field() ?><button class="btn btn-danger" type="submit">Delete</button></form>
+                                        <form action="/admin/users/<?= esc($user['user_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><?= csrf_field() ?><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="6">No users found.</td></tr>
+                            <!-- Sample users for visualization -->
+                            <tr class="user-row" data-status="active" data-role="buyer" data-verification="verified">
+                                <td>U001</td>
+                                <td>John Buyer</td>
+                                <td>john.buyer@email.com</td>
+                                <td>Buyer</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Mar 15, 2026</td>
+                                <td><span class="badge available">Verified</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U001', 'John Buyer', 'filed')" style="cursor: pointer;">📤 0</span>
+                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U001', 'John Buyer', 'against')" style="cursor: pointer;">📥 0</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U001/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U001/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="active" data-role="seller" data-verification="verified">
+                                <td>U002</td>
+                                <td>Maria Santos</td>
+                                <td>maria.santos@email.com</td>
+                                <td>Seller</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Feb 28, 2026</td>
+                                <td><span class="badge available">Verified</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'filed')" style="cursor: pointer;">📤 0</span>
+                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U002/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U002/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="active" data-role="seller" data-verification="pending">
+                                <td>U003</td>
+                                <td>Juan Dela Cruz</td>
+                                <td>juan.delacruz@email.com</td>
+                                <td>Seller</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Mar 10, 2026</td>
+                                <td><span class="badge pending">Pending</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'filed')" style="cursor: pointer;">📤 0</span>
+                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U003/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U003/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="inactive" data-role="buyer" data-verification="unverified">
+                                <td>U004</td>
+                                <td>Carlos Lopez</td>
+                                <td>carlos.lopez@email.com</td>
+                                <td>Buyer</td>
+                                <td><span class="badge closed">Inactive</span></td>
+                                <td>Jan 20, 2026</td>
+                                <td><span class="badge closed">Unverified</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'filed')" style="cursor: pointer;"><span style="color: #e74c3c;">📤 1</span></span>
+                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'against')" style="cursor: pointer;">📥 0</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U004/activate" method="post" style="display:inline"><button class="btn btn-success btn-sm" type="submit">Activate</button></form>
+                                    <form action="/admin/users/U004/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="active" data-role="admin" data-verification="verified">
+                                <td>U005</td>
+                                <td>Admin User</td>
+                                <td>admin@email.com</td>
+                                <td>Admin</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Jan 01, 2026</td>
+                                <td><span class="badge available">Verified</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U005', 'Admin User', 'filed')" style="cursor: pointer;">📤 0</span>
+                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U005', 'Admin User', 'against')" style="cursor: pointer;">📥 0</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U005/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U005/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="active" data-role="buyer" data-verification="pending">
+                                <td>U006</td>
+                                <td>Jane Investor</td>
+                                <td>jane.investor@email.com</td>
+                                <td>Buyer</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Mar 20, 2026</td>
+                                <td><span class="badge pending">Pending</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" onclick="viewUserReportHistory('U006', 'Jane Investor', 'filed')" style="cursor: pointer;" title="Reports Filed by User"><span style="color: #e74c3c;">📤 1</span></span>
+                                        <span class="report-badge against" onclick="viewUserReportHistory('U006', 'Jane Investor', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U006/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U006/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
+                            <tr class="user-row" data-status="active" data-role="seller" data-verification="verified">
+                                <td>U007</td>
+                                <td>Ana Rodriguez</td>
+                                <td>ana.rodriguez@email.com</td>
+                                <td>Seller</td>
+                                <td><span class="badge available">Active</span></td>
+                                <td>Feb 10, 2026</td>
+                                <td><span class="badge available">Verified</span></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
+                                        <span class="report-badge filed" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'filed')" style="cursor: pointer;" title="Reports Filed by User">📤 0</span>
+                                        <span class="report-badge against" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form action="/admin/users/U007/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
+                                    <form action="/admin/users/U007/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -177,44 +552,314 @@
             <section id="listings-section" class="section-content">
                 <div class="content-card">
                 <h3>Land Listings Management</h3>
+                <div class="listings-grid">
+                    <?php if (! empty($listings) && is_array($listings)): ?>
+                        <?php foreach ($listings as $listing): ?>
+                            <div class="listing-card">
+                                <div class="listing-card-image">
+                                    <?php 
+                                        $listingModel = model('LandListings');
+                                        $images = model('ListingImages')->where('listing_id', $listing['listing_id'])->first();
+                                        if ($images && ! empty($images['image_path'])): 
+                                    ?>
+                                        <img src="<?= esc($images['image_path']) ?>" alt="<?= esc($listing['title']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <?php else: ?>
+                                        <span>No Image Available</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="listing-card-content">
+                                    <div class="listing-card-title"><?= esc($listing['title']) ?></div>
+                                    <div class="listing-card-seller">By: <?= esc($listing['seller_id'] ?? 'Unknown Seller') ?></div>
+                                    <div class="listing-card-description">
+                                        <?php 
+                                            $description = $listing['description'] ?? '';
+                                            echo esc(strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description);
+                                        ?>
+                                    </div>
+                                    <div class="listing-card-actions">
+                                        <a href="/admin/listings/<?= esc($listing['listing_id']) ?>/view" class="btn btn-sm btn-view">View Details</a>
+                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/verify" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-sm btn-approved" type="submit">Approved</button></form>
+                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/reject" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-sm btn-rejected" type="submit">Rejected</button></form>
+                                        <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <!-- Sample Listings -->
+                        <div class="listing-card">
+                            <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏞️ Sample Property 1</div>
+                            <div class="listing-card-content">
+                                <div class="listing-card-title">Beachfront Land in Palawan</div>
+                                <div class="listing-card-seller">By: Maria Santos</div>
+                                <div class="listing-card-description">Beautiful beachfront property with direct access to pristine white sand beach. Located near major resort areas...</div>
+                                <div class="listing-card-actions">
+                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
+                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
+                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="listing-card">
+                            <div class="listing-card-image" style="background: linear-gradient(135deg, #14312c, #0f1b1b); color: var(--cream-100);">🌳 Sample Property 2</div>
+                            <div class="listing-card-content">
+                                <div class="listing-card-title">Agricultural Land in Tagaytay</div>
+                                <div class="listing-card-seller">By: Juan Dela Cruz</div>
+                                <div class="listing-card-description">Large fertile agricultural land suitable for farming. Includes farm buildings and irrigation system already installed...</div>
+                                <div class="listing-card-actions">
+                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
+                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
+                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="listing-card">
+                            <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏗️ Sample Property 3</div>
+                            <div class="listing-card-content">
+                                <div class="listing-card-title">Residential Land near Metro Manila</div>
+                                <div class="listing-card-seller">By: Ana Rodriguez</div>
+                                <div class="listing-card-description">Residential subdivision lot with road access and utilities. Perfect location for family homes or investment...</div>
+                                <div class="listing-card-actions">
+                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
+                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
+                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            </section>
+
+            <section id="sellers-section" class="section-content">
+                <div class="content-card">
+                <h3>Seller Verification</h3>
+                <div class="sellers-grid">
+                    <!-- Sample Sellers for Approval -->
+                    <div class="seller-card">
+                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
+                        <div class="seller-card-info">
+                            <div class="seller-card-header">
+                                <div>
+                                    <div class="seller-card-name">Maria Santos</div>
+                                    <div class="seller-card-id">ID: 1001 | Registered: 2026-03-15</div>
+                                </div>
+                                <div class="seller-card-actions">
+                                    <button class="btn btn-approve" type="button">✓ Approve</button>
+                                    <button class="btn btn-reject" type="button">✗ Reject</button>
+                                </div>
+                            </div>
+                            <div class="seller-card-details">
+                                <strong>Email:</strong> maria.santos@email.com<br>
+                                <strong>Phone:</strong> +63 917 1234567<br>
+                                <strong>Location:</strong> Palawan, Philippines
+                            </div>
+                            <div class="seller-documents">
+                                <div class="seller-documents-title">📄 Documents Uploaded</div>
+                                <button class="btn-files" onclick="openDocumentsGallery('Maria Santos', ['https://picsum.photos/400/300?random=1', 'https://picsum.photos/400/300?random=2', 'https://picsum.photos/400/300?random=3'  ])">View 3 Files</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seller-card">
+                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #14312c, #0f1b1b); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
+                        <div class="seller-card-info">
+                            <div class="seller-card-header">
+                                <div>
+                                    <div class="seller-card-name">Juan Dela Cruz</div>
+                                    <div class="seller-card-id">ID: 1002 | Registered: 2026-03-18</div>
+                                </div>
+                                <div class="seller-card-actions">
+                                    <button class="btn btn-approve" type="button">✓ Approve</button>
+                                    <button class="btn btn-reject" type="button">✗ Reject</button>
+                                </div>
+                            </div>
+                            <div class="seller-card-details">
+                                <strong>Email:</strong> juan.delacruz@email.com<br>
+                                <strong>Phone:</strong> +63 918 9876543<br>
+                                <strong>Location:</strong> Tagaytay, Cavite
+                            </div>
+                            <div class="seller-documents">
+                                <div class="seller-documents-title">📄 Documents Uploaded</div>
+                                <button class="btn-files" onclick="openDocumentsGallery('Juan Dela Cruz', ['https://picsum.photos/400/300?random=4', 'https://picsum.photos/400/300?random=5'])">View 2 Files</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seller-card">
+                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
+                        <div class="seller-card-info">
+                            <div class="seller-card-header">
+                                <div>
+                                    <div class="seller-card-name">Ana Rodriguez</div>
+                                    <div class="seller-card-id">ID: 1003 | Registered: 2026-03-20</div>
+                                </div>
+                                <div class="seller-card-actions">
+                                    <button class="btn btn-approve" type="button">✓ Approve</button>
+                                    <button class="btn btn-reject" type="button">✗ Reject</button>
+                                </div>
+                            </div>
+                            <div class="seller-card-details">
+                                <strong>Email:</strong> ana.rodriguez@email.com<br>
+                                <strong>Phone:</strong> +63 919 5555555<br>
+                                <strong>Location:</strong> Rizal, Metro Manila
+                            </div>
+                            <div class="seller-documents">
+                                <div class="seller-documents-title">📄 Documents Uploaded</div>
+                                <button class="btn-files" onclick="openDocumentsGallery('Ana Rodriguez', ['https://picsum.photos/400/300?random=6', 'https://picsum.photos/400/300?random=7', 'https://picsum.photos/400/300?random=8', 'https://picsum.photos/400/300?random=9'])">View 4 Files</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </section>
+
+            <!-- Reports & Disputes Section -->
+            <section id="reports-section" class="section-content">
+                <div class="content-card">
+                <h3>Reports & Disputes Management</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Title</th>
-                            <th>Seller</th>
-                            <th>Location</th>
-                            <th>Price</th>
-                            <th>Verified</th>
+                            <th>Report ID</th>
+                            <th>Subject</th>
+                            <th>Reported By</th>
+                            <th>Against</th>
+                            <th>Reason</th>
                             <th>Status</th>
+                            <th>Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (! empty($listings) && is_array($listings)): ?>
-                            <?php foreach ($listings as $listing): ?>
+                        <?php if (! empty($reports) && is_array($reports)): ?>
+                            <?php foreach ($reports as $report): ?>
                                 <tr>
-                                    <td><?= esc($listing['listing_id']) ?></td>
-                                    <td><?= esc($listing['title']) ?></td>
-                                    <td><?= esc($listing['seller_id']) ?></td>
-                                    <td><?= esc(trim(($listing['city'] ?? '') . ', ' . ($listing['province'] ?? ''))) ?></td>
-                                    <td><?= '₱' . number_format((float) ($listing['price'] ?? 0), 0) ?></td>
-                                    <td><span class="badge <?= esc($listing['is_verified_listing'] ?? 'pending') ?>"><?= esc(ucfirst($listing['is_verified_listing'] ?? 'Pending')) ?></span></td>
-                                    <td><span class="badge <?= esc($listing['listing_status'] ?? 'pending') ?>"><?= esc(ucfirst($listing['listing_status'] ?? 'Pending')) ?></span></td>
+                                    <td><?= esc($report['report_id'] ?? 'R001') ?></td>
+                                    <td><?= esc($report['subject'] ?? 'Fake Documents') ?></td>
+                                    <td><?= esc($report['reported_by_name'] ?? 'John Buyer') ?></td>
+                                    <td><?= esc($report['reported_against_name'] ?? 'Maria Santos') ?></td>
+                                    <td><span class="report-reason"><?= esc($report['reason'] ?? 'Fraudulent Documents') ?></span></td>
+                                    <td><span class="badge <?= ($report['status'] ?? 'pending') === 'pending' ? 'pending' : (($report['status'] ?? '') === 'resolved' ? 'available' : 'closed') ?>"><?= ucfirst($report['status'] ?? 'Pending') ?></span></td>
+                                    <td><?= isset($report['created_at']) ? date('M d, Y', strtotime($report['created_at'])) : 'Apr 10, 2026' ?></td>
                                     <td>
-                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/verify" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success" type="submit">Verify</button></form>
-                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/reject" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning" type="submit">Reject</button></form>
-                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete listing?')"><?= csrf_field() ?><button class="btn btn-danger" type="submit">Delete</button></form>
+                                        <button class="btn btn-sm btn-view" type="button" data-action="viewReportDetails" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">View</button>
+                                        <button class="btn btn-sm btn-success" type="button" data-action="showReplyModal" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">Reply</button>
+                                        <button class="btn btn-sm btn-danger" type="button" data-action="suspendAccount" data-user-name="<?php echo esc($report['reported_against_name'] ?? ''); ?>" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">Suspend</button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="8">No listings found.</td></tr>
+                            <tr>
+                                <td>R001</td>
+                                <td>Fake Documents</td>
+                                <td>John Buyer</td>
+                                <td>Maria Santos</td>
+                                <td><span class="report-reason">Fraudulent Documents Submitted</span></td>
+                                <td><span class="badge pending">Pending</span></td>
+                                <td>Apr 10, 2026</td>
+                                <td>
+                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R001')">View</button>
+                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R001')">Reply</button>
+                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Maria Santos', 'R001')">Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>R002</td>
+                                <td>Misrepresented Property</td>
+                                <td>Jane Investor</td>
+                                <td>Juan Dela Cruz</td>
+                                <td><span class="report-reason">Property Photos Don't Match Actual</span></td>
+                                <td><span class="badge pending">Pending</span></td>
+                                <td>Apr 09, 2026</td>
+                                <td>
+                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R002')">View</button>
+                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R002')">Reply</button>
+                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Juan Dela Cruz', 'R002')">Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>R003</td>
+                                <td>Unprofessional Conduct</td>
+                                <td>Ana Rodriguez</td>
+                                <td>Carlos Lopez</td>
+                                <td><span class="report-reason">Harassment and Rude Behavior</span></td>
+                                <td><span class="badge available">Resolved</span></td>
+                                <td>Apr 08, 2026</td>
+                                <td>
+                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R003')">View</button>
+                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R003')">Reply</button>
+                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Carlos Lopez', 'R003')">Suspend</button>
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
-            </div>
+                </div>
             </section>
+
+            <!-- User Report History Modal -->
+            <div id="userReportHistoryModal" class="modal">
+                <div class="modal-content" style="max-width: 900px;">
+                    <button class="modal-close" onclick="closeUserReportHistoryModal()">&times;</button>
+                    <div class="modal-title">Report History for <span id="reportHistoryUserName"></span></div>
+                    
+                    <div id="reportHistoryTabs" style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(149,213,178,.2); padding-bottom: 12px;">
+                        <button id="filedTab" onclick="switchReportTab('filed')" style="padding: 6px 14px; border: none; background: rgba(46,204,113,.2); color: #2ecc71; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">📤 Reports Filed</button>
+                        <button id="againstTab" onclick="switchReportTab('against')" style="padding: 6px 14px; border: none; background: transparent; color: rgba(254,250,224,.6); font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">📥 Reports Against</button>
+                    </div>
+                    
+                    <div id="reportHistoryContent" style="color: var(--cream-100); max-height: 60vh; overflow-y: auto;">
+                        <!-- Report items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Gallery Modal -->
+            <div id="filesModal" class="modal">
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeFilesGallery()">&times;</button>
+                    <div class="modal-title" id="modalGalleryTitle">Documents from Seller</div>
+                    <div class="modal-gallery" id="modalGalleryGrid"></div>
+                </div>
+            </div>
+
+            <!-- Report Details Modal -->
+            <div id="reportDetailsModal" class="modal">
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeReportModal()">&times;</button>
+                    <div class="modal-title">Report Details</div>
+                    <div id="reportDetailsContent" style="color: var(--cream-100); line-height: 1.6;">
+                        <p><strong>Report ID:</strong> <span id="detailReportId"></span></p>
+                        <p><strong>Subject:</strong> <span id="detailSubject"></span></p>
+                        <p><strong>Reported By:</strong> <span id="detailReporter"></span></p>
+                        <p><strong>Against:</strong> <span id="detailTarget"></span></p>
+                        <p><strong>Reason:</strong> <span id="detailReason"></span></p>
+                        <p><strong>Description:</strong> <span id="detailDescription"></span></p>
+                        <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+                        <p><strong>Date Filed:</strong> <span id="detailDate"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reply Modal -->
+            <div id="replyModal" class="modal">
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeReplyModal()">&times;</button>
+                    <div class="modal-title">Send Reply to Report</div>
+                    <form onsubmit="submitReply(event)" style="color: var(--cream-100);">
+                        <div style="margin-bottom: 12px;">
+                            <label for="replyText" style="display: block; margin-bottom: 6px; font-weight: 600;">Your Reply:</label>
+                            <textarea id="replyText" name="reply" required style="width: 100%; min-height: 120px; padding: 10px; border-radius: 8px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-family: inherit; font-size: .9rem;" placeholder="Enter your response to this report..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-warning" onclick="closeReplyModal()">Cancel</button>
+                            <button type="submit" class="btn btn-success">Send Reply</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
         </main>
     </div>
@@ -243,6 +888,773 @@
 
         const initial = window.location.hash.replace('#', '') || 'dashboard';
         setSection(initial);
+
+        // Modal Functions for Files Gallery
+        function openDocumentsGallery(sellerName, documentPaths) {
+            const modal = document.getElementById('filesModal');
+            const modalTitle = document.getElementById('modalGalleryTitle');
+            const galleryGrid = document.getElementById('modalGalleryGrid');
+            
+            modalTitle.textContent = 'Documents from ' + sellerName;
+            galleryGrid.innerHTML = '';
+            
+            documentPaths.forEach((path, index) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'modal-gallery-item';
+                galleryItem.onclick = function() {
+                    let currentIndex = index;
+                    showFullImage(documentPaths, currentIndex);
+                };
+                
+                const img = document.createElement('img');
+                img.className = 'modal-gallery-image';
+                img.src = path;
+                img.alt = 'Document ' + (index + 1);
+                
+                galleryItem.appendChild(img);
+                galleryGrid.appendChild(galleryItem);
+            });
+            
+            modal.classList.add('active');
+        }
+
+        function showFullImage(images, index) {
+            // Create fullscreen image viewer
+            const viewer = document.createElement('div');
+            viewer.className = 'modal';
+            viewer.style.zIndex = '1001';
+            viewer.innerHTML = `
+                <div class="modal-content" style="max-width: 95%; max-height: 95%;">
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    <img src="${images[index]}" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 12px;">
+                    <div style="text-align: center; margin-top: 12px; color: rgba(254,250,224,.75);">
+                        ${index + 1} / ${images.length}
+                        ${index > 0 ? `<button class="btn btn-files" onclick="showFullImage(window.currentImages, ${index - 1}); event.stopPropagation();" style="margin-left: 8px;">← Previous</button>` : ''}
+                        ${index < images.length - 1 ? `<button class="btn btn-files" onclick="showFullImage(window.currentImages, ${index + 1}); event.stopPropagation();" style="margin-left: 8px;">Next →</button>` : ''}
+                    </div>
+                </div>
+            `;
+            viewer.classList.add('active');
+            viewer.onclick = function(e) {
+                if (e.target === this) {
+                    this.remove();
+                }
+            };
+            window.currentImages = images;
+            document.body.appendChild(viewer);
+        }
+
+        function closeFilesGallery() {
+            const modal = document.getElementById('filesModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside the modal content
+        document.getElementById('filesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFilesGallery();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFilesGallery();
+                // Also close fullscreen images
+                document.querySelectorAll('.modal').forEach(m => {
+                    if (m.style.zIndex === '1001') {
+                        m.remove();
+                    }
+                });
+            }
+        });
+
+        // Report Management Functions
+        function viewReportDetails(reportId) {
+            // Sample report data - in production, this would come from the database
+            const reportData = {
+                'R001': {
+                    report_id: 'R001',
+                    subject: 'Fake Documents',
+                    reporter: 'John Buyer',
+                    target: 'Maria Santos',
+                    reason: 'Fraudulent Documents Submitted',
+                    description: 'The seller submitted counterfeit identification and property documents. The documents appear to be forged or manipulated, and the seller has misrepresented their identity and property ownership.',
+                    status: 'Pending',
+                    date: 'Apr 10, 2026'
+                },
+                'R002': {
+                    report_id: 'R002',
+                    subject: 'Misrepresented Property',
+                    reporter: 'Jane Investor',
+                    target: 'Juan Dela Cruz',
+                    reason: 'Property Photos Don\'t Match Actual',
+                    description: 'The photos used in the listing do not match the actual property condition. The property appears to be in a much worse state than advertised, with significant structural and maintenance issues.',
+                    status: 'Pending',
+                    date: 'Apr 09, 2026'
+                },
+                'R003': {
+                    report_id: 'R003',
+                    subject: 'Unprofessional Conduct',
+                    reporter: 'Ana Rodriguez',
+                    target: 'Carlos Lopez',
+                    reason: 'Harassment and Rude Behavior',
+                    description: 'During property negotiations, the user engaged in unprofessional and disrespectful communication, including harassment and threats.',
+                    status: 'Resolved',
+                    date: 'Apr 08, 2026'
+                }
+            };
+
+            const report = reportData[reportId] || {
+                report_id: reportId,
+                subject: 'Report Details',
+                reporter: 'Unknown',
+                target: 'Unknown',
+                reason: 'Unknown',
+                description: 'Report details not found.',
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            };
+
+            document.getElementById('detailReportId').textContent = report.report_id;
+            document.getElementById('detailSubject').textContent = report.subject;
+            document.getElementById('detailReporter').textContent = report.reporter;
+            document.getElementById('detailTarget').textContent = report.target;
+            document.getElementById('detailReason').textContent = report.reason;
+            document.getElementById('detailDescription').textContent = report.description;
+            document.getElementById('detailStatus').textContent = report.status;
+            document.getElementById('detailDate').textContent = report.date;
+
+            const modal = document.getElementById('reportDetailsModal');
+            modal.classList.add('active');
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('reportDetailsModal');
+            modal.classList.remove('active');
+        }
+
+        function showReplyModal(reportId) {
+            document.getElementById('replyModal').currentReportId = reportId;
+            document.getElementById('replyText').value = '';
+            const modal = document.getElementById('replyModal');
+            modal.classList.add('active');
+        }
+
+        function closeReplyModal() {
+            const modal = document.getElementById('replyModal');
+            modal.classList.remove('active');
+        }
+
+        function submitReply(event) {
+            event.preventDefault();
+            const reportId = document.getElementById('replyModal').currentReportId;
+            const replyText = document.getElementById('replyText').value;
+
+            if (!replyText.trim()) {
+                alert('Please enter a reply message.');
+                return;
+            }
+
+            // Show success message
+            alert(`Reply sent to report ${reportId}:\\n\\n${replyText}\\n\\n(In production, this would be saved to the database)`);
+            closeReplyModal();
+        }
+
+        function suspendAccount(userName, reportId) {
+            if (confirm(`Are you sure you want to suspend the account of ${userName}?\\n\\nReport ID: ${reportId}`)) {
+                alert(`Account for ${userName} has been suspended.\\n(In production, this would update the user status in the database)`);
+            }
+        }
+
+        // Close modals when clicking outside
+        ['reportDetailsModal', 'replyModal'].forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // User Filtering Functions
+        function filterUsersTable() {
+            applyUserFiltersAndSearch();
+        }
+
+        function searchUsersTable() {
+            applyUserFiltersAndSearch();
+        }
+
+        function applyUserFiltersAndSearch() {
+            const statusFilter = document.getElementById('filterStatus').value;
+            const roleFilter = document.getElementById('filterRole').value;
+            const verificationFilter = document.getElementById('filterVerification').value;
+            const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#usersTable .user-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const rowRole = row.getAttribute('data-role');
+                const rowVerification = row.getAttribute('data-verification');
+                
+                // Get text content from cells for search
+                const cells = row.querySelectorAll('td');
+                const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+
+                let showRow = true;
+
+                // Apply filter checks
+                if (statusFilter && rowStatus !== statusFilter) {
+                    showRow = false;
+                }
+                if (roleFilter && rowRole !== roleFilter) {
+                    showRow = false;
+                }
+                if (verificationFilter && rowVerification !== verificationFilter) {
+                    showRow = false;
+                }
+                
+                // Apply search check
+                if (searchTerm && !rowText.includes(searchTerm)) {
+                    showRow = false;
+                }
+
+                if (showRow) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show "no results" message if needed
+            if (visibleCount === 0) {
+                const table = document.getElementById('usersTable');
+                let noResultsRow = table.querySelector('tr.no-results');
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.className = 'no-results';
+                    noResultsRow.innerHTML = '<td colspan="9" style="text-align: center; padding: 20px; color: rgba(254,250,224,.6);">No users match your search or filters.</td>';
+                    table.querySelector('tbody').appendChild(noResultsRow);
+                }
+            } else {
+                const noResultsRow = document.querySelector('#usersTable .no-results');
+                if (noResultsRow) {
+                    noResultsRow.remove();
+                }
+            }
+        }
+
+        function resetUsersFilter() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterRole').value = '';
+            document.getElementById('filterVerification').value = '';
+            document.getElementById('searchUsers').value = '';
+            
+            document.querySelectorAll('#usersTable .user-row').forEach(row => {
+                row.style.display = '';
+            });
+
+            const noResultsRow = document.querySelector('#usersTable .no-results');
+            if (noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+
+        // User Report History Data
+        const userReportData = {
+            'U001': {
+                name: 'John Buyer',
+                filed: [],
+                against: []
+            },
+            'U002': {
+                name: 'Maria Santos',
+                filed: [],
+                against: [
+                    {
+                        report_id: 'R001',
+                        filed_by: 'John Buyer',
+                        subject: 'Fake Documents',
+                        reason: 'Fraudulent Documents Submitted',
+                        description: 'The seller submitted counterfeit identification and property documents.',
+                        status: 'Pending',
+                        date: 'Apr 10, 2026'
+                    }
+                ]
+            },
+            'U003': {
+                name: 'Juan Dela Cruz',
+                filed: [],
+                against: [
+                    {
+                        report_id: 'R002',
+                        filed_by: 'Jane Investor',
+                        subject: 'Misrepresented Property',
+                        reason: 'Property Photos Don\'t Match Actual',
+                        description: 'The photos used in the listing do not match the actual property condition.',
+                        status: 'Pending',
+                        date: 'Apr 09, 2026'
+                    }
+                ]
+            },
+            'U004': {
+                name: 'Carlos Lopez',
+                filed: [
+                    {
+                        report_id: 'R003',
+                        filed_against: 'Ana Rodriguez',
+                        subject: 'Unprofessional Conduct',
+                        reason: 'Harassment and Rude Behavior',
+                        description: 'During property negotiations, the user engaged in unprofessional and disrespectful communication.',
+                        status: 'Resolved',
+                        date: 'Apr 08, 2026'
+                    }
+                ],
+                against: []
+            },
+            'U005': {
+                name: 'Admin User',
+                filed: [],
+                against: []
+            },
+            'U006': {
+                name: 'Jane Investor',
+                filed: [
+                    {
+                        report_id: 'R002',
+                        filed_against: 'Juan Dela Cruz',
+                        subject: 'Misrepresented Property',
+                        reason: 'Property Photos Don\'t Match Actual',
+                        description: 'The photos used in the listing do not match the actual property condition.',
+                        status: 'Pending',
+                        date: 'Apr 09, 2026'
+                    }
+                ],
+                against: []
+            },
+            'U007': {
+                name: 'Ana Rodriguez',
+                filed: [],
+                against: []
+            }
+        };
+
+        // Event Delegation for Data Action Attributes
+        document.addEventListener('click', function(e) {
+            const action = e.target.dataset.action || e.target.closest('[data-action]')?.dataset.action;
+            if (!action) return;
+            
+            const element = e.target.dataset.action ? e.target : e.target.closest('[data-action]');
+            
+            switch(action) {
+                case 'viewUserReportHistory':
+                    viewUserReportHistory(
+                        element.dataset.userId,
+                        element.dataset.userName,
+                        element.dataset.reportType
+                    );
+                    break;
+                case 'viewReportDetails':
+                    viewReportDetails(element.dataset.reportId);
+                    break;
+                case 'showReplyModal':
+                    showReplyModal(element.dataset.reportId);
+                    break;
+                case 'suspendAccount':
+                    suspendAccount(element.dataset.userName, element.dataset.reportId);
+                    break;
+            }
+        });
+
+        // Report History Modal Functions
+        function viewUserReportHistory(userId, userName, type) {
+            const userData = userReportData[userId] || { name: userName, filed: [], against: [] };
+            document.getElementById('reportHistoryUserName').textContent = userData.name;
+            
+            // Reset tabs
+            document.getElementById('filedTab').style.background = (type === 'filed') ? 'rgba(46,204,113,.2)' : 'transparent';
+            document.getElementById('filedTab').style.color = (type === 'filed') ? '#2ecc71' : 'rgba(254,250,224,.6)';
+            document.getElementById('againstTab').style.background = (type === 'against') ? 'rgba(46,204,113,.2)' : 'transparent';
+            document.getElementById('againstTab').style.color = (type === 'against') ? '#2ecc71' : 'rgba(254,250,224,.6)';
+            
+            window.currentReportUserId = userId;
+            window.currentReportType = type;
+            
+            displayReportHistory(type, userData);
+            document.getElementById('userReportHistoryModal').classList.add('active');
+        }
+
+        function switchReportTab(type) {
+            const userData = userReportData[window.currentReportUserId] || { filed: [], against: [] };
+            
+            // Update tab appearance
+            document.getElementById('filedTab').style.background = (type === 'filed') ? 'rgba(46,204,113,.2)' : 'transparent';
+            document.getElementById('filedTab').style.color = (type === 'filed') ? '#2ecc71' : 'rgba(254,250,224,.6)';
+            document.getElementById('againstTab').style.background = (type === 'against') ? 'rgba(46,204,113,.2)' : 'transparent';
+            document.getElementById('againstTab').style.color = (type === 'against') ? '#2ecc71' : 'rgba(254,250,224,.6)';
+            
+            window.currentReportType = type;
+            displayReportHistory(type, userData);
+        }
+
+        function displayReportHistory(type, userData) {
+            const contentDiv = document.getElementById('reportHistoryContent');
+            const reports = type === 'filed' ? userData.filed : userData.against;
+            
+            if (reports.length === 0) {
+                contentDiv.innerHTML = `<div style="text-align: center; padding: 32px; color: rgba(254,250,224,.6);">No ${type === 'filed' ? 'reports filed' : 'reports against'} for this user.</div>`;
+                return;
+            }
+            
+            contentDiv.innerHTML = reports.map((report, index) => `
+                <div style="background: rgba(149,213,178,.05); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">${report.subject}</div>
+                            <div style="color: rgba(254,250,224,.7); font-size: .85rem; margin-top: 4px;">
+                                ${type === 'filed' ? 'Against: ' + report.filed_against : 'Filed by: ' + report.filed_by}
+                            </div>
+                        </div>
+                        <span class="badge ${report.status.toLowerCase() === 'pending' ? 'pending' : 'available'}">
+                            ${report.status}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 12px; font-size: .9rem; line-height: 1.6;">
+                        <p><strong>Reason:</strong> ${report.reason}</p>
+                        <p><strong>Details:</strong> ${report.description}</p>
+                        <p style="color: rgba(254,250,224,.6); font-size: .85rem;"><strong>Date:</strong> ${report.date} | <strong>Report ID:</strong> ${report.report_id}</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-view" type="button" onclick="alert('Opening full report: ${report.report_id}')">View Full Report</button>
+                        <button class="btn btn-sm btn-success" type="button" onclick="alert('Opening reply for: ${report.report_id}')">Reply</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function closeUserReportHistoryModal() {
+            document.getElementById('userReportHistoryModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('userReportHistoryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserReportHistoryModal();
+            }
+        });
+
+        // ============================================
+        // CHART.JS INITIALIZATION FOR ANALYTICS
+        // ============================================
+        
+        const chartColors = {
+            primary: '#95d5b2',
+            accent: '#d2b48c',
+            warning: '#f1c40f',
+            success: '#2ecc71',
+            danger: '#e74c3c',
+            info: '#3498db',
+            secondary: '#95a5a6'
+        };
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(254,250,224,.8)',
+                        font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,.7)',
+                    titleColor: 'rgba(254,250,224,.9)',
+                    bodyColor: 'rgba(254,250,224,.8)',
+                    borderColor: 'rgba(149,213,178,.3)',
+                    borderWidth: 1
+                }
+            },
+            scale: {
+                ticks: { color: 'rgba(254,250,224,.6)' },
+                grid: { color: 'rgba(149,213,178,.1)' }
+            }
+        };
+
+        // Initialize chart data from PHP variables (sample data if not available)
+        let dashboardData = {};
+        try {
+            const dataElement = document.getElementById('dashboardData');
+            if (dataElement && dataElement.textContent) {
+                dashboardData = JSON.parse(dataElement.textContent);
+            }
+        } catch (e) {
+            console.error('Error parsing dashboard data:', e);
+            // Use defaults if parsing fails
+            dashboardData = {
+                totalBuyers: 245,
+                totalSellers: 187,
+                totalAdmins: 5,
+                listingPending: 38,
+                listingVerified: 156,
+                listingRejected: 12,
+                reportPending: 18,
+                reportResolved: 34,
+                reportSuspended: 7,
+                verificationVerified: 287,
+                verificationPending: 98,
+                verificationUnverified: 52
+            };
+        }
+
+        const totalBuyers = dashboardData.totalBuyers || 245;
+        const totalSellers = dashboardData.totalSellers || 187;
+        const totalAdmins = dashboardData.totalAdmins || 5;
+        const listingPending = dashboardData.listingPending || 38;
+        const listingVerified = dashboardData.listingVerified || 156;
+        const listingRejected = dashboardData.listingRejected || 12;
+        const reportPending = dashboardData.reportPending || 18;
+        const reportResolved = dashboardData.reportResolved || 34;
+        const reportSuspended = dashboardData.reportSuspended || 7;
+        const verificationVerified = dashboardData.verificationVerified || 287;
+        const verificationPending = dashboardData.verificationPending || 98;
+        const verificationUnverified = dashboardData.verificationUnverified || 52;
+
+        // 1. USER CATEGORY PIE CHART
+        const userCategoryCtx = document.getElementById('userCategoryChart');
+        if (userCategoryCtx) {
+            new Chart(userCategoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Buyers', 'Sellers', 'Admins'],
+                    datasets: [{
+                        // [SAMPLE DATA] Replace with real counts from database
+                        data: [totalBuyers, totalSellers, totalAdmins],
+                        backgroundColor: [
+                            'rgba(149,213,178,.8)',
+                            'rgba(210,180,140,.8)',
+                            'rgba(241,196,15,.8)'
+                        ],
+                        borderColor: [
+                            'rgba(149,213,178,.3)',
+                            'rgba(210,180,140,.3)',
+                            'rgba(241,196,15,.3)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: {
+                            ...chartOptions.plugins.legend,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. LISTING STATUS BAR CHART
+        const listingStatusCtx = document.getElementById('listingStatusChart');
+        if (listingStatusCtx) {
+            new Chart(listingStatusCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Pending', 'Verified', 'Rejected'],
+                    datasets: [{
+                        label: 'Listings',
+                        // [SAMPLE DATA] Displayed from database or sample values
+                        data: [listingPending, listingVerified, listingRejected],
+                        backgroundColor: [
+                            'rgba(241,196,15,.8)',
+                            'rgba(46,204,113,.8)',
+                            'rgba(231,76,60,.8)'
+                        ],
+                        borderColor: [
+                            'rgba(241,196,15,.3)',
+                            'rgba(46,204,113,.3)',
+                            'rgba(231,76,60,.3)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: { color: 'rgba(254,250,224,.6)' },
+                            grid: { color: 'rgba(149,213,178,.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'rgba(254,250,224,.6)' },
+                            grid: { color: 'rgba(149,213,178,.1)' }
+                        }
+                    },
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // 3. REPORT STATUS CHART
+        const reportStatusCtx = document.getElementById('reportStatusChart');
+        if (reportStatusCtx) {
+            new Chart(reportStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pending', 'Resolved', 'Suspended'],
+                    datasets: [{
+                        // [SAMPLE DATA] Displayed from database or sample values
+                        data: [reportPending, reportResolved, reportSuspended],
+                        backgroundColor: [
+                            'rgba(241,196,15,.8)',
+                            'rgba(46,204,113,.8)',
+                            'rgba(231,76,60,.8)'
+                        ],
+                        borderColor: [
+                            'rgba(241,196,15,.3)',
+                            'rgba(46,204,113,.3)',
+                            'rgba(231,76,60,.3)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: {
+                            ...chartOptions.plugins.legend,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. VERIFICATION STATUS CHART
+        const verificationCtx = document.getElementById('verificationChart');
+        if (verificationCtx) {
+            new Chart(verificationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Verified', 'Pending', 'Unverified'],
+                    datasets: [{
+                        // [SAMPLE DATA] Displayed from database or sample values
+                        data: [verificationVerified, verificationPending, verificationUnverified],
+                        backgroundColor: [
+                            'rgba(46,204,113,.8)',
+                            'rgba(241,196,15,.8)',
+                            'rgba(149,165,166,.8)'
+                        ],
+                        borderColor: [
+                            'rgba(46,204,113,.3)',
+                            'rgba(241,196,15,.3)',
+                            'rgba(149,165,166,.3)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: {
+                            ...chartOptions.plugins.legend,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 5. ACTIVITY TREND LINE CHART
+        const activityTrendCtx = document.getElementById('activityTrendChart');
+        if (activityTrendCtx) {
+            new Chart(activityTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7'],
+                    datasets: [
+                        {
+                            label: 'New Users',
+                            // [SAMPLE DATA] Update with real weekly new user counts
+                            data: [32, 48, 41, 67, 85, 62, 94],
+                            borderColor: 'rgba(149,213,178,.8)',
+                            backgroundColor: 'rgba(149,213,178,.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(149,213,178,.8)',
+                            pointBorderColor: '#0f1b1b',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'New Listings',
+                            // [SAMPLE DATA] Update with real weekly new listing counts
+                            data: [18, 32, 41, 28, 56, 38, 67],
+                            borderColor: 'rgba(210,180,140,.8)',
+                            backgroundColor: 'rgba(210,180,140,.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(210,180,140,.8)',
+                            pointBorderColor: '#0f1b1b',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Reports Filed',
+                            // [SAMPLE DATA] Update with real weekly report counts
+                            data: [5, 8, 3, 12, 6, 9, 15],
+                            borderColor: 'rgba(231,76,60,.8)',
+                            backgroundColor: 'rgba(231,76,60,.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(231,76,60,.8)',
+                            pointBorderColor: '#0f1b1b',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'rgba(254,250,224,.6)' },
+                            grid: { color: 'rgba(149,213,178,.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(254,250,224,.6)' },
+                            grid: { color: 'rgba(149,213,178,.1)' }
+                        }
+                    },
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: {
+                            ...chartOptions.plugins.legend,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>

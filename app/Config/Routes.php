@@ -111,6 +111,7 @@ $routes->group('notifications', function ($routes) {
 // Admin routes
 $routes->group('admin', function ($routes) {
     $routes->get('dashboard', 'Admin\DashboardController::index');
+    $routes->get('listings/(:num)/view', 'Admin\DashboardController::viewListing/$1');
     $routes->post('users/(:num)/activate', 'Admin\DashboardController::activateUser/$1');
     $routes->post('users/(:num)/deactivate', 'Admin\DashboardController::deactivateUser/$1');
     $routes->post('users/(:num)/delete', 'Admin\DashboardController::deleteUser/$1');
