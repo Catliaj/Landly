@@ -26,13 +26,15 @@ $userProfile = $userProfile ?? [
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --green-900: #0f1b1b;
-            --green-800: #14312c;
-            --green-700: #1a3d35;
-            --cream-100: #f5f5dc;
-            --cream-200: #efe7d8;
-            --accent: #d2b48c;
-            --text-dark: #0f1b1b;
+            --green-900: #0d2818;
+            --green-800: #1a4d2e;
+            --green-700: #2d6a4f;
+            --green-600: #40916c;
+            --cream-100: #fefae0;
+            --cream-200: #f5f0d6;
+            --accent: #95d5b2;
+            --accent-dark: #74c69d;
+            --text-dark: #0d2818;
             --sidebar-width: 280px;
         }
 
@@ -56,10 +58,10 @@ $userProfile = $userProfile ?? [
             position: fixed;
             inset: 0;
             background-image:
-                radial-gradient(circle at 20% 30%, rgba(210, 180, 140, 0.03) 0%, transparent 25%),
-                radial-gradient(circle at 80% 70%, rgba(210, 180, 140, 0.025) 0%, transparent 30%),
-                radial-gradient(circle at 50% 50%, rgba(20, 49, 44, 0.15) 0%, transparent 50%),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d2b48c' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                radial-gradient(circle at 20% 30%, rgba(149, 213, 178, 0.03) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(149, 213, 178, 0.025) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(45, 106, 79, 0.15) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2395d5b2' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             pointer-events: none;
             z-index: 0;
         }
@@ -96,9 +98,9 @@ $userProfile = $userProfile ?? [
         /* === SIDEBAR === */
         .sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, rgba(20, 49, 44, 0.95) 0%, rgba(15, 27, 27, 0.98) 100%);
+            background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(210, 180, 140, 0.15);
+            border-right: 1px solid rgba(149, 213, 178, 0.15);
             position: fixed;
             top: 0;
             left: 0;
@@ -111,7 +113,7 @@ $userProfile = $userProfile ?? [
 
         .sidebar-header {
             padding: 25px 20px;
-            border-bottom: 1px solid rgba(210, 180, 140, 0.1);
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
         }
 
         .brand {
@@ -126,7 +128,7 @@ $userProfile = $userProfile ?? [
             width: 42px;
             height: 42px;
             border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent) 0%, #c9a86c 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
             color: var(--green-900);
             display: grid;
             place-items: center;
@@ -152,7 +154,7 @@ $userProfile = $userProfile ?? [
         /* User Profile */
         .user-profile {
             padding: 20px;
-            border-bottom: 1px solid rgba(210, 180, 140, 0.1);
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
         }
 
         .user-info {
@@ -165,7 +167,7 @@ $userProfile = $userProfile ?? [
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent) 0%, #c9a86c 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
             display: grid;
             place-items: center;
             font-weight: 600;
