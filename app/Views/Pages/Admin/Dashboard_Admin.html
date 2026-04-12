@@ -105,7 +105,8 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
         .gallery-thumbnail { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; cursor: pointer; transition: all .2s ease; border: 1px solid rgba(149,213,178,.15); }
         .gallery-thumbnail:hover { transform: scale(1.05); border-color: rgba(149,213,178,.35); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,.8); animation: fadeIn .3s ease; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(15, 27, 27, 0.85) 0%, rgba(5, 12, 12, 0.95) 70%, rgba(2, 6, 6, 0.98) 100%); backdrop-filter: blur(2px); animation: fadeIn .3s ease; }
+        .modal::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%); background-size: 60px 60px; background-position: 0 0; pointer-events: none; z-index: -1; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
         .modal-content { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 24px; width: 95%; max-width: 1400px; max-height: 90vh; overflow: auto; position: relative; }
         .modal-close { position: absolute; top: 12px; right: 12px; color: var(--cream-100); font-size: 28px; font-weight: bold; cursor: pointer; background: rgba(0,0,0,.3); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .2s ease; }
@@ -120,6 +121,8 @@
         .report-badge.filed { background: rgba(46,204,113,.15); color: #2ecc71; }
         .report-badge.against { background: rgba(231, 76, 60,.15); color: #e74c3c; }
         .report-badge:hover { transform: scale(1.05); }
+        .user-row { cursor: pointer; transition: all .2s ease; }
+        .user-row:hover { background: rgba(149, 213, 178, 0.08); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         /* User Filter Styles */
@@ -225,6 +228,29 @@
             box-shadow: 0 0 0 3px rgba(149, 213, 178, 0.35);
         }
 
+        /* Styled backdrop with gradient design */
+        .swal2-backdrop.swal2-shown {
+            background: radial-gradient(circle at center, rgba(15, 27, 27, 0.85) 0%, rgba(5, 12, 12, 0.95) 70%, rgba(2, 6, 6, 0.98) 100%);
+            backdrop-filter: blur(2px);
+        }
+        
+        /* Add subtle pattern overlay to backdrop */
+        .swal2-backdrop.swal2-shown::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%);
+            background-size: 60px 60px;
+            background-position: 0 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
         @keyframes landlyFadeInUp {
             from {
                 opacity: 0;
@@ -298,13 +324,6 @@
                 <div class="page-title">
                     <h1>Admin Dashboard</h1>
                     <p>Welcome back, <?= esc($fullname ?? 'Administrator') ?>. Overview of key platform metrics.</p>
-                </div>
-                <div class="section-links">
-                    <a href="#dashboard">Dashboard</a>
-                    <a href="#users">Users</a>
-                    <a href="#sellers">Seller Approval</a>
-                    <a href="#listings">Land Listings</a>
-                    <a href="#reports">Reports & Disputes</a>
                 </div>
             </div>
 
@@ -456,7 +475,7 @@
                     <tbody>
                         <?php if (! empty($users) && is_array($users)): ?>
                             <?php foreach ($users as $user): ?>
-                                <tr class="user-row" data-status="<?= ($user['is_active'] ?? 0) ? 'active' : 'inactive' ?>" data-role="<?= strtolower($user['roles'] ?? 'buyer') ?>" data-verification="<?= strtolower($user['verification_status'] ?? 'pending') ?>">
+                                <tr class="user-row" onclick="viewUserDetailsModal('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>', '<?= esc($user['email']) ?>', '<?= ucfirst($user['roles'] ?? 'buyer') ?>', '<?= ($user['is_active'] ?? 0) ? 'Active' : 'Inactive' ?>', '<?= isset($user['created_at']) ? date('M d, Y', strtotime($user['created_at'])) : 'Mar 15, 2026' ?>', '<?= ucfirst($user['verification_status'] ?? 'pending') ?>', '<?= $user['reports_filed'] ?? 0 ?>', '<?= $user['reports_against'] ?? 0 ?>')" data-status="<?= ($user['is_active'] ?? 0) ? 'active' : 'inactive' ?>" data-role="<?= strtolower($user['roles'] ?? 'buyer') ?>" data-verification="<?= strtolower($user['verification_status'] ?? 'pending') ?>">
                                     <td><?= esc($user['user_id']) ?></td>
                                     <td><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
                                     <td><?= esc($user['email']) ?></td>
@@ -469,7 +488,7 @@
                                             <?= ucfirst($verifyStatus) ?>
                                         </span>
                                     </td>
-                                    <td>
+                                    <td onclick="event.stopPropagation();">
                                         <div style="display: flex; gap: 8px; font-size: .85rem;">
                                             <span class="report-badge filed" title="Reports Filed by User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="filed" style="cursor: pointer;">
                                                 📤 <?= $user['reports_filed'] ?? 0 ?>
@@ -479,7 +498,7 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td onclick="event.stopPropagation();">
                                         <?php if (! empty($user['is_active'])): ?>
                                             <form action="/admin/users/<?= esc($user['user_id']) ?>/deactivate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                         <?php else: ?>
@@ -491,7 +510,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <!-- Sample users for visualization -->
-                            <tr class="user-row" data-status="active" data-role="buyer" data-verification="verified">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U001', 'John Buyer', 'john.buyer@email.com', 'Buyer', 'Active', 'Mar 15, 2026', 'Verified', '0', '0')" data-status="active" data-role="buyer" data-verification="verified">
                                 <td>U001</td>
                                 <td>John Buyer</td>
                                 <td>john.buyer@email.com</td>
@@ -499,18 +518,18 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Mar 15, 2026</td>
                                 <td><span class="badge available">Verified</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U001', 'John Buyer', 'filed')" style="cursor: pointer;">📤 0</span>
                                         <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U001', 'John Buyer', 'against')" style="cursor: pointer;">📥 0</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U001/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U001/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="active" data-role="seller" data-verification="verified">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U002', 'Maria Santos', 'maria.santos@email.com', 'Seller', 'Active', 'Feb 28, 2026', 'Verified', '0', '1')" data-status="active" data-role="seller" data-verification="verified">
                                 <td>U002</td>
                                 <td>Maria Santos</td>
                                 <td>maria.santos@email.com</td>
@@ -518,18 +537,18 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Feb 28, 2026</td>
                                 <td><span class="badge available">Verified</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'filed')" style="cursor: pointer;">📤 0</span>
                                         <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U002/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U002/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="active" data-role="seller" data-verification="pending">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U003', 'Juan Dela Cruz', 'juan.delacruz@email.com', 'Seller', 'Active', 'Mar 10, 2026', 'Pending', '0', '1')" data-status="active" data-role="seller" data-verification="pending">
                                 <td>U003</td>
                                 <td>Juan Dela Cruz</td>
                                 <td>juan.delacruz@email.com</td>
@@ -537,18 +556,18 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Mar 10, 2026</td>
                                 <td><span class="badge pending">Pending</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'filed')" style="cursor: pointer;">📤 0</span>
                                         <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U003/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U003/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="inactive" data-role="buyer" data-verification="unverified">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U004', 'Carlos Lopez', 'carlos.lopez@email.com', 'Buyer', 'Inactive', 'Jan 20, 2026', 'Unverified', '1', '0')" data-status="inactive" data-role="buyer" data-verification="unverified">
                                 <td>U004</td>
                                 <td>Carlos Lopez</td>
                                 <td>carlos.lopez@email.com</td>
@@ -556,18 +575,18 @@
                                 <td><span class="badge closed">Inactive</span></td>
                                 <td>Jan 20, 2026</td>
                                 <td><span class="badge closed">Unverified</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'filed')" style="cursor: pointer;"><span style="color: #e74c3c;">📤 1</span></span>
                                         <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'against')" style="cursor: pointer;">📥 0</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U004/activate" method="post" style="display:inline"><button class="btn btn-success btn-sm" type="submit">Activate</button></form>
                                     <form action="/admin/users/U004/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="active" data-role="admin" data-verification="verified">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U005', 'Admin User', 'admin@email.com', 'Admin', 'Active', 'Jan 01, 2026', 'Verified', '0', '0')" data-status="active" data-role="admin" data-verification="verified">
                                 <td>U005</td>
                                 <td>Admin User</td>
                                 <td>admin@email.com</td>
@@ -575,18 +594,18 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Jan 01, 2026</td>
                                 <td><span class="badge available">Verified</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U005', 'Admin User', 'filed')" style="cursor: pointer;">📤 0</span>
                                         <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U005', 'Admin User', 'against')" style="cursor: pointer;">📥 0</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U005/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U005/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="active" data-role="buyer" data-verification="pending">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U006', 'Jane Investor', 'jane.investor@email.com', 'Buyer', 'Active', 'Mar 20, 2026', 'Pending', '1', '0')" data-status="active" data-role="buyer" data-verification="pending">
                                 <td>U006</td>
                                 <td>Jane Investor</td>
                                 <td>jane.investor@email.com</td>
@@ -594,18 +613,18 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Mar 20, 2026</td>
                                 <td><span class="badge pending">Pending</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" onclick="viewUserReportHistory('U006', 'Jane Investor', 'filed')" style="cursor: pointer;" title="Reports Filed by User"><span style="color: #e74c3c;">📤 1</span></span>
                                         <span class="report-badge against" onclick="viewUserReportHistory('U006', 'Jane Investor', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U006/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U006/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
                             </tr>
-                            <tr class="user-row" data-status="active" data-role="seller" data-verification="verified">
+                            <tr class="user-row" onclick="viewUserDetailsModal('U007', 'Ana Rodriguez', 'ana.rodriguez@email.com', 'Seller', 'Active', 'Feb 10, 2026', 'Verified', '0', '0')" data-status="active" data-role="seller" data-verification="verified">
                                 <td>U007</td>
                                 <td>Ana Rodriguez</td>
                                 <td>ana.rodriguez@email.com</td>
@@ -613,13 +632,13 @@
                                 <td><span class="badge available">Active</span></td>
                                 <td>Feb 10, 2026</td>
                                 <td><span class="badge available">Verified</span></td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <div style="display: flex; gap: 8px; font-size: .85rem;">
                                         <span class="report-badge filed" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'filed')" style="cursor: pointer;" title="Reports Filed by User">📤 0</span>
                                         <span class="report-badge against" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td onclick="event.stopPropagation();">
                                     <form action="/admin/users/U007/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
                                     <form action="/admin/users/U007/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
                                 </td>
@@ -635,48 +654,15 @@
                 <div class="content-card">
                 <h3>Land Listings Management</h3>
                 <div class="listings-grid">
-                    <?php if (! empty($listings) && is_array($listings)): ?>
-                        <?php foreach ($listings as $listing): ?>
-                            <div class="listing-card">
-                                <div class="listing-card-image">
-                                    <?php 
-                                        $listingModel = model('LandListings');
-                                        $images = model('ListingImages')->where('listing_id', $listing['listing_id'])->first();
-                                        if ($images && ! empty($images['image_path'])): 
-                                    ?>
-                                        <img src="<?= esc($images['image_path']) ?>" alt="<?= esc($listing['title']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <?php else: ?>
-                                        <span>No Image Available</span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="listing-card-content">
-                                    <div class="listing-card-title"><?= esc($listing['title']) ?></div>
-                                    <div class="listing-card-seller">By: <?= esc($listing['seller_id'] ?? 'Unknown Seller') ?></div>
-                                    <div class="listing-card-description">
-                                        <?php 
-                                            $description = $listing['description'] ?? '';
-                                            echo esc(strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description);
-                                        ?>
-                                    </div>
-                                    <div class="listing-card-actions">
-                                        <a href="/admin/listings/<?= esc($listing['listing_id']) ?>/view" class="btn btn-sm btn-view">View Details</a>
-                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/verify" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-sm btn-approved" type="submit">Approved</button></form>
-                                        <form action="/admin/listings/<?= esc($listing['listing_id']) ?>/reject" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-sm btn-rejected" type="submit">Rejected</button></form>
-                                        <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <!-- Sample Listings -->
-                        <div class="listing-card">
-                            <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏞️ Sample Property 1</div>
+                    <!-- Sample Listings -->
+                    <div class="listing-card">
+                        <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏞️ Sample Property 1</div>
                             <div class="listing-card-content">
                                 <div class="listing-card-title">Beachfront Land in Palawan</div>
                                 <div class="listing-card-seller">By: Maria Santos</div>
                                 <div class="listing-card-description">Beautiful beachfront property with direct access to pristine white sand beach. Located near major resort areas...</div>
                                 <div class="listing-card-actions">
-                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1001', 'Beachfront Land in Palawan', 'Maria Santos')">View Details</button>
                                     <button class="btn btn-sm btn-approved" type="button">Approved</button>
                                     <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
                                     <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
@@ -690,7 +676,7 @@
                                 <div class="listing-card-seller">By: Juan Dela Cruz</div>
                                 <div class="listing-card-description">Large fertile agricultural land suitable for farming. Includes farm buildings and irrigation system already installed...</div>
                                 <div class="listing-card-actions">
-                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1002', 'Agricultural Land in Tagaytay', 'Juan Dela Cruz')">View Details</button>
                                     <button class="btn btn-sm btn-approved" type="button">Approved</button>
                                     <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
                                     <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
@@ -704,14 +690,13 @@
                                 <div class="listing-card-seller">By: Ana Rodriguez</div>
                                 <div class="listing-card-description">Residential subdivision lot with road access and utilities. Perfect location for family homes or investment...</div>
                                 <div class="listing-card-actions">
-                                    <a href="#" class="btn btn-sm btn-view">View Details</a>
+                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1003', 'Residential Land near Metro Manila', 'Ana Rodriguez')">View Details</button>
                                     <button class="btn btn-sm btn-approved" type="button">Approved</button>
                                     <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
                                     <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
                                 </div>
                             </div>
                         </div>
-                    <?php endif; ?>
                 </div>
             </div>
             </section>
@@ -907,6 +892,55 @@
                 </div>
             </div>
 
+            <!-- Listing Details Modal -->
+            <div id="listingDetailsModal" class="modal">
+                <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                    <button class="modal-close" onclick="closeListingDetailsModal()">&times;</button>
+                    <div id="listingDetailsContent" style="color: var(--cream-100);">
+                        <div id="detailListingImage" style="width: 100%; height: 400px; background: linear-gradient(135deg, #2a6c62, #1f4f48); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,.5); font-size: 3rem; margin-bottom: 24px; overflow: hidden;">
+                            🏞️
+                        </div>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                            <div>
+                                <h2 id="detailListingTitle" style="font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: var(--cream-100);"></h2>
+                                <p id="detailListingSeller" style="color: rgba(254,250,224,.7); margin-bottom: 24px; font-size: 1rem;"></p>
+                                <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                                    <h3 style="color: rgba(254,250,224,.9); margin-bottom: 12px; font-weight: 600;">Full Description</h3>
+                                    <p id="detailListingDescription" style="color: rgba(254,250,224,.75); line-height: 1.8; font-size: 1rem;"></p>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px;">
+                                    <h3 style="color: rgba(254,250,224,.9); margin-bottom: 16px; font-weight: 600; font-size: 1.1rem;">Details</h3>
+                                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        <div>
+                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Listing ID</p>
+                                            <p id="detailListingId" style="color: var(--cream-100); font-weight: 600;"></p>
+                                        </div>
+                                        <div>
+                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</p>
+                                            <p id="detailListingStatus" style="color: var(--cream-100); font-weight: 600;"></p>
+                                        </div>
+                                        <div>
+                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Posted Date</p>
+                                            <p id="detailListingDate" style="color: var(--cream-100); font-weight: 600;"></p>
+                                        </div>
+                                        <div>
+                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Location</p>
+                                            <p id="detailListingLocation" style="color: var(--cream-100); font-weight: 600;"></p>
+                                        </div>
+                                        <div>
+                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Price</p>
+                                            <p id="detailListingPrice" style="color: var(--accent); font-weight: 700; font-size: 1.2rem;"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Report Details Modal -->
             <div id="reportDetailsModal" class="modal">
                 <div class="modal-content">
@@ -943,6 +977,90 @@
                 </div>
             </div>
 
+            <!-- User Details Modal -->
+            <div id="userDetailsModal" class="modal">
+                <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+                    <button class="modal-close" onclick="closeUserDetailsModal()">&times;</button>
+                    <div style="color: var(--cream-100);">
+                        <!-- User Header Section -->
+                        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(149,213,178,.2);">
+                            <!-- Profile Picture -->
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                <div id="userProfilePic" style="width: 180px; height: 180px; border-radius: 50%; background: linear-gradient(135deg, #2a6c62, #1f4f48); display: flex; align-items: center; justify-content: center; font-size: 4rem; border: 3px solid rgba(149,213,178,.3);"></div>
+                                <p id="userRole" style="padding: 4px 12px; border-radius: 6px; background: rgba(46,204,113,.2); color: #2ecc71; font-weight: 600; font-size: 0.9rem;"></p>
+                            </div>
+                            <!-- User Info -->
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div>
+                                    <h2 id="userFullName" style="font-size: 2rem; font-weight: 700; margin-bottom: 4px; color: var(--cream-100);"></h2>
+                                    <p id="userEmail" style="color: rgba(254,250,224,.7); font-size: 1rem;"></p>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">User ID</p>
+                                        <p id="userID" style="color: var(--cream-100); font-weight: 600;"></p>
+                                    </div>
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Account Status</p>
+                                        <p id="userStatus" style="color: #2ecc71; font-weight: 600;"></p>
+                                    </div>
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Member Since</p>
+                                        <p id="userJoinDate" style="color: var(--cream-100); font-weight: 600;"></p>
+                                    </div>
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Verification</p>
+                                        <p id="userVerification" style="color: #f1c40f; font-weight: 600;"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details Section -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px;">
+                            <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 20px;">
+                                <h3 style="color: rgba(254,250,224,.9); margin-bottom: 16px; font-weight: 600; font-size: 1.1rem;">Contact Information</h3>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Phone</p>
+                                        <p id="userPhone" style="color: var(--cream-100); font-weight: 500;">+63 917 123 4567</p>
+                                    </div>
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Location</p>
+                                        <p id="userLocation" style="color: var(--cream-100); font-weight: 500;">Metro Manila, Philippines</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 20px;">
+                                <h3 style="color: rgba(254,250,224,.9); margin-bottom: 16px; font-weight: 600; font-size: 1.1rem;">Account Statistics</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; margin-bottom: 4px;">📤 Reports Filed</p>
+                                        <p id="userReportsFiled" style="color: var(--cream-100); font-size: 1.4rem; font-weight: 700;">0</p>
+                                    </div>
+                                    <div>
+                                        <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; margin-bottom: 4px;">📥 Reports Against</p>
+                                        <p id="userReportsAgainst" style="color: #e74c3c; font-size: 1.4rem; font-weight: 700;">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Listing History Section -->
+                        <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 20px;">
+                            <h3 style="color: rgba(254,250,224,.9); margin-bottom: 16px; font-weight: 600; font-size: 1.1rem;">📍 Land Listings History</h3>
+                            <div id="userListingsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                                <!-- Listings will be populated here -->
+                            </div>
+                            <div id="noListingsMessage" style="text-align: center; padding: 24px; color: rgba(254,250,224,.6);">
+                                <p>No listings found for this user.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -962,7 +1080,7 @@
             hideClass: {
                 popup: 'landly-swal-hide'
             }
-        };
+        }; 
 
         function hasSwal() {
             return Boolean(window.Swal && typeof window.Swal.fire === 'function');
@@ -1166,6 +1284,40 @@
             modal.classList.remove('active');
         }
 
+        // === Listing Details Modal Functions ===
+        function viewListingDetails(listingId, title, sellerName) {
+            document.getElementById('detailListingId').textContent = listingId;
+            document.getElementById('detailListingTitle').textContent = title;
+            document.getElementById('detailListingSeller').textContent = 'Seller: ' + sellerName;
+            document.getElementById('detailListingDescription').textContent = 'Beautiful and well-maintained property with strategic location. Features excellent accessibility, nearby schools and commercial establishments. Perfect for residential living or investment purposes. The property is ready for immediate occupancy and has good potential for appreciation.';
+            document.getElementById('detailListingStatus').innerHTML = '<span class="badge available">Pending Verification</span>';
+            document.getElementById('detailListingDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('detailListingLocation').textContent = 'Metro Manila, Philippines';
+            document.getElementById('detailListingPrice').textContent = '₱2,500,000';
+            
+            // Set image
+            const imageDiv = document.getElementById('detailListingImage');
+            imageDiv.style.background = 'linear-gradient(135deg, #2a6c62, #1f4f48)';
+            imageDiv.innerHTML = '🏞️ Property Image';
+            imageDiv.style.fontSize = '3rem';
+            imageDiv.style.color = 'rgba(254,250,224,.5)';
+            
+            const modal = document.getElementById('listingDetailsModal');
+            modal.classList.add('active');
+        }
+
+        function closeListingDetailsModal() {
+            const modal = document.getElementById('listingDetailsModal');
+            modal.classList.remove('active');
+        }
+
+        // Close listing modal when clicking outside
+        document.getElementById('listingDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeListingDetailsModal();
+            }
+        });
+
         function submitReply(event) {
             event.preventDefault();
             const reportId = document.getElementById('replyModal').currentReportId;
@@ -1189,6 +1341,90 @@
             });
             closeReplyModal();
         }
+
+        // === User Details Modal Functions ===
+        function viewUserDetailsModal(userId, fullName, email, role, accountStatus, joinDate, verification, reportsFiled, reportsAgainst) {
+            // Populate user info
+            document.getElementById('userID').textContent = userId;
+            document.getElementById('userFullName').textContent = fullName;
+            document.getElementById('userEmail').textContent = email;
+            document.getElementById('userRole').textContent = role.toUpperCase();
+            document.getElementById('userStatus').textContent = accountStatus;
+            document.getElementById('userJoinDate').textContent = joinDate;
+            document.getElementById('userVerification').textContent = verification;
+            document.getElementById('userReportsFiled').textContent = reportsFiled;
+            document.getElementById('userReportsAgainst').textContent = reportsAgainst;
+            
+            // Set profile picture emoji based on role
+            const profileEmoji = role === 'Seller' ? '🏢' : (role === 'Admin' ? '👨‍💼' : '👤');
+            document.getElementById('userProfilePic').textContent = profileEmoji;
+            
+            // Sample listings - in production, these would come from database
+            const userListings = [
+                {
+                    id: 'L001',
+                    title: 'Beach Front Property',
+                    location: 'Palawan',
+                    status: 'Verified',
+                    date: 'Mar 10, 2026',
+                    price: '₱2,500,000'
+                },
+                {
+                    id: 'L002',
+                    title: 'Agricultural Land',
+                    location: 'Tagaytay',
+                    status: 'Pending',
+                    date: 'Mar 05, 2026',
+                    price: '₱1,200,000'
+                },
+                {
+                    id: 'L003',
+                    title: 'Residential Lot',
+                    location: 'Metro Manila',
+                    status: 'Verified',
+                    date: 'Feb 28, 2026',
+                    price: '₱800,000'
+                }
+            ];
+            
+            const listingsContainer = document.getElementById('userListingsContainer');
+            const noListingsMessage = document.getElementById('noListingsMessage');
+            
+            // Only show listings if user is a seller
+            if (role === 'Seller' || role === 'seller') {
+                listingsContainer.innerHTML = userListings.map(listing => `
+                    <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px; cursor: pointer; transition: all .2s ease;" onmouseover="this.style.borderColor='rgba(149,213,178,.5)'" onmouseout="this.style.borderColor='rgba(149,213,178,.2)'">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <h4 style="color: var(--cream-100); font-weight: 600; margin: 0; font-size: 1rem;">${listing.title}</h4>
+                            <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${listing.status === 'Verified' ? 'rgba(46,204,113,.2); color: #2ecc71;' : 'rgba(241,196,15,.2); color: #f1c40f;'}">${listing.status}</span>
+                        </div>
+                        <p style="color: rgba(254,250,224,.7); font-size: 0.9rem; margin: 8px 0;">📍 ${listing.location}</p>
+                        <p style="color: var(--accent); font-weight: 700; font-size: 1.1rem; margin: 8px 0;">${listing.price}</p>
+                        <p style="color: rgba(254,250,224,.5); font-size: 0.85rem; margin: 0;">Posted: ${listing.date}</p>
+                    </div>
+                `).join('');
+                noListingsMessage.style.display = 'none';
+            } else {
+                listingsContainer.innerHTML = '';
+                noListingsMessage.style.display = 'block';
+            }
+            
+            // Open modal
+            const modal = document.getElementById('userDetailsModal');
+            modal.classList.add('active');
+        }
+
+        function closeUserDetailsModal() {
+            const modal = document.getElementById('userDetailsModal');
+            modal.classList.remove('active');
+        }
+
+        // Close user details modal when clicking outside
+        document.getElementById('userDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserDetailsModal();
+            }
+        });
 
         function suspendAccount(userName, reportId) {
             fireAppAlert({
@@ -1412,6 +1648,9 @@
                     break;
                 case 'suspendAccount':
                     suspendAccount(element.dataset.userName, element.dataset.reportId);
+                    break;
+                case 'viewListingDetails':
+                    viewListingDetails(element.dataset.listingId, element.dataset.listingTitle, element.dataset.listingSeller);
                     break;
             }
         });
