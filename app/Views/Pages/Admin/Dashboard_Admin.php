@@ -10,29 +10,60 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --green-900: #0f1b1b;
-            --green-800: #14312c;
-            --green-700: #1f4f48;
-            --green-600: #2a6c62;
-            --cream-100: #f5f5dc;
-            --cream-200: #efe7d8;
-            --accent: #d2b48c;
-            --accent-dark: #bea074;
+            --green-900: #0d2818;
+            --green-800: #1a4d2e;
+            --green-700: #2d6a4f;
+            --green-600: #40916c;
+            --cream-100: #fefae0;
+            --cream-200: #f5f0d6;
+            --accent: #95d5b2;
+            --accent-dark: #74c69d;
             --sidebar-width: 280px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", system-ui, sans-serif; }
 
-        body { background-color: var(--green-900); color: var(--cream-100); min-height: 100vh; overflow-x: hidden; }
+        body { background-color: var(--green-900); color: var(--cream-100); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
 
-        .dashboard-container { display: flex; min-height: 100vh; }
-        .sidebar { width: var(--sidebar-width); background: linear-gradient(180deg, rgba(45, 106, 79, 0.95), rgba(13, 40, 24, 0.98)); padding-top: 20px; position: fixed; height: 100vh; }
-        .sidebar .brand { margin: 0 20px 18px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--cream-100); }
-        .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--green-900); display: grid; place-items: center; font-weight: 700; }
-        .brand-text { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
-        .sidebar-nav { margin-top: 16px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 18px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease; }
-        .nav-item:hover, .nav-item.active { background: rgba(149, 213, 178, 0.2); color: var(--accent); }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(149, 213, 178, 0.03) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(149, 213, 178, 0.025) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(45, 106, 79, 0.15) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2395d5b2' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .dashboard-container { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(149, 213, 178, 0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+        .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); color: var(--green-900); display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; animation: pulse 3s ease-in-out infinite; }
+        .brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.5px; }
+        .brand-subtitle { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+        .sidebar-nav { flex: 1; padding: 20px 0; overflow-y: auto; }
+        .nav-item { display: flex; align-items: center; gap: 12px; margin: 0 12px 8px; padding: 12px 16px; border-radius: 14px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease; }
+        .nav-item:hover, .nav-item.active { background: rgba(149, 213, 178, 0.2); color: var(--accent); transform: translateX(2px); }
         .main-content { margin-left: var(--sidebar-width); padding: 28px; width: calc(100% - var(--sidebar-width)); }
         .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
         .page-title h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-style: italic; color: var(--cream-100); }
@@ -172,12 +203,47 @@
         .legend-color { width: 12px; height: 12px; border-radius: 3px; }
         .analytics-section { margin-top: 28px; }
 
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(149, 213, 178, 0.1);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 12px;
+            color: #e74c3c;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.25);
+            border-color: rgba(231, 76, 60, 0.5);
+        }
+
+        .logout-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
         @media (max-width: 1200px) {
             .analytics-grid { grid-template-columns: 1fr; }
             .chart-container { height: 280px; }
         }
 
-        /* === SweetAlert2 Landly Theme === */
+        /* Unified SweetAlert theme aligned with system Auth style */
         .swal2-popup.landly-swal {
             background: var(--green-900);
             color: var(--cream-100);
@@ -203,9 +269,9 @@
         }
 
         .swal2-popup.landly-swal .swal2-cancel {
-            background: rgba(245, 245, 220, 0.14);
+            background: rgba(245, 240, 214, 0.14);
             color: var(--cream-100);
-            border: 1px solid rgba(245, 245, 220, 0.25);
+            border: 1px solid rgba(245, 240, 214, 0.25);
             border-radius: 10px;
         }
 
@@ -215,6 +281,54 @@
             border: 1px solid rgba(217, 111, 91, 0.4);
             border-radius: 10px;
         }
+
+        .swal2-popup.landly-swal .swal2-confirm:hover,
+        .swal2-popup.landly-swal .swal2-cancel:hover,
+        .swal2-popup.landly-swal .swal2-deny:hover {
+            transform: scale(1.02);
+        }
+
+        .swal2-popup.landly-swal .swal2-confirm:focus,
+        .swal2-popup.landly-swal .swal2-cancel:focus,
+        .swal2-popup.landly-swal .swal2-deny:focus {
+            box-shadow: 0 0 0 3px rgba(149, 213, 178, 0.35);
+        }
+
+        /* Styled backdrop with gradient design */
+        .swal2-backdrop.swal2-shown {
+            background: radial-gradient(circle at center, rgba(15, 27, 27, 0.85) 0%, rgba(5, 12, 12, 0.95) 70%, rgba(2, 6, 6, 0.98) 100%);
+            backdrop-filter: blur(2px);
+        }
+
+        /* Add subtle pattern overlay to backdrop */
+        .swal2-backdrop.swal2-shown::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%);
+            background-size: 60px 60px;
+            background-position: 0 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes landlyFadeInUp {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes landlyFadeOutDown {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(12px) scale(0.98); }
+        }
+
+        .landly-swal-show { animation: landlyFadeInUp 0.28s ease-out; }
+        .landly-swal-hide { animation: landlyFadeOutDown 0.2s ease-in; }
 
         .swal2-popup.landly-swal .swal2-confirm:hover,
         .swal2-popup.landly-swal .swal2-cancel:hover,
@@ -303,20 +417,29 @@
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <a class="brand" href="/admin/dashboard">
-                <div class="brand-badge">A</div>
-                <div>
-                    <div class="brand-text">Landly</div>
-                    <div style="font-size:.65rem;color:var(--accent);letter-spacing:1.2px;">Admin Panel</div>
-                </div>
-            </a>
+            <div class="sidebar-header">
+                <a class="brand" href="/admin/dashboard">
+                    <div class="brand-badge">A</div>
+                    <div>
+                        <div class="brand-text">Landly</div>
+                        <div class="brand-subtitle">Admin Panel</div>
+                    </div>
+                </a>
+            </div>
             <nav class="sidebar-nav">
-                <a class="nav-item active" href="#dashboard">Dashboard</a>
-                <a class="nav-item" href="#users">Users</a>
-                <a class="nav-item" href="#sellers">Seller Approval</a>
-                <a class="nav-item" href="#listings">Land Listings</a>
-                <a class="nav-item" href="#reports">Reports & Disputes</a>
+                <a class="nav-item active" href="#" data-section="dashboard">Dashboard</a>
+                <a class="nav-item" href="#" data-section="users">Users</a>
+                <a class="nav-item" href="#" data-section="sellers">Seller Approval</a>
+                <a class="nav-item" href="#" data-section="listings">Land Listings</a>
+                <a class="nav-item" href="#" data-section="reports">Reports & Disputes</a>
             </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="adminLogoutBtn" type="button">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Logout
+                </button>
+            </div>
         </aside>
 
         <main class="main-content">
@@ -415,457 +538,15 @@
                 </div>
             </section>
 
-            <section id="users-section" class="section-content">
-                <div class="content-card">
-                <h3>Users Management</h3>
-                
-                <!-- Filter Controls -->
-                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <label for="filterStatus" style="color: rgba(254,250,224,.8); font-weight: 600;">Status:</label>
-                        <select id="filterStatus" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <label for="filterRole" style="color: rgba(254,250,224,.8); font-weight: 600;">Role:</label>
-                        <select id="filterRole" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
-                            <option value="">All Roles</option>
-                            <option value="buyer">Buyer</option>
-                            <option value="seller">Seller</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
+            <?= view('Pages/Admin/Components/UserSection') ?>
 
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <label for="filterVerification" style="color: rgba(254,250,224,.8); font-weight: 600;">Verification:</label>
-                        <select id="filterVerification" onchange="filterUsersTable()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 600; cursor: pointer;">
-                            <option value="">All</option>
-                            <option value="verified">Verified</option>
-                            <option value="pending">Pending</option>
-                            <option value="unverified">Unverified</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;">
-                        <label for="searchUsers" style="color: rgba(254,250,224,.8); font-weight: 600;">🔍 Search:</label>
-                        <input type="text" id="searchUsers" placeholder="Name, email, or ID..." oninput="searchUsersTable()" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); font-weight: 500; font-family: inherit;" />
-                    </div>
-                    
-                    <button onclick="resetUsersFilter()" style="padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(149,213,178,.3); background: rgba(149,213,178,.15); color: #95d5b2; font-weight: 600; cursor: pointer; transition: all .2s ease;">Reset Filters</button>
-                </div>
+            <?= view('Pages/Admin/Components/ListingSection') ?>
 
-                <table id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th>Verification Approval</th>
-                            <th>Report History</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (! empty($users) && is_array($users)): ?>
-                            <?php foreach ($users as $user): ?>
-                                <tr class="user-row" onclick="viewUserDetailsModal('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>', '<?= esc($user['email']) ?>', '<?= ucfirst($user['roles'] ?? 'buyer') ?>', '<?= ($user['is_active'] ?? 0) ? 'Active' : 'Inactive' ?>', '<?= isset($user['created_at']) ? date('M d, Y', strtotime($user['created_at'])) : 'Mar 15, 2026' ?>', '<?= ucfirst($user['verification_status'] ?? 'pending') ?>', '<?= $user['reports_filed'] ?? 0 ?>', '<?= $user['reports_against'] ?? 0 ?>')" data-status="<?= ($user['is_active'] ?? 0) ? 'active' : 'inactive' ?>" data-role="<?= strtolower($user['roles'] ?? 'buyer') ?>" data-verification="<?= strtolower($user['verification_status'] ?? 'pending') ?>">
-                                    <td><?= esc($user['user_id']) ?></td>
-                                    <td><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
-                                    <td><?= esc($user['email']) ?></td>
-                                    <td><?= esc(ucfirst($user['roles'] ?? 'buyer')) ?></td>
-                                    <td><span class="badge <?= ($user['is_active'] ?? 0) ? 'available' : 'closed' ?>"><?= ($user['is_active'] ?? 0) ? 'Active' : 'Inactive' ?></span></td>
-                                    <td><?= isset($user['created_at']) ? date('M d, Y', strtotime($user['created_at'])) : 'Mar 15, 2026' ?></td>
-                                    <td>
-                                        <?php $verifyStatus = strtolower($user['verification_status'] ?? 'pending'); ?>
-                                        <span class="badge <?= $verifyStatus === 'verified' ? 'available' : ($verifyStatus === 'pending' ? 'pending' : 'closed') ?>">
-                                            <?= ucfirst($verifyStatus) ?>
-                                        </span>
-                                    </td>
-                                    <td onclick="event.stopPropagation();">
-                                        <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                            <span class="report-badge filed" title="Reports Filed by User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="filed" style="cursor: pointer;">
-                                                📤 <?= $user['reports_filed'] ?? 0 ?>
-                                            </span>
-                                            <span class="report-badge against" title="Reports Against User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="against" style="cursor: pointer;">
-                                                📥 <?= $user['reports_against'] ?? 0 ?>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td onclick="event.stopPropagation();">
-                                        <?php if (! empty($user['is_active'])): ?>
-                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/deactivate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                        <?php else: ?>
-                                            <form action="/admin/users/<?= esc($user['user_id']) ?>/activate" method="post" style="display:inline"><?= csrf_field() ?><button class="btn btn-success btn-sm" type="submit">Activate</button></form>
-                                        <?php endif; ?>
-                                        <form action="/admin/users/<?= esc($user['user_id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><?= csrf_field() ?><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <!-- Sample users for visualization -->
-                            <tr class="user-row" onclick="viewUserDetailsModal('U001', 'John Buyer', 'john.buyer@email.com', 'Buyer', 'Active', 'Mar 15, 2026', 'Verified', '0', '0')" data-status="active" data-role="buyer" data-verification="verified">
-                                <td>U001</td>
-                                <td>John Buyer</td>
-                                <td>john.buyer@email.com</td>
-                                <td>Buyer</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Mar 15, 2026</td>
-                                <td><span class="badge available">Verified</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U001', 'John Buyer', 'filed')" style="cursor: pointer;">📤 0</span>
-                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U001', 'John Buyer', 'against')" style="cursor: pointer;">📥 0</span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U001/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U001/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U002', 'Maria Santos', 'maria.santos@email.com', 'Seller', 'Active', 'Feb 28, 2026', 'Verified', '0', '1')" data-status="active" data-role="seller" data-verification="verified">
-                                <td>U002</td>
-                                <td>Maria Santos</td>
-                                <td>maria.santos@email.com</td>
-                                <td>Seller</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Feb 28, 2026</td>
-                                <td><span class="badge available">Verified</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'filed')" style="cursor: pointer;">📤 0</span>
-                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U002', 'Maria Santos', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U002/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U002/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U003', 'Juan Dela Cruz', 'juan.delacruz@email.com', 'Seller', 'Active', 'Mar 10, 2026', 'Pending', '0', '1')" data-status="active" data-role="seller" data-verification="pending">
-                                <td>U003</td>
-                                <td>Juan Dela Cruz</td>
-                                <td>juan.delacruz@email.com</td>
-                                <td>Seller</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Mar 10, 2026</td>
-                                <td><span class="badge pending">Pending</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'filed')" style="cursor: pointer;">📤 0</span>
-                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U003', 'Juan Dela Cruz', 'against')" style="cursor: pointer;"><span style="color: #e74c3c;">📥 1</span></span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U003/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U003/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U004', 'Carlos Lopez', 'carlos.lopez@email.com', 'Buyer', 'Inactive', 'Jan 20, 2026', 'Unverified', '1', '0')" data-status="inactive" data-role="buyer" data-verification="unverified">
-                                <td>U004</td>
-                                <td>Carlos Lopez</td>
-                                <td>carlos.lopez@email.com</td>
-                                <td>Buyer</td>
-                                <td><span class="badge closed">Inactive</span></td>
-                                <td>Jan 20, 2026</td>
-                                <td><span class="badge closed">Unverified</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'filed')" style="cursor: pointer;"><span style="color: #e74c3c;">📤 1</span></span>
-                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U004', 'Carlos Lopez', 'against')" style="cursor: pointer;">📥 0</span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U004/activate" method="post" style="display:inline"><button class="btn btn-success btn-sm" type="submit">Activate</button></form>
-                                    <form action="/admin/users/U004/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U005', 'Admin User', 'admin@email.com', 'Admin', 'Active', 'Jan 01, 2026', 'Verified', '0', '0')" data-status="active" data-role="admin" data-verification="verified">
-                                <td>U005</td>
-                                <td>Admin User</td>
-                                <td>admin@email.com</td>
-                                <td>Admin</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Jan 01, 2026</td>
-                                <td><span class="badge available">Verified</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" title="Reports Filed by User" onclick="viewUserReportHistory('U005', 'Admin User', 'filed')" style="cursor: pointer;">📤 0</span>
-                                        <span class="report-badge against" title="Reports Against User" onclick="viewUserReportHistory('U005', 'Admin User', 'against')" style="cursor: pointer;">📥 0</span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U005/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U005/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U006', 'Jane Investor', 'jane.investor@email.com', 'Buyer', 'Active', 'Mar 20, 2026', 'Pending', '1', '0')" data-status="active" data-role="buyer" data-verification="pending">
-                                <td>U006</td>
-                                <td>Jane Investor</td>
-                                <td>jane.investor@email.com</td>
-                                <td>Buyer</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Mar 20, 2026</td>
-                                <td><span class="badge pending">Pending</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" onclick="viewUserReportHistory('U006', 'Jane Investor', 'filed')" style="cursor: pointer;" title="Reports Filed by User"><span style="color: #e74c3c;">📤 1</span></span>
-                                        <span class="report-badge against" onclick="viewUserReportHistory('U006', 'Jane Investor', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U006/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U006/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                            <tr class="user-row" onclick="viewUserDetailsModal('U007', 'Ana Rodriguez', 'ana.rodriguez@email.com', 'Seller', 'Active', 'Feb 10, 2026', 'Verified', '0', '0')" data-status="active" data-role="seller" data-verification="verified">
-                                <td>U007</td>
-                                <td>Ana Rodriguez</td>
-                                <td>ana.rodriguez@email.com</td>
-                                <td>Seller</td>
-                                <td><span class="badge available">Active</span></td>
-                                <td>Feb 10, 2026</td>
-                                <td><span class="badge available">Verified</span></td>
-                                <td onclick="event.stopPropagation();">
-                                    <div style="display: flex; gap: 8px; font-size: .85rem;">
-                                        <span class="report-badge filed" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'filed')" style="cursor: pointer;" title="Reports Filed by User">📤 0</span>
-                                        <span class="report-badge against" onclick="viewUserReportHistory('U007', 'Ana Rodriguez', 'against')" style="cursor: pointer;" title="Reports Against User">📥 0</span>
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    <form action="/admin/users/U007/deactivate" method="post" style="display:inline"><button class="btn btn-warning btn-sm" type="submit">Deactivate</button></form>
-                                    <form action="/admin/users/U007/delete" method="post" style="display:inline" onsubmit="return confirm('Delete user?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            </section>
-
-            <section id="listings-section" class="section-content">
-                <div class="content-card">
-                <h3>Land Listings Management</h3>
-                <div class="listings-grid">
-                    <!-- Sample Listings -->
-                    <div class="listing-card">
-                        <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏞️ Sample Property 1</div>
-                            <div class="listing-card-content">
-                                <div class="listing-card-title">Beachfront Land in Palawan</div>
-                                <div class="listing-card-seller">By: Maria Santos</div>
-                                <div class="listing-card-description">Beautiful beachfront property with direct access to pristine white sand beach. Located near major resort areas...</div>
-                                <div class="listing-card-actions">
-                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1001', 'Beachfront Land in Palawan', 'Maria Santos')">View Details</button>
-                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
-                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
-                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="listing-card">
-                            <div class="listing-card-image" style="background: linear-gradient(135deg, #14312c, #0f1b1b); color: var(--cream-100);">🌳 Sample Property 2</div>
-                            <div class="listing-card-content">
-                                <div class="listing-card-title">Agricultural Land in Tagaytay</div>
-                                <div class="listing-card-seller">By: Juan Dela Cruz</div>
-                                <div class="listing-card-description">Large fertile agricultural land suitable for farming. Includes farm buildings and irrigation system already installed...</div>
-                                <div class="listing-card-actions">
-                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1002', 'Agricultural Land in Tagaytay', 'Juan Dela Cruz')">View Details</button>
-                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
-                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
-                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="listing-card">
-                            <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100);">🏗️ Sample Property 3</div>
-                            <div class="listing-card-content">
-                                <div class="listing-card-title">Residential Land near Metro Manila</div>
-                                <div class="listing-card-seller">By: Ana Rodriguez</div>
-                                <div class="listing-card-description">Residential subdivision lot with road access and utilities. Perfect location for family homes or investment...</div>
-                                <div class="listing-card-actions">
-                                    <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('1003', 'Residential Land near Metro Manila', 'Ana Rodriguez')">View Details</button>
-                                    <button class="btn btn-sm btn-approved" type="button">Approved</button>
-                                    <button class="btn btn-sm btn-rejected" type="button">Rejected</button>
-                                    <button class="btn btn-sm btn-incomplete" type="button">Incomplete</button>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-            </div>
-            </section>
-
-            <section id="sellers-section" class="section-content">
-                <div class="content-card">
-                <h3>Seller Verification</h3>
-                <div class="sellers-grid">
-                    <!-- Sample Sellers for Approval -->
-                    <div class="seller-card">
-                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
-                        <div class="seller-card-info">
-                            <div class="seller-card-header">
-                                <div>
-                                    <div class="seller-card-name">Maria Santos</div>
-                                    <div class="seller-card-id">ID: 1001 | Registered: 2026-03-15</div>
-                                </div>
-                                <div class="seller-card-actions">
-                                    <button class="btn btn-approve" type="button">✓ Approve</button>
-                                    <button class="btn btn-reject" type="button">✗ Reject</button>
-                                </div>
-                            </div>
-                            <div class="seller-card-details">
-                                <strong>Email:</strong> maria.santos@email.com<br>
-                                <strong>Phone:</strong> +63 917 1234567<br>
-                                <strong>Location:</strong> Palawan, Philippines
-                            </div>
-                            <div class="seller-documents">
-                                <div class="seller-documents-title">📄 Documents Uploaded</div>
-                                <button class="btn-files" onclick="openDocumentsGallery('Maria Santos', ['https://picsum.photos/400/300?random=1', 'https://picsum.photos/400/300?random=2', 'https://picsum.photos/400/300?random=3'  ])">View 3 Files</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="seller-card">
-                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #14312c, #0f1b1b); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
-                        <div class="seller-card-info">
-                            <div class="seller-card-header">
-                                <div>
-                                    <div class="seller-card-name">Juan Dela Cruz</div>
-                                    <div class="seller-card-id">ID: 1002 | Registered: 2026-03-18</div>
-                                </div>
-                                <div class="seller-card-actions">
-                                    <button class="btn btn-approve" type="button">✓ Approve</button>
-                                    <button class="btn btn-reject" type="button">✗ Reject</button>
-                                </div>
-                            </div>
-                            <div class="seller-card-details">
-                                <strong>Email:</strong> juan.delacruz@email.com<br>
-                                <strong>Phone:</strong> +63 918 9876543<br>
-                                <strong>Location:</strong> Tagaytay, Cavite
-                            </div>
-                            <div class="seller-documents">
-                                <div class="seller-documents-title">📄 Documents Uploaded</div>
-                                <button class="btn-files" onclick="openDocumentsGallery('Juan Dela Cruz', ['https://picsum.photos/400/300?random=4', 'https://picsum.photos/400/300?random=5'])">View 2 Files</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="seller-card">
-                        <div class="seller-profile-pic" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); display: flex; align-items: center; justify-content: center; color: var(--cream-100); font-size: 2rem;">👤</div>
-                        <div class="seller-card-info">
-                            <div class="seller-card-header">
-                                <div>
-                                    <div class="seller-card-name">Ana Rodriguez</div>
-                                    <div class="seller-card-id">ID: 1003 | Registered: 2026-03-20</div>
-                                </div>
-                                <div class="seller-card-actions">
-                                    <button class="btn btn-approve" type="button">✓ Approve</button>
-                                    <button class="btn btn-reject" type="button">✗ Reject</button>
-                                </div>
-                            </div>
-                            <div class="seller-card-details">
-                                <strong>Email:</strong> ana.rodriguez@email.com<br>
-                                <strong>Phone:</strong> +63 919 5555555<br>
-                                <strong>Location:</strong> Rizal, Metro Manila
-                            </div>
-                            <div class="seller-documents">
-                                <div class="seller-documents-title">📄 Documents Uploaded</div>
-                                <button class="btn-files" onclick="openDocumentsGallery('Ana Rodriguez', ['https://picsum.photos/400/300?random=6', 'https://picsum.photos/400/300?random=7', 'https://picsum.photos/400/300?random=8', 'https://picsum.photos/400/300?random=9'])">View 4 Files</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </section>
+            <?= view('Pages/Admin/Components/SellerSection') ?>
 
             <!-- Reports & Disputes Section -->
-            <section id="reports-section" class="section-content">
-                <div class="content-card">
-                <h3>Reports & Disputes Management</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Report ID</th>
-                            <th>Subject</th>
-                            <th>Reported By</th>
-                            <th>Against</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (! empty($reports) && is_array($reports)): ?>
-                            <?php foreach ($reports as $report): ?>
-                                <tr>
-                                    <td><?= esc($report['report_id'] ?? 'R001') ?></td>
-                                    <td><?= esc($report['subject'] ?? 'Fake Documents') ?></td>
-                                    <td><?= esc($report['reported_by_name'] ?? 'John Buyer') ?></td>
-                                    <td><?= esc($report['reported_against_name'] ?? 'Maria Santos') ?></td>
-                                    <td><span class="report-reason"><?= esc($report['reason'] ?? 'Fraudulent Documents') ?></span></td>
-                                    <td><span class="badge <?= ($report['status'] ?? 'pending') === 'pending' ? 'pending' : (($report['status'] ?? '') === 'resolved' ? 'available' : 'closed') ?>"><?= ucfirst($report['status'] ?? 'Pending') ?></span></td>
-                                    <td><?= isset($report['created_at']) ? date('M d, Y', strtotime($report['created_at'])) : 'Apr 10, 2026' ?></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-view" type="button" data-action="viewReportDetails" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">View</button>
-                                        <button class="btn btn-sm btn-success" type="button" data-action="showReplyModal" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">Reply</button>
-                                        <button class="btn btn-sm btn-danger" type="button" data-action="suspendAccount" data-user-name="<?php echo esc($report['reported_against_name'] ?? ''); ?>" data-report-id="<?php echo esc($report['report_id'] ?? '1'); ?>">Suspend</button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td>R001</td>
-                                <td>Fake Documents</td>
-                                <td>John Buyer</td>
-                                <td>Maria Santos</td>
-                                <td><span class="report-reason">Fraudulent Documents Submitted</span></td>
-                                <td><span class="badge pending">Pending</span></td>
-                                <td>Apr 10, 2026</td>
-                                <td>
-                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R001')">View</button>
-                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R001')">Reply</button>
-                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Maria Santos', 'R001')">Suspend</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>R002</td>
-                                <td>Misrepresented Property</td>
-                                <td>Jane Investor</td>
-                                <td>Juan Dela Cruz</td>
-                                <td><span class="report-reason">Property Photos Don't Match Actual</span></td>
-                                <td><span class="badge pending">Pending</span></td>
-                                <td>Apr 09, 2026</td>
-                                <td>
-                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R002')">View</button>
-                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R002')">Reply</button>
-                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Juan Dela Cruz', 'R002')">Suspend</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>R003</td>
-                                <td>Unprofessional Conduct</td>
-                                <td>Ana Rodriguez</td>
-                                <td>Carlos Lopez</td>
-                                <td><span class="report-reason">Harassment and Rude Behavior</span></td>
-                                <td><span class="badge available">Resolved</span></td>
-                                <td>Apr 08, 2026</td>
-                                <td>
-                                    <button class="btn btn-sm btn-view" type="button" onclick="viewReportDetails('R003')">View</button>
-                                    <button class="btn btn-sm btn-success" type="button" onclick="showReplyModal('R003')">Reply</button>
-                                    <button class="btn btn-sm btn-danger" type="button" onclick="suspendAccount('Carlos Lopez', 'R003')">Suspend</button>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-                </div>
-            </section>
-
+            <?= view('Pages/Admin/Components/ReportSection') ?>
+            
             <!-- User Report History Modal -->
             <div id="userReportHistoryModal" class="modal">
                 <div class="modal-content" style="max-width: 900px;">
@@ -1105,29 +786,102 @@
             });
         }
 
+        const logoutRedirectUrl = <?= json_encode(base_url('auth'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+        async function confirmAdminLogout() {
+            if (!hasSwal()) {
+                const shouldLogout = window.confirm('Do you want to logout?');
+                if (shouldLogout) {
+                    window.location.href = logoutRedirectUrl;
+                }
+                return;
+            }
+
+            const result = await fireAppAlert({
+                icon: 'question',
+                title: 'Do you want to logout?',
+                text: 'You can log in again anytime.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                allowOutsideClick: true,
+                allowEscapeKey: true
+            });
+
+            if (result && result.isConfirmed) {
+                window.location.href = logoutRedirectUrl;
+            }
+        }
+
+        const adminSectionStorageKey = 'adminDashboardActiveSection';
+
+        function normalizeAdminSectionName(value) {
+            return String(value || '').replace('#', '').trim().toLowerCase();
+        }
+
+        function getAdminSectionKey(link) {
+            return normalizeAdminSectionName(link?.dataset?.section || link?.getAttribute('href') || '');
+        }
+
         function setSection(sectionId) {
+            sectionId = normalizeAdminSectionName(sectionId) || 'dashboard';
+
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(el => el.classList.remove('active'));
+
             const section = document.getElementById(sectionId + '-section');
-            if (section) section.classList.add('active');
+            if (section) {
+                section.classList.add('active');
+            }
+
             document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(el => {
-                if (el.getAttribute('href') === '#' + sectionId) {
+                if (getAdminSectionKey(el) === sectionId) {
                     el.classList.add('active');
                 }
             });
+
+            try {
+                localStorage.setItem(adminSectionStorageKey, sectionId);
+                sessionStorage.setItem(adminSectionStorageKey, sectionId);
+            } catch (error) {
+            }
+
+            if (window.location.hash !== `#${sectionId}`) {
+                history.replaceState(null, '', `#${sectionId}`);
+            }
         }
 
         document.querySelectorAll('.section-links a, .sidebar-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                const target = this.getAttribute('href').replace('#', '');
-                setSection(target);
-                history.replaceState(null, null, '#'+target);
+                setSection(getAdminSectionKey(this));
             });
         });
 
-        const initial = window.location.hash.replace('#', '') || 'dashboard';
-        setSection(initial);
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        adminLogoutBtn?.addEventListener('click', () => {
+            confirmAdminLogout();
+        });
+
+        const initialFromHash = normalizeAdminSectionName(window.location.hash || '');
+        let initial = ['dashboard', 'users', 'sellers', 'listings', 'reports'].includes(initialFromHash) ? initialFromHash : '';
+
+        if (!initial) {
+            try {
+                const savedSection = normalizeAdminSectionName(
+                    sessionStorage.getItem(adminSectionStorageKey)
+                    || localStorage.getItem(adminSectionStorageKey)
+                    || ''
+                );
+                if (['dashboard', 'users', 'sellers', 'listings', 'reports'].includes(savedSection)) {
+                    initial = savedSection;
+                }
+            } catch (error) {
+                initial = '';
+            }
+        }
+
+        setSection(initial || 'dashboard');
 
         // Modal Functions for Files Gallery
         function openDocumentsGallery(sellerName, documentPaths) {

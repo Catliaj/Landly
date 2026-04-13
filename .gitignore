@@ -44,6 +44,8 @@ $RECYCLE.BIN/
 .env
 .vagrant
 Vagrantfile
+CHATBOT_SETUP.md
+test_chatbot.php
 
 #-------------------------
 # Temporary Files

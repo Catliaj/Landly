@@ -14,12 +14,16 @@ class ReportsModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'reported_by',
+        'reported_against',
+        'subject',
         'listing_id',
         'reason',
         'description',
+        'evidence_path',
         'status',
         'admin_notes',
         'created_at',
+        'updated_at',
         'resolved_at',
     ];
 
@@ -33,7 +37,7 @@ class ReportsModel extends Model
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    protected $updatedField  = null;
+    protected $updatedField  = 'updated_at';
     protected $deletedField  = null;
 
     public function getPendingReports()

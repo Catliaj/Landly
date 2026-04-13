@@ -1,0 +1,225 @@
+# Admin AI Guide
+
+Use this guide when you want an AI helper to work on the admin area of Landly.
+
+## What the AI should understand
+
+The admin area manages:
+
+- Dashboard overview
+- Users management
+- Seller approval
+- Land listings moderation
+- Reports and disputes
+- Logout and sidebar navigation
+- Modals, buttons, filters, and table actions
+
+## IMPORTANT: Analyze the project first
+
+**BEFORE asking the AI to make changes:**
+
+The AI needs to understand the whole codebase structure so it doesn't break other parts.
+
+Tell the AI to:
+
+- Read the Dashboard_Admin.php file to see the current code
+- Check the component structure (app/Views/Pages/Admin/Components/)
+- Compare with Dashboard_Buyer.php and Dashboard_Seller.php to understand shared patterns
+- Identify all section IDs (#dashboard-section, #users-section, etc.)
+- Check the sidebar navigation structure and how data-section attributes work
+- Understand the storage keys and state management (adminDashboardActiveSection)
+- See what colors and styles are used (CSS variables like --green-900, --cream-100, --accent)
+- Check the UserModel, MessageModel, and other Models to understand the data flow
+- Look at existing Controllers to understand how data is passed to views
+- Review the Config/ folder for settings that might affect the admin area
+- Understand the difference between admin, buyer, and seller roles
+
+**Why this matters:**
+
+Each role (Admin, Buyer, Seller) has its own:
+
+- Dashboard file (Dashboard_Admin.php, Dashboard_Buyer.php, Dashboard_Seller.php)
+- Navigation structure
+- Section components
+- Data relationships (Users, Sellers, Listings, Reports models)
+
+Changes to the admin area must NOT:
+
+- Break the buyer or seller dashboard
+- Modify shared Models or Controllers used by other roles
+- Remove or rename existing section IDs that other code depends on
+- Change the authentication or session logic
+- Affect the router or filters that other roles use
+
+## Best way to prompt the AI
+
+When you ask the AI to do something, give it:
+
+- The exact page or file
+- The problem or task
+- The section of the admin panel involved
+- What the expected result should be
+- Any design or behavior rules to follow
+
+## Prompt Template
+
+Use this format:
+
+```text
+You are working on the Landly admin dashboard.
+
+FIRST: Analyze the codebase:
+- Read c:\Users\ajcat\OneDrive\Desktop\Landly Website\landly\app\Views\Pages\Admin\Dashboard_Admin.php
+- Check c:\Users\ajcat\OneDrive\Desktop\Landly Website\landly\app\Views\Pages\Admin\Components/ for component structure
+- Compare with app/Views/Pages/Buyer/Dashboard_Buyer.php to understand the design patterns
+- Understand the Models (UserModel, SellerVerificationModel, InquriesModel, etc.) and how data flows
+- Identify all existing section IDs and navigation logic
+
+Task: [describe the exact task]
+Section: [dashboard / users / sellers / listings / reports / sidebar / logout]
+Goal: [what should happen after the change]
+Design rules: [match buyer/seller style, keep spacing, keep colors, etc.]
+Behavior rules: [click action, modal action, navigation, validation, etc.]
+Do not change: [anything you want to keep untouched, other dashboards, other roles, shared models]
+```
+
+## Example Prompts
+
+### 1. Sidebar task
+
+```text
+You are working on the Landly admin dashboard.
+Task: Make the admin sidebar match the buyer dashboard design.
+Section: sidebar
+Goal: Use the same padding, margin, button spacing, and logout position as the buyer page.
+Design rules: Keep the same dark green theme, rounded nav items, and bottom logout button.
+Do not change: The admin page content sections.
+```
+
+### 2. Logout task
+
+```text
+You are working on the Landly admin dashboard.
+Task: Add a logout button with SweetAlert confirmation.
+Section: logout
+Goal: Make logout work like the buyer dashboard.
+Design rules: Use the same SweetAlert design, colors, and animation as buyer.
+Behavior rules: Ask for confirmation first, then redirect to the auth page.
+```
+
+### 3. Reports task
+
+```text
+You are working on the Landly admin dashboard.
+Task: Improve the reports section.
+Section: reports
+Goal: Show report details, status, reporter, target user, and actions.
+Design rules: Match the existing buyer/seller visual style.
+Behavior rules: Clicking a report button should open the correct modal or section.
+```
+
+## What the AI should do
+
+Tell the AI to:
+
+- Keep the design consistent with buyer and seller pages
+- Use the existing admin structure instead of rebuilding everything
+- Follow the current section IDs and sidebar logic
+- Keep buttons, cards, and modals visually aligned
+- Fix the root cause instead of applying temporary patches
+
+## What the AI should not do
+
+Tell the AI not to:
+
+- Break the sidebar navigation
+- Change unrelated pages
+- Remove existing admin sections
+- Replace the design with a completely different style
+- Hardcode sample data unless it is only for testing or placeholders
+
+## Quick checklist before sending a task
+
+**Codebase Analysis (MUST DO):**
+
+- [ ] I asked the AI to read the Dashboard_Admin.php file first
+- [ ] I asked the AI to check the Components folder structure
+- [ ] I asked the AI to compare with Dashboard_Buyer.php to understand design patterns
+- [ ] I asked the AI to understand the Models and data flow (UserModel, SellerVerificationModel, etc.)
+- [ ] I asked the AI to identify existing section IDs and navigation
+- [ ] I reminded the AI not to break buyer/seller dashboards or shared code
+
+**Task Details:**
+
+- [ ] I know the exact section
+- [ ] I know the expected result
+- [ ] I know whether it is design, behavior, or data-related
+- [ ] I know what should stay unchanged
+- [ ] I included the style reference if it should match buyer or seller
+- [ ] I specified which files should NOT be modified
+
+**Impact Check:**
+
+- [ ] This change only affects the admin area
+- [ ] This does not touch authentication or routing
+- [ ] This does not modify buyer or seller code
+- [ ] This does not change shared Models or Controllers
+
+## Short prompt you can reuse
+
+```text
+Work on the Landly admin dashboard.
+
+FIRST: Analyze the project by reading:
+- Dashboard_Admin.php (current admin code)
+- Components/ folder (admin components)
+- Dashboard_Buyer.php (design reference)
+- UserModel, SellerVerificationModel, InquriesModel (data sources)
+
+Then: Make this admin task match the buyer and seller style, keep the same layout behavior, and only change the admin files needed for this section. Do NOT modify buyer/seller dashboards, Models, or Controllers.
+```
+
+## Project Structure Reference
+
+**The three separate dashboards (DO NOT MIX):**
+
+1. **Admin Dashboard** - What you work on
+   - File: app/Views/Pages/Admin/Dashboard_Admin.php
+   - Components: app/Views/Pages/Admin/Components/
+   - Manages: Users, Sellers, Listings, Reports
+   - Controllers: app/Controllers/Admin/
+
+2. **Buyer Dashboard** - Reference for design, DO NOT modify
+   - File: app/Views/Pages/Buyer/Dashboard_Buyer.php
+   - Components: app/Views/Pages/Buyer/Components/
+   - Controllers: app/Controllers/Buyer/
+   - Uses Models: UserModel, MessageModel, ListingAnalytics
+
+3. **Seller Dashboard** - Reference for design, DO NOT modify
+   - File: app/Views/Pages/Seller/Dashboard_Seller.php
+   - Components: app/Views/Pages/Seller/Components/
+   - Controllers: app/Controllers/Seller/
+   - Uses Models: ListingImages, SellerVerificationModel, ReportsModel
+
+**Shared Models (TOUCH WITH CARE):**
+
+These Models are used by multiple roles. If you modify them, check that it doesn't break buyer/seller:
+
+- UserModel - used by all roles (login, profile data)
+- MessageModel - used by buyer and seller
+- ListingAnalytics - used by buyer and seller
+- NotificationModel - used by all roles
+
+**Safe to modify for admin work:**
+
+- Admin Controllers (app/Controllers/Admin/)
+- Admin Views (app/Views/Pages/Admin/)
+- Admin Components (app/Views/Pages/Admin/Components/)
+- Config settings that are admin-specific
+
+**NEVER modify without understanding impact:**
+
+- Routes.php (if you change routing, check all three roles still work)
+- Auth filters (if you change auth logic, verify all login flows still work)
+- Session logic (if you modify session, test logout for all roles)
+- Any Model that is used by buyer or seller

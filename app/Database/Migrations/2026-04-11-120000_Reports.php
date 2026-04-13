@@ -20,6 +20,15 @@ class Reports extends Migration
                 'constraint' => 11,
                 'unsigned'   => true,
             ],
+            'reported_against' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+            ],
+            'subject' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+            ],
             'listing_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
@@ -34,6 +43,11 @@ class Reports extends Migration
                 'type' => 'TEXT',
                 'null' => true,
             ],
+            'evidence_path' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => true,
+            ],
             'status' => [
                 'type'       => 'ENUM',
                 'constraint' => ['pending', 'resolved', 'dismissed'],
@@ -46,6 +60,10 @@ class Reports extends Migration
             'created_at' => [
                 'type' => 'DATETIME',
             ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
             'resolved_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
@@ -54,6 +72,7 @@ class Reports extends Migration
 
         $this->forge->addKey('report_id', true);
         $this->forge->addForeignKey('reported_by', 'users', 'user_id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('reported_against', 'users', 'user_id', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('listing_id', 'land_listings', 'listing_id', 'CASCADE', 'CASCADE');
         $this->forge->createTable('reports');
     }
