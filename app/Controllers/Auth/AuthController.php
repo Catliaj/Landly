@@ -80,7 +80,10 @@ class AuthController extends BaseController
             return redirect()->to('/seller/dashboard');
         } elseif (strpos($roles, 'buyer') !== false) {
             return redirect()->to('/buyer/dashboard');
-        } else {
+        } elseif (strpos($roles, 'admin') !== false) {
+            return redirect()->to('/admin/dashboard');
+        }
+        else {
             return redirect()->to('/');
         }
     }
