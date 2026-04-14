@@ -4,6 +4,7 @@ namespace App\Controllers\Buyer;
 
 use App\Controllers\BaseController;
 use App\Models\LandListings;
+use App\Models\UserModel;
 use Config\ChatbotTraining;
 use Config\Database;
 
@@ -13,6 +14,19 @@ class ChatbotController extends BaseController
     private $geoapifyApiKey;
     private $geminiApiBase = 'https://generativelanguage.googleapis.com/v1beta/models/';
     private $geminiModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    private const NASUGBU_BARANGAYS = [
+        'aga', 'balaytigui', 'banilad', 'bilaran', 'bucana', 'bulihan', 'bunducan', 'butucan',
+        'calayo', 'catandaan', 'cogunan', 'dayap', 'kaylaway', 'kayrilaw', 'latag', 'looc',
+        'lumbangan', 'malapad na bato', 'mataas na pulo', 'maugat', 'munting indang', 'natipuan',
+        'pantalan', 'papaya', 'putat', 'reparo', 'talangan', 'tumalim', 'utod', 'wawa',
+        'barangay 1', 'barangay 2', 'barangay 3', 'barangay 4', 'barangay 5', 'barangay 6',
+        'barangay 7', 'barangay 8', 'barangay 9', 'barangay 10', 'barangay 11', 'barangay 12',
+        'poblacion 1', 'poblacion 2', 'poblacion 3', 'poblacion 4', 'poblacion 5', 'poblacion 6',
+        'poblacion 7', 'poblacion 8', 'poblacion 9', 'poblacion 10', 'poblacion 11', 'poblacion 12',
+        'brgy 1', 'brgy 2', 'brgy 3', 'brgy 4', 'brgy 5', 'brgy 6', 'brgy 7', 'brgy 8', 'brgy 9',
+        'brgy 10', 'brgy 11', 'brgy 12',
+        'pob 1', 'pob 2', 'pob 3', 'pob 4', 'pob 5', 'pob 6', 'pob 7', 'pob 8', 'pob 9', 'pob 10', 'pob 11', 'pob 12',
+    ];
     private ?array $geminiLastError = null;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
@@ -58,9 +72,12 @@ class ChatbotController extends BaseController
         try {
             $this->geminiLastError = null;
             $trainingMatch = $this->matchTrainingIntent($userMessage);
+            $buyerFirstName = $this->resolveBuyerFirstName((string) $this->request->getPost('user_name'));
+            $session = session();
 
             if ($this->isGreetingMessage($userMessage)) {
-                $greetingResponse = $this->buildGreetingResponse($userMessage);
+                $session->set('landly_ai_last_topic', 'property');
+                $greetingResponse = $this->buildGreetingResponse($userMessage, $buyerFirstName);
                 return $this->response->setStatusCode(200)->setJSON([
                     'status' => 'success',
                     'message' => $greetingResponse,
@@ -69,14 +86,16 @@ class ChatbotController extends BaseController
             }
 
             if (($trainingMatch['reply_type'] ?? '') === 'availability') {
+                $session->set('landly_ai_last_topic', 'property');
                 $intent = $this->extractUserIntent($userMessage);
+                $requestedArea = $this->resolveRequestedAreaFromIntent($intent);
                 $listingObjects = $this->getNasugbuListingObjects($userMessage);
                 log_message('notice', 'Availability query: Found ' . count($listingObjects) . ' listings');
 
                 if ($listingObjects === []) {
                     return $this->response->setStatusCode(200)->setJSON([
                         'status' => 'success',
-                        'message' => 'Sorry 😔 I couldn’t find any available Nasugbu listings right now. Please try another filter like barangay, budget, or nearby landmark.',
+                        'message' => $this->buildNoListingsMessage($requestedArea, $buyerFirstName),
                         'listings' => [],
                     ]);
                 }
@@ -88,6 +107,9 @@ class ChatbotController extends BaseController
                     log_message('notice', 'Calling Gemini API for availability response');
                     $systemPrompt = $this->buildNasugbuRecommendationPrompt($listingObjects, $topListings, $intent);
                     $aiResponse = $this->callGeminiApi($userMessage, $systemPrompt);
+                    if ($this->isOutsideNasugbuReply($aiResponse) && !$this->isOutsideNasugbuRequest($userMessage, $intent)) {
+                        $aiResponse = null;
+                    }
                     if ($aiResponse !== null && $aiResponse !== '') {
                         log_message('notice', 'Gemini returned response');
                     } else {
@@ -109,7 +131,22 @@ class ChatbotController extends BaseController
                 ]);
             }
 
-            if (!$this->isPropertyRelatedQuery($userMessage)) {
+            if ($this->isAffirmativeMessage($userMessage)) {
+                $followUp = 'Sure 😊 What type of property are you looking for? (farm lot, residential, commercial, etc.)';
+                $session->set('landly_ai_chatbot_step', 'barangay');
+                $session->set('landly_ai_last_topic', 'property');
+
+                return $this->response->setStatusCode(200)->setJSON([
+                    'status' => 'success',
+                    'message' => $followUp,
+                    'listings' => [],
+                ]);
+            }
+
+            $isPropertyQuery = $this->isPropertyRelatedQuery($userMessage)
+                || $this->isPropertyFollowUpMessage($userMessage, $session);
+
+            if (!$isPropertyQuery) {
                 return $this->response->setStatusCode(200)->setJSON([
                     'status' => 'success',
                     'message' => 'Sorry, I can only assist with land listings and property-related inquiries on Landly.',
@@ -117,7 +154,10 @@ class ChatbotController extends BaseController
                 ]);
             }
 
+            $session->set('landly_ai_last_topic', 'property');
+
             $intent = $this->extractUserIntent($userMessage);
+            $requestedArea = $this->resolveRequestedAreaFromIntent($intent);
             if ($this->isOutsideNasugbuRequest($userMessage, $intent)) {
                 return $this->response->setStatusCode(200)->setJSON([
                     'status' => 'success',
@@ -140,7 +180,7 @@ class ChatbotController extends BaseController
             if ($allListingObjects === []) {
                 return $this->response->setStatusCode(200)->setJSON([
                     'status' => 'success',
-                    'message' => 'Sorry 😔 I couldn’t find any listings that match your request right now. You may try adjusting your preferences or exploring nearby areas in Nasugbu.',
+                    'message' => $this->buildNoListingsMessage($requestedArea, $buyerFirstName),
                     'listings' => [],
                 ]);
             }
@@ -158,13 +198,16 @@ class ChatbotController extends BaseController
             $topListings = array_slice($recommendation['top'] ?? [], 0, 3);
 
             if ($recommendation['barangay_empty'] ?? false) {
-                $aiResponse = 'Sorry 😔 there are no listings available in that area right now. However, here are nearby options you may consider.';
+                $aiResponse = $this->buildNoListingsNearbyOptionsMessage($buyerFirstName);
             } elseif ($topListings === []) {
-                $aiResponse = 'Sorry 😔 I couldn’t find any listings that match your request right now. You may try adjusting your preferences or exploring nearby areas in Nasugbu.';
+                $aiResponse = $this->buildNoListingsMessage($requestedArea, $buyerFirstName);
             } elseif ($this->geminiApiKey !== '') {
                 log_message('notice', 'Calling Gemini API for property recommendation');
                 $systemPrompt = $this->buildNasugbuRecommendationPrompt($allListingObjects, $topListings, $intent);
                 $aiResponse = $this->callGeminiApi($userMessage, $systemPrompt);
+                if ($this->isOutsideNasugbuReply($aiResponse) && !$this->isOutsideNasugbuRequest($userMessage, $intent)) {
+                    $aiResponse = null;
+                }
                 if ($aiResponse !== null && $aiResponse !== '') {
                     log_message('notice', 'Gemini returned response for property query');
                 } else {
@@ -179,7 +222,9 @@ class ChatbotController extends BaseController
                 $aiResponse = $this->buildRuleBasedRecommendationReply(
                     $topListings,
                     (bool) ($recommendation['exact'] ?? false),
-                    (bool) ($recommendation['barangay_empty'] ?? false)
+                    (bool) ($recommendation['barangay_empty'] ?? false),
+                    $requestedArea,
+                    $buyerFirstName
                 );
             }
 
@@ -292,10 +337,15 @@ class ChatbotController extends BaseController
         return preg_match('/\b(hi|hello|hey|hai|hallo|good morning|good afternoon|good evening|kumusta|kamusta)\b/i', $message) === 1;
     }
 
-    private function buildGreetingResponse(string $userMessage): string
+    private function buildGreetingResponse(string $userMessage, ?string $buyerFirstName = null): string
     {
+        $safeBuyerName = trim((string) $buyerFirstName);
+        $fallbackGreeting = $safeBuyerName !== ''
+            ? 'Hi ' . $safeBuyerName . ' 😊 What kind of land in Nasugbu are you looking for?'
+            : 'Hi 😊 What kind of land in Nasugbu are you looking for?';
+
         if ($this->geminiApiKey === '') {
-            return 'Hi 😊 What kind of land in Nasugbu are you looking for?';
+            return $fallbackGreeting;
         }
 
         $systemPrompt = "You are Landly AI Assistant, a friendly real estate assistant for a land marketplace named Landly.
@@ -313,10 +363,35 @@ STYLE:
 - Friendly and concise.
 - Can use light emoji sparingly.";
 
+        if ($safeBuyerName !== '') {
+            $systemPrompt .= "\n- Buyer first name: {$safeBuyerName}. You may greet them by name once.";
+        }
+
         $response = $this->callGeminiApi($userMessage, $systemPrompt);
         return $response !== null && $response !== ''
             ? $response
-            : 'Hi 😊 What kind of land in Nasugbu are you looking for?';
+            : $fallbackGreeting;
+    }
+
+    private function resolveBuyerFirstName(string $postedName = ''): ?string
+    {
+        $name = trim($postedName);
+        if ($name !== '') {
+            return trim((string) strtok($name, ' '));
+        }
+
+        $userId = (int) (session('user_id') ?? session('UserID') ?? 0);
+        if ($userId <= 0) {
+            return null;
+        }
+
+        $user = (new UserModel())->find($userId);
+        if (!is_array($user)) {
+            return null;
+        }
+
+        $firstName = trim((string) ($user['first_name'] ?? ''));
+        return $firstName !== '' ? $firstName : null;
     }
 
     private function extractUserIntent(string $message): array
@@ -336,6 +411,12 @@ STYLE:
 
         if (preg_match('/\b(?:in|at|around)\s+([a-z][a-z\s-]{1,60})(?:[?.!,]|$)/i', $message, $matches)) {
             $intent['location_phrase'] = trim((string) ($matches[1] ?? ''));
+        }
+        if ($intent['barangay'] === '') {
+            $detectedBarangay = $this->detectNasugbuBarangayFromText($message . ' ' . $intent['location_phrase']);
+            if ($detectedBarangay !== null) {
+                $intent['barangay'] = $detectedBarangay;
+            }
         }
 
         if (preg_match('/\bnear(?:by)?\s+(?:to\s+)?(?:a|an|the)?\s*([a-z][a-z\s-]{1,40})(?:\s+in\s+[a-z\s-]+)?(?:[?.!,]|$)/i', $message, $matches)) {
@@ -442,7 +523,19 @@ STYLE:
             return false;
         }
 
+        if ($this->containsNasugbuBarangay($location) || $this->containsNasugbuBarangay($messageLower)) {
+            return false;
+        }
+
         if (str_contains($location, 'nasugbu')) {
+            return false;
+        }
+
+        // If the user mentions a short local-area phrase (e.g., "looc"),
+        // don't classify it as outside Nasugbu unless a clear outside location is present.
+        $location = trim(preg_replace('/\b(the|brgy|barangay|in|at|around)\b/i', ' ', $location) ?? $location);
+        $location = trim(preg_replace('/\s+/', ' ', $location) ?? $location);
+        if ($location !== '' && preg_match('/^[a-z\s-]{2,40}$/i', $location) === 1 && !str_contains($location, ',')) {
             return false;
         }
 
@@ -450,7 +543,39 @@ STYLE:
             return false;
         }
 
-        return true;
+        // Treat explicit city/province/country mentions as outside requests.
+        return preg_match('/\b(tagaytay|calatagan|lemery|balayan|lian|calaca|manila|cebu|davao|quezon city|makati|pasay|laguna|cavite|bulacan|pampanga|iloilo|baguio|philippines)\b/i', $location) === 1;
+    }
+
+    private function containsNasugbuBarangay(string $text): bool
+    {
+        $normalized = strtolower(trim($text));
+        if ($normalized === '') {
+            return false;
+        }
+
+        foreach (self::NASUGBU_BARANGAYS as $barangay) {
+            if ($barangay !== '' && str_contains($normalized, $barangay)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isOutsideNasugbuReply(?string $response): bool
+    {
+        $text = strtolower(trim((string) $response));
+        if ($text === '') {
+            return false;
+        }
+
+        return str_contains($text, 'currently, i can only assist with properties located in nasugbu, batangas');
+    }
+
+    private function isAffirmativeMessage(string $message): bool
+    {
+        return preg_match('/^\s*(yes|yup|yeah|yep|oo|opo|sige|sure|go|ok|okay)\s*[!.?]*\s*$/i', $message) === 1;
     }
 
     private function getAvailableNasugbuListings(int $limit = 80): array
@@ -733,6 +858,8 @@ STRICT CONSTRAINTS:
 RECOMMENDATION RULES:
 - Prioritize available listings, budget fit, and preference match (near school/beach/church/barangay, farm lot/residential, etc.).
 - If there is no exact match, say: I couldn't find an exact match, but here are the closest available options.
+- For location/barangay requests, treat ONLY listing barangay/city/province fields as valid location match.
+- Do NOT treat nearby road names, landmarks, or nearby places as proof that a listing is inside that barangay.
 - Keep response friendly, concise, simple English or Taglish.
 - Start with a short explanation then provide top 3 recommendations.
 
@@ -741,14 +868,14 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
             . "\n\nALL_NASUGBU_LISTINGS_JSON:\n" . json_encode($allListings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     }
 
-    private function buildRuleBasedRecommendationReply(array $topListings, bool $exactMatch, bool $barangayEmpty): string
+    private function buildRuleBasedRecommendationReply(array $topListings, bool $exactMatch, bool $barangayEmpty, ?string $requestedArea = null, ?string $buyerFirstName = null): string
     {
         if ($topListings === []) {
-            return 'Sorry 😔 I couldn’t find any listings that match your request right now. You may try adjusting your preferences or exploring nearby areas in Nasugbu.';
+            return $this->buildNoListingsMessage($requestedArea, $buyerFirstName);
         }
 
         if ($barangayEmpty) {
-            $prefix = 'Sorry 😔 there are no listings available in that area right now. However, here are nearby options you may consider.';
+            $prefix = $this->buildNoListingsNearbyOptionsMessage($buyerFirstName);
         } elseif (!$exactMatch) {
             $prefix = 'I couldn\'t find an exact match, but here are the closest available options.';
         } else {
@@ -765,6 +892,64 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
         }
 
         return $prefix . "\n" . implode("\n", $lines);
+    }
+
+    private function detectNasugbuBarangayFromText(string $text): ?string
+    {
+        $normalized = strtolower(trim($text));
+        if ($normalized === '') {
+            return null;
+        }
+
+        foreach (self::NASUGBU_BARANGAYS as $barangay) {
+            $barangay = trim(strtolower($barangay));
+            if ($barangay === '') {
+                continue;
+            }
+
+            $pattern = '/\\b' . str_replace(' ', '\\s+', preg_quote($barangay, '/')) . '\\b/i';
+            if (preg_match($pattern, $normalized) === 1) {
+                return ucwords($barangay);
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveRequestedAreaFromIntent(array $intent): ?string
+    {
+        $area = trim((string) ($intent['barangay'] ?? ''));
+        if ($area !== '') {
+            return $area;
+        }
+
+        $area = trim((string) ($intent['location_phrase'] ?? ''));
+        return $area !== '' ? $area : null;
+    }
+
+    private function buildNoListingsMessage(?string $requestedArea = null, ?string $buyerFirstName = null): string
+    {
+        $namePrefix = $this->buildBuyerNamePrefix($buyerFirstName);
+        $area = trim((string) $requestedArea);
+        $normalizedArea = strtolower($area);
+
+        if ($area !== '' && !in_array($normalizedArea, ['nasugbu', 'nasugbu batangas', 'nasugbu, batangas'], true)) {
+            return $namePrefix . 'No available land listings in Brgy. ' . $area . ', Nasugbu at the moment. I can suggest nearby barangays if you want.';
+        }
+
+        return $namePrefix . 'No available land listings in Nasugbu at the moment. You can try again later, or share your budget and preferred area so I can suggest alternatives.';
+    }
+
+    private function buildNoListingsNearbyOptionsMessage(?string $buyerFirstName = null): string
+    {
+        return $this->buildBuyerNamePrefix($buyerFirstName)
+            . 'there are no listings available in that area right now. However, here are nearby options you may consider.';
+    }
+
+    private function buildBuyerNamePrefix(?string $buyerFirstName = null): string
+    {
+        $name = trim((string) $buyerFirstName);
+        return $name !== '' ? ('Hi ' . $name . ' 😊 ') : '';
     }
 
     private function searchNearbyListingsForRecommendation(array $intent): array
@@ -1346,8 +1531,25 @@ RESPONSE FORMAT:
 
     private function isAvailabilityQuestion(string $message): bool
     {
-        return preg_match('/\b(available|availability|for sale|open)\b/i', $message) === 1
-            && preg_match('/\b(property|properties|land|listing|listings)\b/i', $message) === 1;
+        if (preg_match('/\b(available|availability|for sale|open)\b/i', $message) !== 1) {
+            return false;
+        }
+
+        if (preg_match('/\b(property|properties|land|listing|listings|area|barangay|brgy|lot)\b/i', $message) === 1) {
+            return true;
+        }
+
+        return preg_match('/\b(is there|meron|mayroon|so is there|do you have|any)\b/i', $message) === 1;
+    }
+
+    private function isPropertyFollowUpMessage(string $message, \CodeIgniter\Session\Session $session): bool
+    {
+        $lastTopic = strtolower(trim((string) $session->get('landly_ai_last_topic')));
+        if ($lastTopic !== 'property') {
+            return false;
+        }
+
+        return $this->isAvailabilityQuestion($message);
     }
 
     private function buildAvailabilityReply(array $listingDataObjects): string

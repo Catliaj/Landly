@@ -2265,10 +2265,6 @@ $userProfile = $userProfile ?? [
                     <button class="mobile-menu-btn" onclick="toggleSidebar()">
                         <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <div class="search-box">
-                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="seller-listings-search" placeholder="Search listings..." autocomplete="off">
-                    </div>
                     <div class="notification-wrapper">
                         <button class="notification-btn" id="header-notification-btn" type="button" aria-label="Open notifications" aria-expanded="false">
                             <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -2910,7 +2906,6 @@ $userProfile = $userProfile ?? [
             document.querySelector('.sidebar').classList.toggle('open');
         }
 
-        const listingSearchInput = document.getElementById('seller-listings-search');
         const listingFilterBtns = document.querySelectorAll('#section-listings .filter-btn[data-filter]');
         const listingCards = Array.from(document.querySelectorAll('#section-listings .listing-card'));
         const listingEmptyState = document.getElementById('seller-listings-empty');
@@ -2940,26 +2935,17 @@ $userProfile = $userProfile ?? [
             }
 
             listingEmptyTitle.textContent = 'No matching listings';
-            listingEmptyDescription.textContent = hasQuery || activeListingFilter !== 'all'
-                ? 'Try a different status filter or search keyword.'
+            listingEmptyDescription.textContent = activeListingFilter !== 'all'
+                ? 'Try a different status filter.'
                 : 'No listings are available for this view.';
         }
 
         function applyListingFilters() {
-            const query = (listingSearchInput?.value || '').trim().toLowerCase();
             let visibleCount = 0;
 
             listingCards.forEach((card) => {
                 const matchesFilter = activeListingFilter === 'all' || card.dataset.listingStatus === activeListingFilter;
-                const searchIndex = [
-                    card.dataset.searchTitle || '',
-                    card.dataset.searchLocation || '',
-                    card.dataset.searchType || '',
-                    card.dataset.searchDocument || '',
-                    card.dataset.searchVerification || ''
-                ].join(' ').toLowerCase();
-                const matchesSearch = query === '' || searchIndex.includes(query);
-                const isVisible = matchesFilter && matchesSearch;
+                const isVisible = matchesFilter;
 
                 card.hidden = !isVisible;
                 card.classList.toggle('is-hidden', !isVisible);
@@ -2969,7 +2955,7 @@ $userProfile = $userProfile ?? [
                 }
             });
 
-            updateListingEmptyState(visibleCount, query !== '');
+            updateListingEmptyState(visibleCount, false);
         }
 
         listingFilterBtns.forEach((btn) => {
@@ -2981,7 +2967,6 @@ $userProfile = $userProfile ?? [
             });
         });
 
-        listingSearchInput?.addEventListener('input', applyListingFilters);
         applyListingFilters();
 
         // Period buttons functionality

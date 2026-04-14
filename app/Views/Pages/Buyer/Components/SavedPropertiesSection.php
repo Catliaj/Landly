@@ -1,10 +1,10 @@
 <section id="section-saved" class="content-section">
                 <div class="browse-toolbar">
                     <div class="toolbar-filters">
-                        <button class="filter-btn active">All Saved (<span id="favorites-count">0</span>)</button>
-                        <button class="filter-btn">Agricultural</button>
-                        <button class="filter-btn">Commercial</button>
-                        <button class="filter-btn">Residential</button>
+                        <button type="button" class="filter-btn active" data-filter="all">All Saved (<span id="favorites-count">0</span>)</button>
+                        <button type="button" class="filter-btn" data-filter="agricultural_land">Agricultural</button>
+                        <button type="button" class="filter-btn" data-filter="commercial_land">Commercial</button>
+                        <button type="button" class="filter-btn" data-filter="residential_land">Residential</button>
                     </div>
                 </div>
 
@@ -59,15 +59,15 @@
         }
 
         container.innerHTML = favorites.map(favorite => `
-            <div class="listing-card" onclick="openPropertyModal(${favorite.listing_id})" data-property-id="${favorite.listing_id}">
+            <div class="listing-card" onclick="openPropertyModal(${favorite.listing_id})" data-property-id="${favorite.listing_id}" data-property-type="${normalizePropertyTypeKey(favorite.property_type)}">
                 <div class="listing-card-image">
-                    <img src="https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=400" alt="${escapeHtml(favorite.title)}">
-                    <span class="listing-card-badge listing-status available">Available</span>
+                    <img src="${escapeHtml(favorite.image_url || 'https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=400')}" alt="${escapeHtml(favorite.title)}">
+                    <span class="listing-card-badge listing-status ${escapeHtml(favorite.listing_status || 'available')}">${escapeHtml(favorite.listing_status_label || 'Available')}</span>
                     <div class="listing-card-actions">
                         <button class="listing-card-action saved favorite-btn" data-listing-id="${favorite.listing_id}" title="Remove from Saved" onclick="toggleFavorite(event, this, ${favorite.listing_id})">
                             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                         </button>
-                        <button class="listing-card-action" title="Contact Seller" onclick="event.stopPropagation()">
+                        <button class="listing-card-action" title="Contact Seller" onclick="createInquiryForListing(event, ${favorite.listing_id})">
                             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         </button>
                     </div>
@@ -76,18 +76,18 @@
                     <h4 class="listing-card-title">${escapeHtml(favorite.title)}</h4>
                     <div class="listing-card-location">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        Location
+                        ${escapeHtml(favorite.location_label || 'Location unavailable')}
                     </div>
                     <div class="listing-card-details">
-                        <div class="listing-card-detail"><strong>${favorite.property_type || 'Unspecified'}</strong></div>
-                        <div class="listing-card-detail"><strong>Available</strong></div>
-                        <div class="listing-card-detail"><strong>Clean Title</strong></div>
+                        <div class="listing-card-detail"><strong>${escapeHtml(favorite.property_type_label || formatPropertyTypeLabel(favorite.property_type))}</strong></div>
+                        <div class="listing-card-detail"><strong>${escapeHtml(favorite.listing_status_label || 'Available')}</strong></div>
+                        <div class="listing-card-detail"><strong>${escapeHtml(favorite.document_status_label || 'Documents Pending')}</strong></div>
                     </div>
                     <div class="listing-card-footer">
-                        <span class="listing-card-price">₱${favorite.price ? parseInt(favorite.price).toLocaleString() : '0'}</span>
+                        <span class="listing-card-price">${escapeHtml(favorite.price_label || '₱0.00')}</span>
                         <div class="listing-card-seller">
-                            <span class="seller-avatar">NA</span>
-                            Seller
+                            <span class="seller-avatar">${escapeHtml(favorite.seller_initials || 'NA')}</span>
+                            ${escapeHtml(favorite.seller_name || 'Unknown Seller')}
                         </div>
                     </div>
                 </div>
@@ -100,9 +100,48 @@
                 e.stopPropagation();
             });
         });
+
+        applyListingFilters();
+    }
+
+    function normalizePropertyTypeKey(propertyType) {
+        const raw = String(propertyType || '').trim().toLowerCase();
+        if (raw === '') {
+            return '';
+        }
+
+        if (raw === 'residential' || raw === 'residential_land') {
+            return 'residential_land';
+        }
+
+        if (raw === 'commercial' || raw === 'commercial_land') {
+            return 'commercial_land';
+        }
+
+        if (raw === 'agricultural' || raw === 'agricultural_land') {
+            return 'agricultural_land';
+        }
+
+        return raw;
+    }
+
+    function formatPropertyTypeLabel(propertyType) {
+        const normalized = normalizePropertyTypeKey(propertyType);
+
+        switch (normalized) {
+            case 'residential_land':
+                return 'Residential';
+            case 'commercial_land':
+                return 'Commercial';
+            case 'agricultural_land':
+                return 'Agricultural';
+            default:
+                return propertyType || 'Unspecified';
+        }
     }
 
     function escapeHtml(text) {
+        const value = String(text ?? '');
         const map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -110,6 +149,6 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, m => map[m]);
+        return value.replace(/[&<>"']/g, m => map[m]);
     }
 </script>

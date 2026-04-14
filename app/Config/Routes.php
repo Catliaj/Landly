@@ -8,6 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('auth', 'Home::auth');
 $routes->get('media/profile', 'MediaController::profile');
+$routes->get('listings/filter', 'Buyer\DashboardController::filterListings');
 
 $routes->group('auth', function ($routes) {
     $routes->post('login', 'Auth\AuthController::login');
