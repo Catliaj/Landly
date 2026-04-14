@@ -1,3 +1,29 @@
+<?php
+$availableListings = array_values(array_filter(
+    is_array($availableListings ?? null) ? $availableListings : [],
+    static fn(array $listing): bool => strtolower(trim((string) ($listing['listing_status'] ?? ''))) === 'available'
+));
+$listingMapPins = array_values(array_filter(
+    array_map(static function (array $listing): ?array {
+        $lat = isset($listing['latitude']) && is_numeric($listing['latitude']) ? (float) $listing['latitude'] : null;
+        $lng = isset($listing['longitude']) && is_numeric($listing['longitude']) ? (float) $listing['longitude'] : null;
+        if ($lat === null || $lng === null) {
+            return null;
+        }
+
+        return [
+            'id' => (int) ($listing['listing_id'] ?? 0),
+            'title' => (string) ($listing['title'] ?? 'Untitled Listing'),
+            'location' => (string) ($listing['location_label'] ?? 'Location unavailable'),
+            'price' => (float) ($listing['price_value'] ?? 0),
+            'lat' => $lat,
+            'lng' => $lng,
+        ];
+    }, $availableListings),
+    static fn(?array $pin): bool => is_array($pin)
+));
+$availableResultCount = count($availableListings);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +33,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <style>
         :root {
             --green-900: #0f1b1b;
@@ -358,7 +385,7 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+            background: url('https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
             filter: blur(3px);
             transform: scale(1.03);
             z-index: 0;
@@ -1054,11 +1081,28 @@
 
         .map-placeholder {
             height: 380px;
-            background: linear-gradient(120deg, rgba(5, 12, 12, 0.92), rgba(15, 27, 27, 0.85)),
-                        url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80');
-            background-size: cover;
-            background-position: center;
+            background: #dce7d4;
             position: relative;
+        }
+
+        #landlyListingsMap {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .map-empty-note {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            z-index: 400;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(15, 27, 27, 0.86);
+            color: var(--cream-100);
+            font-size: 0.8rem;
+            border: 1px solid rgba(210, 180, 140, 0.35);
+            backdrop-filter: blur(4px);
         }
 
         .map-pins {
@@ -2876,7 +2920,6 @@
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#listings">Listings</a>
-                <a href="#testimonials">Testimonials</a>
                 <a href="#contact">Contact</a>
             </nav>
             <div class="nav-actions">
@@ -2895,15 +2938,15 @@
         <div class="container hero-grid">
             <div class="hero-content">
                 <span class="pill">Exclusive land marketplace</span>
-                <h1>Buy, sell, and secure premium land deals.</h1>
-                <p style="margin-bottom: 30px">Browse curated listings and close deals in one elegant space.</p>
-                <a href="#listings" class="btn btn-primary">Explore listings</a>
+                <h1>Find and secure premium land in Nasugbu.</h1>
+                <p style="margin-bottom: 30px">Explore verified lots in Nasugbu, Batangas and discover the right property for your next move.</p>
+                <a href="#listings" class="btn btn-primary">Explore available lands</a>
             </div>
             <div class="hero-glass">
                 <div class="hero-slideshow" aria-hidden="true">
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=1200&q=80');"></div>
                 </div>
             </div>
         </div>
@@ -2920,7 +2963,7 @@
     <section class="map-section" id="listings">
         <div class="container">
             <h2>Find Your Perfect Land</h2>
-            <p class="section-subtitle">Search by location and budget to discover premium land opportunities</p>
+            <p class="section-subtitle">Search by location and budget to discover available land opportunities</p>
             
             <!-- Search Controls -->
             <div class="search-controls reveal">
@@ -2963,28 +3006,16 @@
             <!-- Map Container -->
             <div class="map-wrap reveal-scale">
                 <div class="map-placeholder" aria-label="Interactive Map">
-                    <div class="map-pins">
-                        <div class="map-pin pin-1"></div>
-                        <div class="map-pin pin-2"></div>
-                        <div class="map-pin pin-3"></div>
-                        <div class="map-pin pin-4"></div>
-                    </div>
-                </div>
-                <div class="map-overlay">
-                    <button class="map-pill">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        Grid View
-                    </button>
-                    <button class="map-pill">
-                        <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                        Filter
-                    </button>
+                    <div id="landlyListingsMap"></div>
+                    <?php if ($listingMapPins === []): ?>
+                        <div class="map-empty-note">No plotted coordinates available yet for Nasugbu listings.</div>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <!-- Recommended Results -->
             <div class="results-header">
-                <h3>Recommended for You <span class="results-count">12 Results</span></h3>
+                <h3>Available Lands <span id="resultsCountBadge" class="results-count"><?= esc((string) $availableResultCount) ?> Results</span></h3>
                 <div class="results-sort">
                     <span>Sort by:</span>
                     <select>
@@ -2998,129 +3029,56 @@
             </div>
 
             <div class="results-grid stagger-children">
-                <div class="result-card">
-                    <div class="result-card-image">
-                        <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80" alt="Sunset Ridge Estate" />
-                        <span class="result-badge verified">Verified</span>
-                        <button class="result-favorite" aria-label="Add to favorites">
-                            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        </button>
-                    </div>
-                    <div class="result-card-body">
-                        <div class="result-location">
-                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            Nasugbo, Batangas
-                        </div>
-                        <h4>Sunset Ridge Estate</h4>
-                        <div class="result-specs">
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-                                4.8 Acres
-                            </span>
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                Residential
-                            </span>
-                        </div>
-                        <div class="result-footer">
-                            <div class="result-price">₱1.2M <span>/ lot</span></div>
-                            <button class="result-view-btn">View Details</button>
+                <?php if ($availableListings === []): ?>
+                    <div class="result-card">
+                        <div class="result-card-body">
+                            <h4>No available lands right now.</h4>
+                            <p>Please check back later for new listings.</p>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
-                <div class="result-card">
-                    <div class="result-card-image">
-                        <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80" alt="Highland Vista" />
-                        <span class="result-badge">New Listing</span>
-                        <button class="result-favorite" aria-label="Add to favorites">
-                            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        </button>
-                    </div>
-                    <div class="result-card-body">
-                        <div class="result-location">
-                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            Tagaytay, Cavite
+                <?php foreach ($availableListings as $listing): ?>
+                    <?php
+                    $title = trim((string) ($listing['title'] ?? 'Untitled Listing'));
+                    $location = trim((string) ($listing['location_label'] ?? 'Location unavailable'));
+                    $type = trim((string) ($listing['property_type_label'] ?? 'Land'));
+                    $area = (float) ($listing['area_value'] ?? 0);
+                    $price = (float) ($listing['price_value'] ?? 0);
+                    $imageUrl = trim((string) ($listing['image_url'] ?? ''));
+                    $searchText = strtolower($title . ' ' . $location . ' ' . $type);
+                    ?>
+                    <div class="result-card" data-listing-id="<?= (int) ($listing['listing_id'] ?? 0) ?>" data-price="<?= esc((string) $price) ?>" data-search="<?= esc($searchText) ?>">
+                        <div class="result-card-image">
+                            <img src="<?= esc($imageUrl) ?>" alt="<?= esc($title) ?>" />
+                            <span class="result-badge verified">Available</span>
+                            <button class="result-favorite" aria-label="Add to favorites">
+                                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            </button>
                         </div>
-                        <h4>Highland Vista</h4>
-                        <div class="result-specs">
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-                                5.1 Acres
-                            </span>
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                Farm Lot
-                            </span>
-                        </div>
-                        <div class="result-footer">
-                            <div class="result-price">₱1.5M <span>/ lot</span></div>
-                            <button class="result-view-btn">View Details</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="result-card">
-                    <div class="result-card-image">
-                        <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80" alt="Coastal Haven" />
-                        <span class="result-badge verified">Verified</span>
-                        <button class="result-favorite" aria-label="Add to favorites">
-                            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        </button>
-                    </div>
-                    <div class="result-card-body">
-                        <div class="result-location">
-                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            Pagbilao, Quezon
-                        </div>
-                        <h4>Coastal Haven</h4>
-                        <div class="result-specs">
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-                                3.2 Acres
-                            </span>
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                Beach Front
-                            </span>
-                        </div>
-                        <div class="result-footer">
-                            <div class="result-price">₱980K <span>/ lot</span></div>
-                            <button class="result-view-btn">View Details</button>
+                        <div class="result-card-body">
+                            <div class="result-location">
+                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <?= esc($location) ?>
+                            </div>
+                            <h4><?= esc($title) ?></h4>
+                            <div class="result-specs">
+                                <span class="result-spec">
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+                                    <?= $area > 0 ? esc(number_format($area, 0)) . ' sqm' : 'Area N/A' ?>
+                                </span>
+                                <span class="result-spec">
+                                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                    <?= esc($type) ?>
+                                </span>
+                            </div>
+                            <div class="result-footer">
+                                <div class="result-price">₱<?= esc(number_format($price, 2)) ?> <span>/ lot</span></div>
+                                <a class="result-view-btn" href="<?= base_url('auth') ?>">View Details</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="result-card">
-                    <div class="result-card-image">
-                        <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80" alt="Laguna Reserve" />
-                        <span class="result-badge">Hot Deal</span>
-                        <button class="result-favorite" aria-label="Add to favorites">
-                            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        </button>
-                    </div>
-                    <div class="result-card-body">
-                        <div class="result-location">
-                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            Calamba, Laguna
-                        </div>
-                        <h4>Laguna Reserve</h4>
-                        <div class="result-specs">
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-                                4.1 Acres
-                            </span>
-                            <span class="result-spec">
-                                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                Agricultural
-                            </span>
-                        </div>
-                        <div class="result-footer">
-                            <div class="result-price">₱1.1M <span>/ lot</span></div>
-                            <button class="result-view-btn">View Details</button>
-                        </div>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -3131,124 +3089,6 @@
             <path class="wave-layer wave-layer--move" fill="#0f1b1b" fill-opacity="0.55" d="M0,96L100,88C200,80,400,64,600,64C800,64,1000,80,1200,88C1400,96,1600,96,1700,96L1800,96L1800,160L1700,160C1600,160,1400,160,1200,160C1000,160,800,160,600,160C400,160,200,160,100,160L0,160Z"></path>
         </svg>
     </div>
-
-    <section class="featured-section">
-        <div class="container">
-            <h2 style="text-align: center;">Featured Listings</h2>
-            <div class="featured-carousel">
-                <button class="carousel-arrow prev" type="button" aria-label="Previous">‹</button>
-                <div class="featured-track" id="featuredTrack">
-                    <article class="featured-card" data-index="0">
-                        <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80" alt="Sunset Ridge Estate" />
-                        <div class="featured-body">
-                            <h3>Sunset Ridge Estate</h3>
-                            <span class="tag">Nasugbo, Batangas</span>
-                            <span class="price">$1.2M · 4.8 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                    <article class="featured-card" data-index="1">
-                        <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80" alt="Coastal Haven" />
-                        <div class="featured-body">
-                            <h3>Coastal Haven</h3>
-                            <span class="tag">Pagbilao, Quezon</span>
-                            <span class="price">$980K · 3.2 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                    <article class="featured-card active" data-index="2">
-                        <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="Highland Vista" />
-                        <div class="featured-body">
-                            <h3>Highland Vista</h3>
-                            <span class="tag">Tagaytay, Cavite</span>
-                            <span class="price">$1.5M · 5.1 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                    <article class="featured-card" data-index="3">
-                        <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80" alt="Forest Crest" />
-                        <div class="featured-body">
-                            <h3>Forest Crest</h3>
-                            <span class="tag">Silang, Cavite</span>
-                            <span class="price">$860K · 2.9 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                    <article class="featured-card" data-index="4">
-                        <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=80" alt="Laguna Reserve" />
-                        <div class="featured-body">
-                            <h3>Laguna Reserve</h3>
-                            <span class="tag">Calamba, Laguna</span>
-                            <span class="price">$1.1M · 4.1 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                    <article class="featured-card" data-index="5">
-                        <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80" alt="Valley Point" />
-                        <div class="featured-body">
-                            <h3>Valley Point</h3>
-                            <span class="tag">Baguio, Benguet</span>
-                            <span class="price">$1.7M · 6.0 Acres</span>
-                            <button class="btn btn-tan">View Plot</button>
-                        </div>
-                    </article>
-                </div>
-                <button class="carousel-arrow next" type="button" aria-label="Next">›</button>
-            </div>
-            <div class="carousel-dots" id="carouselDots"></div>
-        </div>
-    </section>
-
-    <div class="wave-container wave-green" style="margin-top: 0">
-        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
-            <path class="wave-layer" fill="#0f1b1b" fill-opacity="0.95" d="M0,80L80,72C160,64,320,48,480,48C640,48,800,64,960,72C1120,80,1280,80,1360,80L1440,80L1440,160L1360,160C1280,160,1120,160,960,160C800,160,640,160,480,160C320,160,160,160,80,160L0,160Z"></path>
-            <path class="wave-layer wave-layer--move" fill="#0f1b1b" fill-opacity="0.65" d="M0,96L100,88C200,80,400,64,600,64C800,64,1000,80,1200,88C1400,96,1600,96,1700,96L1800,96L1800,160L1700,160C1600,160,1400,160,1200,160C1000,160,800,160,600,160C400,160,200,160,100,160L0,160Z"></path>
-        </svg>
-    </div>
-
-    <section class="testimonials-section" id="testimonials">
-        <div class="container">
-            <div class="section-header">
-                <h2>What Private Buyers Say</h2>
-                <p class="section-subtitle">Trusted by elite investors and private buyers across the Philippines</p>
-            </div>
-            <div class="testimonial-grid stagger-children">
-                <div class="testimonial-card">
-                    <div class="testimonial-header">
-                        <img class="avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" alt="Client" />
-                        <div class="testimonial-name">
-                            <strong>Mariane C.</strong>
-                            <div>Manila</div>
-                            <span class="testimonial-badge">Verified Buyer</span>
-                        </div>
-                    </div>
-                    <p class="quote">“Landly’s curated listings saved us weeks. The process felt truly premium.”</p>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-header">
-                        <img class="avatar" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80" alt="Client" />
-                        <div class="testimonial-name">
-                            <strong>Paolo R.</strong>
-                            <div>Cebu</div>
-                            <span class="testimonial-badge">Top Client</span>
-                        </div>
-                    </div>
-                    <p class="quote">“The map view and document support made closing effortless.”</p>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-header">
-                        <img class="avatar" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80" alt="Client" />
-                        <div class="testimonial-name">
-                            <strong>Arnel S.</strong>
-                            <div>Davao</div>
-                            <span class="testimonial-badge">Premium Member</span>
-                        </div>
-                    </div>
-                    <p class="quote">“The team’s attention to detail made our acquisition seamless.”</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <section class="section" id="features">
         <div class="container">
@@ -3508,127 +3348,26 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script>
+        const listingMapPins = <?= json_encode($listingMapPins, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         
-        const cards = document.querySelectorAll('.featured-card');
-        const dotsContainer = document.getElementById('carouselDots');
-        const prevArrow = document.querySelector('.carousel-arrow.prev');
-        const nextArrow = document.querySelector('.carousel-arrow.next');
-        const totalCards = cards.length;
-        let currentIndex = 0; 
-        let isAnimating = false;
-
-        
-        for (let i = 0; i < totalCards; i++) {
-            const dot = document.createElement('button');
-            dot.classList.add('carousel-dot');
-            if (i === currentIndex) dot.classList.add('active');
-            dot.addEventListener('click', () => goToSlide(i));
-            dotsContainer.appendChild(dot);
-        }
-
-        function updateArrowStates() {
-            
-            if (currentIndex === 0) {
-                prevArrow.classList.add('disabled');
-                prevArrow.disabled = true;
-            } else {
-                prevArrow.classList.remove('disabled');
-                prevArrow.disabled = false;
-            }
-
-            // Disable next arrow at end
-            if (currentIndex === totalCards - 1) {
-                nextArrow.classList.add('disabled');
-                nextArrow.disabled = true;
-            } else {
-                nextArrow.classList.remove('disabled');
-                nextArrow.disabled = false;
-            }
-        }
-
-        function updateCarousel(direction = null) {
-            // Remove all state classes
-            cards.forEach((card) => {
-                card.classList.remove('active', 'adjacent', 'slide-left', 'slide-right');
-                card.style.display = 'none';
-            });
-
-            // Calculate visible cards (without wrapping)
-            const leftIndex = currentIndex - 1;
-            const rightIndex = currentIndex + 1;
-
-            // Show left card if it exists
-            if (leftIndex >= 0) {
-                cards[leftIndex].style.display = 'block';
-                cards[leftIndex].classList.add('adjacent');
-                cards[leftIndex].style.order = '1';
-            }
-
-            // Show center (active) card
-            cards[currentIndex].style.display = 'block';
-            cards[currentIndex].classList.add('active');
-            cards[currentIndex].style.order = '2';
-
-            // Show right card if it exists
-            if (rightIndex < totalCards) {
-                cards[rightIndex].style.display = 'block';
-                cards[rightIndex].classList.add('adjacent');
-                cards[rightIndex].style.order = '3';
-            }
-
-            // Update dots
-            document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
-            });
-
-            // Update arrow states
-            updateArrowStates();
-        }
-
-        function goToSlide(index) {
-            if (isAnimating) return;
-            
-            // Clamp index to valid range (no wrapping)
-            if (index < 0 || index >= totalCards) return;
-            
-            const direction = index > currentIndex ? 'next' : 'prev';
-            isAnimating = true;
-            
-            currentIndex = index;
-            updateCarousel(direction);
-            
-            // Reset animation lock after transition completes
-            setTimeout(() => {
-                isAnimating = false;
-            }, 700);
-        }
-
-        prevArrow.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                goToSlide(currentIndex - 1);
-            }
-        });
-
-        nextArrow.addEventListener('click', () => {
-            if (currentIndex < totalCards - 1) {
-                goToSlide(currentIndex + 1);
-            }
-        });
-
-        // Initialize
-        updateCarousel();
-        updateArrowStates();
-
         // Price Range Slider
         const minRange = document.getElementById('minRange');
         const maxRange = document.getElementById('maxRange');
         const rangeTrack = document.getElementById('rangeTrack');
         const minPriceDisplay = document.getElementById('minPriceDisplay');
         const maxPriceDisplay = document.getElementById('maxPriceDisplay');
+        const locationSearchInput = document.getElementById('locationSearch');
+        const searchButton = document.querySelector('.search-btn');
+        const resultsCountBadge = document.getElementById('resultsCountBadge');
+        const listingCards = Array.from(document.querySelectorAll('.results-grid .result-card[data-listing-id]'));
 
-        const minPrice = 100000;  // ₱100K
-        const maxPrice = 10000000; // ₱10M
+        let listingsMap = null;
+        let listingsLayer = null;
+        const mapDefaultCenter = [14.0664, 120.6325];
+        let filterBaseMin = 100000;
+        let filterBaseMax = 10000000;
 
         function formatPrice(value) {
             if (value >= 1000000) {
@@ -3638,9 +3377,19 @@
             }
         }
 
+        function getPriceFromPercent(percent) {
+            return filterBaseMin + (percent / 100) * (filterBaseMax - filterBaseMin);
+        }
+
+        function getSelectedPriceRange() {
+            const rawMin = getPriceFromPercent(parseInt(minRange.value, 10) || 0);
+            const rawMax = getPriceFromPercent(parseInt(maxRange.value, 10) || 100);
+            return [Math.min(rawMin, rawMax), Math.max(rawMin, rawMax)];
+        }
+
         function updateRangeSlider() {
-            const minVal = parseInt(minRange.value);
-            const maxVal = parseInt(maxRange.value);
+            const minVal = parseInt(minRange.value, 10) || 0;
+            const maxVal = parseInt(maxRange.value, 10) || 100;
 
             // Prevent overlap
             if (minVal >= maxVal - 5) {
@@ -3651,27 +3400,166 @@
                 }
             }
 
-            const minPercent = parseInt(minRange.value);
-            const maxPercent = parseInt(maxRange.value);
+            const minPercent = parseInt(minRange.value, 10) || 0;
+            const maxPercent = parseInt(maxRange.value, 10) || 100;
 
             // Update track position
             rangeTrack.style.left = minPercent + '%';
             rangeTrack.style.right = (100 - maxPercent) + '%';
 
             // Calculate actual price values
-            const actualMinPrice = minPrice + (parseInt(minRange.value) / 100) * (maxPrice - minPrice);
-            const actualMaxPrice = minPrice + (parseInt(maxRange.value) / 100) * (maxPrice - minPrice);
+            const [actualMinPrice, actualMaxPrice] = getSelectedPriceRange();
 
             // Update price displays
             minPriceDisplay.textContent = formatPrice(Math.round(actualMinPrice));
             maxPriceDisplay.textContent = formatPrice(Math.round(actualMaxPrice));
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function renderMapPins(pins) {
+            if (!listingsMap || !listingsLayer) {
+                return;
+            }
+
+            listingsLayer.clearLayers();
+            const bounds = [];
+
+            (Array.isArray(pins) ? pins : []).forEach((pin) => {
+                const lat = Number(pin.lat);
+                const lng = Number(pin.lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    return;
+                }
+
+                bounds.push([lat, lng]);
+                const marker = window.L.marker([lat, lng]);
+                marker.bindPopup(
+                    `<strong>${escapeHtml(pin.title || 'Land Listing')}</strong><br>` +
+                    `${escapeHtml(pin.location || 'Nasugbu, Batangas')}<br>` +
+                    `Price: ₱${Number(pin.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                );
+                marker.addTo(listingsLayer);
+            });
+
+            if (bounds.length > 0) {
+                listingsMap.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 });
+            } else {
+                listingsMap.setView(mapDefaultCenter, 12);
+            }
+        }
+
+        function applyListingFilters() {
+            if (listingCards.length === 0) {
+                return;
+            }
+
+            const keyword = String(locationSearchInput?.value || '').trim().toLowerCase();
+            const [selectedMinPrice, selectedMaxPrice] = getSelectedPriceRange();
+            const visibleListingIds = new Set();
+            let visibleCount = 0;
+
+            listingCards.forEach((card) => {
+                const listingId = Number(card.dataset.listingId || 0);
+                const searchableText = String(card.dataset.search || '').toLowerCase();
+                const price = Number(card.dataset.price || 0);
+
+                const matchesKeyword = keyword === '' || searchableText.includes(keyword);
+                const matchesPrice = Number.isFinite(price) && price >= selectedMinPrice && price <= selectedMaxPrice;
+                const isVisible = matchesKeyword && matchesPrice;
+
+                card.style.display = isVisible ? '' : 'none';
+
+                if (isVisible) {
+                    visibleCount += 1;
+                    if (listingId > 0) {
+                        visibleListingIds.add(listingId);
+                    }
+                }
+            });
+
+            if (resultsCountBadge) {
+                resultsCountBadge.textContent = `${visibleCount} Results`;
+            }
+
+            const filteredPins = listingMapPins.filter((pin) => visibleListingIds.has(Number(pin.id || 0)));
+            renderMapPins(filteredPins);
+        }
+
         minRange.addEventListener('input', updateRangeSlider);
         maxRange.addEventListener('input', updateRangeSlider);
 
-        // Initialize range slider
-        updateRangeSlider();
+        minRange.addEventListener('input', () => {
+            applyListingFilters();
+        });
+
+        maxRange.addEventListener('input', () => {
+            applyListingFilters();
+        });
+
+        // Nasugbu listings map with pins from available listings only
+        (function initListingsMap() {
+            const mapNode = document.getElementById('landlyListingsMap');
+            if (!mapNode || !window.L) {
+                return;
+            }
+
+            listingsMap = window.L.map(mapNode, {
+                zoomControl: true,
+                scrollWheelZoom: false,
+            }).setView(mapDefaultCenter, 12);
+
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(listingsMap);
+
+            listingsLayer = window.L.layerGroup().addTo(listingsMap);
+            renderMapPins(listingMapPins);
+        })();
+
+        // Initialize dynamic price range and wire search actions
+        (function initListingSearch() {
+            const prices = listingCards
+                .map((card) => Number(card.dataset.price || 0))
+                .filter((price) => Number.isFinite(price) && price > 0);
+
+            if (prices.length > 0) {
+                const minDatasetPrice = Math.min(...prices);
+                const maxDatasetPrice = Math.max(...prices);
+                filterBaseMin = Math.max(0, Math.floor(minDatasetPrice * 0.8));
+                filterBaseMax = Math.ceil(maxDatasetPrice * 1.2);
+                if (filterBaseMax <= filterBaseMin) {
+                    filterBaseMax = filterBaseMin + 100000;
+                }
+            }
+
+            minRange.value = '0';
+            maxRange.value = '100';
+            updateRangeSlider();
+
+            if (searchButton) {
+                searchButton.addEventListener('click', applyListingFilters);
+            }
+
+            if (locationSearchInput) {
+                locationSearchInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        applyListingFilters();
+                    }
+                });
+            }
+
+            applyListingFilters();
+        })();
 
         // Scroll Reveal Animation
         const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger-children');
@@ -3812,18 +3700,22 @@
         const switchToLoginBtn = document.getElementById('switchToLogin');
 
         // Open modal in login mode
-        openLoginBtn.addEventListener('click', () => {
-            authModalContainer.classList.remove('signup-mode');
-            authModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
+        if (openLoginBtn && authModal && authModalContainer) {
+            openLoginBtn.addEventListener('click', () => {
+                authModalContainer.classList.remove('signup-mode');
+                authModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
 
         // Open modal in signup mode
-        openSignupBtn.addEventListener('click', () => {
-            authModalContainer.classList.add('signup-mode');
-            authModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
+        if (openSignupBtn && authModal && authModalContainer) {
+            openSignupBtn.addEventListener('click', () => {
+                authModalContainer.classList.add('signup-mode');
+                authModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
 
         // Close modal
         const closeModal = () => {
@@ -3831,26 +3723,34 @@
             document.body.style.overflow = '';
         };
 
-        closeAuthBtn.addEventListener('click', closeModal);
+        if (closeAuthBtn) {
+            closeAuthBtn.addEventListener('click', closeModal);
+        }
 
         // Close on overlay click
-        authModal.addEventListener('click', (e) => {
-            if (e.target === authModal) {
-                closeModal();
-            }
-        });
+        if (authModal) {
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) {
+                    closeModal();
+                }
+            });
+        }
 
         // Switch to signup mode (panels swap with animation)
-        switchToSignupBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            authModalContainer.classList.add('signup-mode');
-        });
+        if (switchToSignupBtn && authModalContainer) {
+            switchToSignupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authModalContainer.classList.add('signup-mode');
+            });
+        }
 
         // Switch to login mode (panels swap back)
-        switchToLoginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            authModalContainer.classList.remove('signup-mode');
-        });
+        if (switchToLoginBtn && authModalContainer) {
+            switchToLoginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authModalContainer.classList.remove('signup-mode');
+            });
+        }
 
         // Close on Escape key
         document.addEventListener('keydown', (e) => {

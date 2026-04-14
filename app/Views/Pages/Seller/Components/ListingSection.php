@@ -30,11 +30,6 @@ $listingCounts = $listingCounts ?? [
                             class="listing-card"
                             data-listing-status="<?= esc($listing['status_key']) ?>"
                             data-verification-status="<?= esc($listing['verification_class'] ?? 'pending') ?>"
-                            data-search-title="<?= esc($listing['title']) ?>"
-                            data-search-location="<?= esc($listing['location_label']) ?>"
-                            data-search-type="<?= esc($listing['property_type_label']) ?>"
-                            data-search-document="<?= esc($listing['document_status_label']) ?>"
-                            data-search-verification="<?= esc($listing['verification_label']) ?>"
                         >
                             <div class="listing-card-image">
                                 <img src="<?= esc($listing['image_url']) ?>" alt="<?= esc($listing['title']) ?>">
@@ -79,6 +74,6 @@ $listingCounts = $listingCounts ?? [
 
                 <div class="listings-empty-state<?= $sellerListings === [] ? ' is-visible' : '' ?>" id="seller-listings-empty"<?= $sellerListings === [] ? '' : ' hidden' ?>>
                     <h3 id="seller-listings-empty-title"><?= $sellerListings === [] ? 'No listings yet' : 'No matching listings' ?></h3>
-                    <p id="seller-listings-empty-description"><?= $sellerListings === [] ? 'Your property listings for this account will appear here once they are created.' : 'Try a different status filter or search keyword.' ?></p>
+                        <p id="seller-listings-empty-description"><?= $sellerListings === [] ? 'Your property listings for this account will appear here once they are created.' : 'Try a different status filter.' ?></p>
                 </div>
             </section>

@@ -12,6 +12,9 @@ $userProfile = $userProfile ?? [
     'status_label' => 'Inactive Buyer',
     'status_class' => 'inactive',
 ];
+$buyerFullName = trim((string) ($userProfile['full_name'] ?? 'Buyer'));
+$buyerFirstName = trim((string) strtok($buyerFullName, ' '));
+$buyerFirstName = $buyerFirstName !== '' ? $buyerFirstName : 'there';
 $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 ?>
 <!DOCTYPE html>
@@ -1765,11 +1768,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             inset: 0;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(10px);
-            z-index: 1000;
+            z-index: 5000;
             display: none;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -1786,12 +1790,13 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             border-radius: 24px;
             width: 100%;
             max-width: min(96vw, 1500px);
-            max-height: 90vh;
-            overflow: hidden;
+            max-height: none;
+            overflow: visible;
             display: flex;
             flex-direction: column;
             animation: modalSlideIn 0.4s ease;
             box-shadow: 0 18px 36px rgba(12, 42, 28, 0.28);
+            margin: 8px auto 24px;
         }
 
         @keyframes modalSlideIn {
@@ -1954,7 +1959,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         .modal-content {
             flex: 1;
             min-height: 0;
-            overflow-y: auto;
+            overflow: visible;
             padding: 24px;
             min-width: 0;
         }
@@ -2205,13 +2210,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             border-radius: 10px;
             border: 2px solid transparent;
             cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .modal-thumb:hover {
-            transform: translateY(-2px);
-            border-color: rgba(149, 213, 178, 0.8);
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .modal-thumb.active {
@@ -2452,7 +2451,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.95);
-            z-index: 1100;
+            z-index: 7600;
             display: none;
             align-items: center;
             justify-content: center;
@@ -2681,6 +2680,44 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             font-family: "Inter", system-ui, sans-serif;
             transition: width 0.24s ease;
             overflow: visible;
+        }
+
+        .swal2-container {
+            z-index: 7000 !important;
+        }
+
+        .property-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 6800;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .property-loading-overlay.active {
+            display: flex;
+        }
+
+        .property-loading-card {
+            background: #fefae0;
+            color: #123a25;
+            border: 1px solid rgba(149, 213, 178, 0.65);
+            border-radius: 14px;
+            padding: 14px 18px;
+            min-width: 220px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+            text-align: center;
+        }
+
+        body.property-modal-loading .listing-card,
+        body.property-modal-loading .chatbot-listing-card {
+            pointer-events: none !important;
+            opacity: 0.82;
         }
 
         .chatbot.open {
@@ -2976,10 +3013,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     <button class="mobile-menu-btn" onclick="toggleSidebar()">
                         <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <div class="search-box">
-                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" placeholder="Search properties...">
-                    </div>
                     <div class="notification-wrapper">
                         <button class="notification-btn" id="header-notification-btn" type="button" aria-label="Open notifications" aria-expanded="false">
                             <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -3029,7 +3062,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         </div>
         <div class="chatbot-content" id="buyerChatbotContent" aria-live="polite" aria-atomic="true">
             <div class="chatbot-messages" id="buyerChatbotMessages">
-                <div class="chatbot-message bot">Hello! Need help finding property or tracking your inquiry?</div>
+                <div class="chatbot-message bot">Hello <?= esc($buyerFirstName) ?>! Need help finding property or tracking your inquiry?</div>
             </div>
             <div class="chatbot-input-wrap">
                 <input type="text" id="buyerChatbotInput" class="chatbot-input" placeholder="Type your message..." aria-label="Type your message" />
@@ -3506,6 +3539,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         // Buyer Chatbot controls
         const buyerChatbot = document.getElementById('buyerChatbot');
+        const buyerFirstName = <?= json_encode($buyerFirstName, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         const buyerChatbotToggle = document.getElementById('buyerChatbotToggle');
         const buyerChatbotContent = document.getElementById('buyerChatbotContent');
         const buyerChatbotClose = document.getElementById('buyerChatbotClose');
@@ -3596,7 +3630,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: new URLSearchParams({ message: text })
+                    body: new URLSearchParams({
+                        message: text,
+                        user_name: buyerFirstName || ''
+                    })
                 });
 
                 const data = await response.json();
@@ -3625,18 +3662,18 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         }
 
         function showPropertyDetailsFromChatbot(listingId) {
-            if (!propertyData || propertyData.length === 0) {
+            const targetListingId = Number(listingId || 0);
+            if (!targetListingId) {
                 alert('Property data not available.');
                 return;
             }
 
-            const property = propertyData.find(p => p.id === listingId);
-            if (!property) {
+            if (!propertyData || !propertyData[targetListingId]) {
                 alert('Property details not found.');
                 return;
             }
 
-            showPropertyDetailsModal(property);
+            openPropertyModal(targetListingId);
         }
 
         buyerChatbotSend?.addEventListener('click', (e) => {
@@ -3656,15 +3693,63 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             document.querySelector('.sidebar').classList.toggle('open');
         }
 
+        function normalizePropertyTypeKey(propertyType) {
+            const raw = String(propertyType || '').trim().toLowerCase();
+
+            if (raw === '') {
+                return '';
+            }
+
+            if (raw === 'residential' || raw === 'residential_land') {
+                return 'residential_land';
+            }
+
+            if (raw === 'commercial' || raw === 'commercial_land') {
+                return 'commercial_land';
+            }
+
+            if (raw === 'agricultural' || raw === 'agricultural_land') {
+                return 'agricultural_land';
+            }
+
+            return raw;
+        }
+
+        function applyListingFilters(toolbarElement = null) {
+            const toolbars = toolbarElement ? [toolbarElement] : Array.from(document.querySelectorAll('.toolbar-filters'));
+
+            toolbars.forEach((toolbar) => {
+                const activeButton = toolbar.querySelector('.filter-btn.active');
+                if (!activeButton) {
+                    return;
+                }
+
+                const filterValue = normalizePropertyTypeKey(activeButton.dataset.filter || activeButton.textContent);
+                const section = toolbar.closest('.content-section');
+                if (!section) {
+                    return;
+                }
+
+                const cards = section.querySelectorAll('.listing-card[data-property-type]');
+                cards.forEach((card) => {
+                    const cardType = normalizePropertyTypeKey(card.dataset.propertyType || '');
+                    const isVisible = filterValue === 'all' || filterValue === 'all_saved' || filterValue === '' || cardType === filterValue;
+                    card.hidden = !isVisible;
+                });
+            });
+        }
+
         // Filter buttons functionality
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        filterBtns.forEach(btn => {
+        document.querySelectorAll('.toolbar-filters .filter-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const parent = btn.closest('.toolbar-filters');
-                parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                parent.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
                 btn.classList.add('active');
+                applyListingFilters(parent);
             });
         });
+
+        applyListingFilters();
 
         // Save/Unsave property functionality
         document.querySelectorAll('.listing-card-action').forEach(btn => {
@@ -3689,14 +3774,542 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         // Property data for modal
         const propertyData = <?= json_encode($browsePropertyData ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const browseFilterOptions = <?= json_encode($browseFilterOptions ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         const logoutRedirectUrl = <?= json_encode(base_url('/#listings'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         console.info('[Landly Map] Geoapify key loaded:', Boolean(geoapifyApiKey));
         const leafletCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         const leafletCssCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 
+        const browseAdvancedFilterBtn = document.getElementById('browse-advanced-filter-btn');
+        const browseAdvancedFilterOverlay = document.getElementById('browse-advanced-filter-overlay');
+        const browseAdvancedFilterClose = document.getElementById('browse-advanced-filter-close');
+        const browseAdvancedFilterForm = document.getElementById('browse-advanced-filter-form');
+        const browseResultsCount = document.getElementById('browse-results-count');
+        const browseFilterChips = document.getElementById('browse-filter-chips');
+        const browseFilterLoading = document.getElementById('browse-filter-loading');
+        const browsePagination = document.getElementById('browse-pagination');
+        const browseListingsGrid = document.getElementById('browse-listings-grid');
+        const browseFilterBarangay = document.getElementById('browse-filter-barangay');
+        const browseFilterMinPrice = document.getElementById('browse-filter-min-price');
+        const browseFilterMaxPrice = document.getElementById('browse-filter-max-price');
+        const browseFilterMinSize = document.getElementById('browse-filter-min-size');
+        const browseFilterMaxSize = document.getElementById('browse-filter-max-size');
+        const browseFilterPropertyType = document.getElementById('browse-filter-property-type');
+        const browseFilterRoadAccess = document.getElementById('browse-filter-road-access');
+        const browseFilterViewType = document.getElementById('browse-filter-view-type');
+        const browseFilterSort = document.getElementById('browse-filter-sort');
+        const browseFilterClear = document.getElementById('browse-filter-clear');
+
+        const browseFilterState = {
+            barangay: '',
+            min_price: '',
+            max_price: '',
+            min_size: '',
+            max_size: '',
+            property_type: '',
+            road_access: '',
+            view_type: '',
+            sort: 'newest',
+            page: 1,
+            per_page: 12,
+        };
+
+        let browseFilterAbortController = null;
+        let browseFilterDebounceTimer = null;
+        let browseFilterIsInitialized = false;
+        let browseFilterHasApplied = false;
+
+        function escapeHtml(value) {
+            const text = String(value ?? '');
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+
+            return text.replace(/[&<>"']/g, (character) => map[character]);
+        }
+
+        function syncBrowseFilterFormToState() {
+            browseFilterState.barangay = String(browseFilterBarangay?.value || '');
+            browseFilterState.min_price = String(browseFilterMinPrice?.value || '');
+            browseFilterState.max_price = String(browseFilterMaxPrice?.value || '');
+            browseFilterState.min_size = String(browseFilterMinSize?.value || '');
+            browseFilterState.max_size = String(browseFilterMaxSize?.value || '');
+            browseFilterState.property_type = String(browseFilterPropertyType?.value || '');
+            browseFilterState.road_access = String(browseFilterRoadAccess?.value || '');
+            browseFilterState.view_type = String(browseFilterViewType?.value || '');
+            browseFilterState.sort = String(browseFilterSort?.value || 'newest');
+        }
+
+        function syncBrowseFormFromState() {
+            if (browseFilterBarangay) browseFilterBarangay.value = browseFilterState.barangay;
+            if (browseFilterMinPrice) browseFilterMinPrice.value = browseFilterState.min_price;
+            if (browseFilterMaxPrice) browseFilterMaxPrice.value = browseFilterState.max_price;
+            if (browseFilterMinSize) browseFilterMinSize.value = browseFilterState.min_size;
+            if (browseFilterMaxSize) browseFilterMaxSize.value = browseFilterState.max_size;
+            if (browseFilterPropertyType) browseFilterPropertyType.value = browseFilterState.property_type;
+            if (browseFilterRoadAccess) browseFilterRoadAccess.value = browseFilterState.road_access;
+            if (browseFilterViewType) browseFilterViewType.value = browseFilterState.view_type;
+            if (browseFilterSort) browseFilterSort.value = browseFilterState.sort;
+        }
+
+        function setBrowseLoading(isLoading) {
+            if (!browseFilterLoading) {
+                return;
+            }
+
+            browseFilterLoading.hidden = !isLoading;
+            browseFilterLoading.classList.toggle('is-visible', Boolean(isLoading));
+        }
+
+        function getBrowseDisplayValue(key, value) {
+            if (key === 'property_type') {
+                return {
+                    residential_land: 'Residential',
+                    agricultural_land: 'Agricultural',
+                    commercial_land: 'Commercial',
+                    beach_lot: 'Beach Lot'
+                }[value] || value;
+            }
+
+            if (key === 'road_access') {
+                return {
+                    cemented: 'Concrete',
+                    right_of_way: 'Dirt Road',
+                    none: 'Highway Access'
+                }[value] || value;
+            }
+
+            if (key === 'view_type') {
+                return {
+                    sea_view: 'Beach View',
+                    mountain_view: 'Mountain View',
+                    none: 'Plain'
+                }[value] || value;
+            }
+
+            if (key === 'sort') {
+                return {
+                    price_asc: 'Price Low to High',
+                    price_desc: 'Price High to Low',
+                    largest_lot: 'Largest Lot',
+                    newest: 'Newest Listings'
+                }[value] || value;
+            }
+
+            return value;
+        }
+
+        function renderBrowseFilterChips() {
+            if (!browseFilterChips) {
+                return;
+            }
+
+            if (!browseFilterHasApplied) {
+                browseFilterChips.innerHTML = '';
+                return;
+            }
+
+            const chips = [];
+            const chipMap = [
+                ['barangay', 'Barangay'],
+                ['min_price', 'Min Price'],
+                ['max_price', 'Max Price'],
+                ['min_size', 'Min Size'],
+                ['max_size', 'Max Size'],
+                ['property_type', 'Property Type'],
+                ['road_access', 'Road Access'],
+                ['view_type', 'View Type'],
+                ['sort', 'Sort'],
+            ];
+
+            chipMap.forEach(([key, label]) => {
+                const value = String(browseFilterState[key] ?? '').trim();
+                if (!value) {
+                    return;
+                }
+
+                if (key === 'sort' && value === 'newest') {
+                    return;
+                }
+
+                let displayValue = value;
+                if (key.includes('price')) {
+                    displayValue = `₱${value}`;
+                } else if (key.includes('size')) {
+                    displayValue = `${value} sqm`;
+                } else {
+                    displayValue = getBrowseDisplayValue(key, value);
+                }
+
+                chips.push(`
+                    <span class="browse-filter-chip">
+                        <span>${escapeHtml(label)}: ${escapeHtml(displayValue)}</span>
+                        <button type="button" aria-label="Remove ${escapeHtml(label)}" data-filter-chip-remove="${escapeHtml(key)}">&times;</button>
+                    </span>
+                `);
+            });
+
+            browseFilterChips.innerHTML = chips.join('');
+            browseFilterChips.querySelectorAll('[data-filter-chip-remove]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const key = button.dataset.filterChipRemove;
+                    if (!key) {
+                        return;
+                    }
+
+                    if (key === 'barangay') browseFilterState.barangay = '';
+                    if (key === 'min_price') browseFilterState.min_price = '';
+                    if (key === 'max_price') browseFilterState.max_price = '';
+                    if (key === 'min_size') browseFilterState.min_size = '';
+                    if (key === 'max_size') browseFilterState.max_size = '';
+                    if (key === 'property_type') browseFilterState.property_type = '';
+                    if (key === 'road_access') browseFilterState.road_access = '';
+                    if (key === 'view_type') browseFilterState.view_type = '';
+                    if (key === 'sort') browseFilterState.sort = 'newest';
+
+                    syncBrowseFormFromState();
+                    fetchBrowseListings({ page: 1 });
+                });
+            });
+        }
+
+        function buildBrowseListingCard(listing) {
+            const savedClass = listing.is_saved ? ' saved' : '';
+            const savedTitle = listing.is_saved ? 'Remove from Saved' : 'Save Property';
+            const savedPressed = listing.is_saved ? 'true' : 'false';
+            return `
+                <div class="listing-card" onclick="openPropertyModal(${Number(listing.listing_id || 0)})" data-property-id="${Number(listing.listing_id || 0)}" data-property-type="${escapeHtml(listing.property_type_key || '')}">
+                    <div class="listing-card-image">
+                        <img src="${escapeHtml(listing.image_url || '')}" alt="${escapeHtml(listing.title || 'Land Listing')}">
+                        <span class="listing-card-badge listing-status ${escapeHtml(listing.status_class || 'available')}">${escapeHtml(listing.status_label || 'Available')}</span>
+                        <div class="listing-card-actions">
+                            <button class="listing-card-action favorite-btn${savedClass}" data-listing-id="${Number(listing.listing_id || 0)}" title="${escapeHtml(savedTitle)}" aria-pressed="${savedPressed}" onclick="toggleFavorite(event, this, ${Number(listing.listing_id || 0)})">
+                                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            </button>
+                            <button class="listing-card-action" title="Contact Seller" onclick="createInquiryForListing(event, ${Number(listing.listing_id || 0)})">
+                                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="listing-card-content">
+                        <h4 class="listing-card-title">${escapeHtml(listing.title || 'Untitled Listing')}</h4>
+                        <div class="listing-card-location">
+                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            ${escapeHtml(listing.location_label || 'Location unavailable')}
+                        </div>
+                        <div class="listing-card-details">
+                            <div class="listing-card-detail"><strong>${escapeHtml(listing.property_type_label || 'Unspecified')}</strong></div>
+                            <div class="listing-card-detail"><strong>${escapeHtml(listing.document_status_label || 'Documents Pending')}</strong></div>
+                            <div class="listing-card-detail"><strong>${escapeHtml(listing.road_access_label || 'Road Access N/A')}</strong></div>
+                        </div>
+                        <div class="listing-card-footer">
+                            <span class="listing-card-price">${escapeHtml(listing.price_label || '₱0.00')}</span>
+                            <div class="listing-card-seller">
+                                <span class="seller-avatar">${escapeHtml(listing.seller_initials || 'NA')}</span>
+                                ${escapeHtml(listing.seller_name || 'Unknown Seller')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBrowseListings(listings = [], propertyDataMap = {}, pagination = null) {
+            if (propertyDataMap && typeof propertyDataMap === 'object') {
+                Object.assign(propertyData, propertyDataMap);
+            }
+
+            browseFilterHasApplied = true;
+
+            if (browseListingsGrid) {
+                if (!Array.isArray(listings) || listings.length === 0) {
+                    browseListingsGrid.innerHTML = `
+                        <div class="listing-card" style="grid-column: 1 / -1; cursor: default;">
+                            <div class="listing-card-content">
+                                <h4 class="listing-card-title">No results found</h4>
+                                <div class="listing-card-location">Try adjusting filters or expanding your price range.</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    browseListingsGrid.innerHTML = listings.map(buildBrowseListingCard).join('');
+                }
+            }
+
+            if (browseResultsCount && pagination) {
+                const total = Number(pagination.total || 0);
+                browseResultsCount.textContent = `${total} propert${total === 1 ? 'y' : 'ies'} found`;
+            }
+
+            renderBrowseFilterChips();
+            renderBrowsePagination(pagination);
+            applyListingFilters();
+        }
+
+        function renderBrowsePagination(pagination = null) {
+            if (!browsePagination) {
+                return;
+            }
+
+            const totalPages = Number(pagination?.total_pages || 1);
+            const currentPage = Number(pagination?.page || 1);
+
+            if (totalPages <= 1) {
+                browsePagination.hidden = true;
+                browsePagination.innerHTML = '';
+                return;
+            }
+
+            const items = [];
+            const addButton = (label, page, disabled = false, active = false) => {
+                items.push(`<button type="button"${disabled ? ' disabled' : ''}${active ? ' class="active"' : ''} data-browse-page="${page}">${label}</button>`);
+            };
+
+            addButton('Prev', Math.max(1, currentPage - 1), currentPage === 1);
+
+            const windowSize = 2;
+            const startPage = Math.max(1, currentPage - windowSize);
+            const endPage = Math.min(totalPages, currentPage + windowSize);
+
+            if (startPage > 1) {
+                addButton('1', 1, false, currentPage === 1);
+                if (startPage > 2) {
+                    items.push('<span style="color: rgba(239,231,216,0.6); padding: 0 4px;">...</span>');
+                }
+            }
+
+            for (let page = startPage; page <= endPage; page += 1) {
+                addButton(String(page), page, false, page === currentPage);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    items.push('<span style="color: rgba(239,231,216,0.6); padding: 0 4px;">...</span>');
+                }
+                addButton(String(totalPages), totalPages, false, currentPage === totalPages);
+            }
+
+            addButton('Next', Math.min(totalPages, currentPage + 1), currentPage === totalPages);
+
+            browsePagination.hidden = false;
+            browsePagination.innerHTML = items.join('');
+            browsePagination.querySelectorAll('[data-browse-page]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const page = Number(button.dataset.browsePage || 1);
+                    if (!Number.isFinite(page) || page < 1 || page === browseFilterState.page) {
+                        return;
+                    }
+
+                    fetchBrowseListings({ page });
+                });
+            });
+        }
+
+        function buildBrowseFilterParams(page = 1) {
+            const params = new URLSearchParams();
+            params.set('page', String(page));
+            params.set('per_page', String(browseFilterState.per_page));
+
+            if (browseFilterState.barangay !== '') {
+                params.set('barangay', String(browseFilterState.barangay));
+            }
+
+            if (browseFilterState.min_price !== '') {
+                params.set('min_price', String(browseFilterState.min_price));
+            }
+
+            if (browseFilterState.max_price !== '') {
+                params.set('max_price', String(browseFilterState.max_price));
+            }
+
+            if (browseFilterState.min_size !== '') {
+                params.set('min_size', String(browseFilterState.min_size));
+            }
+
+            if (browseFilterState.max_size !== '') {
+                params.set('max_size', String(browseFilterState.max_size));
+            }
+
+            if (browseFilterState.property_type !== '') {
+                params.set('property_type', String(browseFilterState.property_type));
+            }
+
+            if (browseFilterState.road_access !== '') {
+                params.set('road_access', String(browseFilterState.road_access));
+            }
+
+            if (browseFilterState.view_type !== '') {
+                params.set('view_type', String(browseFilterState.view_type));
+            }
+
+            if (browseFilterState.sort !== 'newest') {
+                params.set('sort', String(browseFilterState.sort));
+            }
+
+            return params;
+        }
+
+        function scheduleBrowseFilterFetch(page = 1) {
+            window.clearTimeout(browseFilterDebounceTimer);
+            browseFilterDebounceTimer = window.setTimeout(() => {
+                fetchBrowseListings({ page });
+            }, 400);
+        }
+
+        async function fetchBrowseListings({ page = 1 } = {}) {
+            if (!browseListingsGrid || !browseResultsCount) {
+                return;
+            }
+
+            syncBrowseFilterFormToState();
+            browseFilterState.page = page;
+
+            if (browseFilterAbortController) {
+                browseFilterAbortController.abort();
+            }
+
+            browseFilterAbortController = new AbortController();
+            setBrowseLoading(true);
+
+            try {
+                const response = await fetch(`<?= base_url('listings/filter') ?>?${buildBrowseFilterParams(page).toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    signal: browseFilterAbortController.signal
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    throw new Error(data.message || 'Unable to filter listings.');
+                }
+
+                browseFilterState.page = Number(data.page || page);
+                browseFilterState.per_page = Number(data.per_page || browseFilterState.per_page);
+                renderBrowseListings(data.listings || [], data.property_data || {}, data);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    if (hasSwal()) {
+                        await fireAppAlert({
+                            icon: 'error',
+                            title: 'Filter Failed',
+                            text: 'Something went wrong. Please try again.',
+                            confirmButtonText: 'Okay'
+                        });
+                    } else {
+                        alert('Something went wrong. Please try again.');
+                    }
+                }
+            } finally {
+                setBrowseLoading(false);
+            }
+        }
+
+        function openBrowseAdvancedFilter() {
+            if (!browseAdvancedFilterOverlay) {
+                return;
+            }
+
+            syncBrowseFormFromState();
+            renderBrowseFilterChips();
+            browseAdvancedFilterOverlay.classList.add('is-visible');
+            browseAdvancedFilterOverlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeBrowseAdvancedFilter() {
+            if (!browseAdvancedFilterOverlay) {
+                return;
+            }
+
+            browseAdvancedFilterOverlay.classList.remove('is-visible');
+            browseAdvancedFilterOverlay.setAttribute('aria-hidden', 'true');
+        }
+
+        function initializeBrowseAdvancedFilters() {
+            if (browseFilterIsInitialized) {
+                return;
+            }
+
+            browseFilterIsInitialized = true;
+
+            if (browseFilterBarangay) browseFilterBarangay.value = '';
+            if (browseFilterSort) browseFilterSort.value = 'newest';
+
+            syncBrowseFormFromState();
+            renderBrowseFilterChips();
+
+            browseAdvancedFilterBtn?.addEventListener('click', openBrowseAdvancedFilter);
+            browseAdvancedFilterClose?.addEventListener('click', closeBrowseAdvancedFilter);
+
+            browseAdvancedFilterOverlay?.addEventListener('click', (event) => {
+                if (event.target === browseAdvancedFilterOverlay) {
+                    closeBrowseAdvancedFilter();
+                }
+            });
+
+            browseAdvancedFilterForm?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                syncBrowseFilterFormToState();
+                closeBrowseAdvancedFilter();
+                await fetchBrowseListings({ page: 1 });
+            });
+
+            browseFilterBarangay?.addEventListener('change', () => {
+                syncBrowseFilterFormToState();
+                scheduleBrowseFilterFetch(1);
+            });
+
+            [browseFilterMinPrice, browseFilterMaxPrice, browseFilterMinSize, browseFilterMaxSize].forEach((input) => {
+                input?.addEventListener('input', () => {
+                    syncBrowseFilterFormToState();
+                    renderBrowseFilterChips();
+                    scheduleBrowseFilterFetch(1);
+                });
+            });
+
+            [browseFilterPropertyType, browseFilterRoadAccess, browseFilterViewType, browseFilterSort].forEach((input) => {
+                input?.addEventListener('change', () => {
+                    syncBrowseFilterFormToState();
+                    renderBrowseFilterChips();
+                    scheduleBrowseFilterFetch(1);
+                });
+            });
+
+            browseFilterClear?.addEventListener('click', async () => {
+                browseFilterState.barangay = '';
+                browseFilterState.min_price = '';
+                browseFilterState.max_price = '';
+                browseFilterState.min_size = '';
+                browseFilterState.max_size = '';
+                browseFilterState.property_type = '';
+                browseFilterState.road_access = '';
+                browseFilterState.view_type = '';
+                browseFilterState.sort = 'newest';
+                browseFilterState.page = 1;
+                syncBrowseFormFromState();
+                renderBrowseFilterChips();
+                await fetchBrowseListings({ page: 1 });
+            });
+
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeBrowseAdvancedFilter();
+                }
+            });
+        }
+
+        initializeBrowseAdvancedFilters();
+
         let fullMapInstance = null;
         let fullMapMarker = null;
+        let propertyModalLoading = false;
 
         const defaultAlertConfig = {
             confirmButtonText: 'OK',
@@ -3751,6 +4364,13 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         }
 
         function showDetailsLoadingState() {
+            document.body.classList.add('property-modal-loading');
+            const fallbackOverlay = document.getElementById('propertyLoadingOverlay');
+            if (fallbackOverlay) {
+                fallbackOverlay.classList.add('active');
+                fallbackOverlay.setAttribute('aria-hidden', 'false');
+            }
+
             fireAppAlert({
                 title: 'Loading Details',
                 text: 'Please wait while we prepare the property details.',
@@ -3766,6 +4386,13 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         }
 
         function closeDetailsLoadingState() {
+            document.body.classList.remove('property-modal-loading');
+            const fallbackOverlay = document.getElementById('propertyLoadingOverlay');
+            if (fallbackOverlay) {
+                fallbackOverlay.classList.remove('active');
+                fallbackOverlay.setAttribute('aria-hidden', 'true');
+            }
+
             if (window.Swal && typeof window.Swal.close === 'function') {
                 window.Swal.close();
             }
@@ -4054,9 +4681,9 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             return { lat: 14.0664, lng: 120.6325 };
         }
 
-        async function showInquirySentDialogAndRedirect() {
+        async function showInquirySentDialogAndRedirect(listingId, inquiryId = 0) {
             if (hasSwal()) {
-                await fireAppAlert({
+                const result = await fireAppAlert({
                     icon: 'success',
                     title: 'Inquiry Sent',
                     text: 'Your inquiry was sent successfully. You can now continue your conversation in Messages.',
@@ -4064,16 +4691,20 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     allowOutsideClick: false,
                     allowEscapeKey: true
                 });
+
+                if (!result?.isConfirmed) {
+                    return;
+                }
             } else {
                 alert('Inquiry sent successfully. You will now be redirected to Messages.');
             }
 
-            showSection('messages');
+            await openMessagesForListing(listingId, inquiryId);
         }
 
-        async function showExistingInquiryDialogAndRedirect() {
+        async function showExistingInquiryDialogAndRedirect(listingId, inquiryId = 0) {
             if (hasSwal()) {
-                await fireAppAlert({
+                const result = await fireAppAlert({
                     icon: 'info',
                     title: 'Conversation Already Started',
                     text: 'You already have an ongoing conversation for this listing. Click below to continue in Messages.',
@@ -4081,8 +4712,30 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     allowOutsideClick: false,
                     allowEscapeKey: true
                 });
+
+                if (!result?.isConfirmed) {
+                    return;
+                }
             } else {
                 alert('You already have an ongoing conversation for this listing. You will now be redirected to Messages.');
+            }
+
+            await openMessagesForListing(listingId, inquiryId);
+        }
+
+        async function openMessagesForListing(listingId, inquiryId = 0) {
+            const targetListingId = Number(listingId || 0);
+            const targetInquiryId = Number(inquiryId || 0);
+
+            if (typeof window.openBuyerConversation === 'function') {
+                try {
+                    await window.openBuyerConversation({
+                        listingId: targetListingId,
+                        inquiryId: targetInquiryId
+                    });
+                    return;
+                } catch (error) {
+                }
             }
 
             showSection('messages');
@@ -4116,6 +4769,23 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 return;
             }
 
+            // Show confirmation dialog first
+            const confirmResult = await fireAppAlert({
+                icon: 'question',
+                title: 'Send Inquiry',
+                text: 'Do you want to send an inquiry to the seller for this listing?',
+                showCancelButton: true,
+                confirmButtonText: 'Send Message',
+                cancelButtonText: 'Cancel',
+                allowOutsideClick: false,
+                allowEscapeKey: true
+            });
+
+            // If user clicked Cancel, return
+            if (confirmResult.dismiss) {
+                return;
+            }
+
             try {
                 const response = await fetch('<?= base_url('messages/inquiries') ?>', {
                     method: 'POST',
@@ -4138,11 +4808,11 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
                     const rawMessage = String(data.message || '').toLowerCase();
                     if (rawMessage.includes('already exists')) {
-                        await showExistingInquiryDialogAndRedirect();
+                        await showExistingInquiryDialogAndRedirect(targetListingId, Number(data.inquiry_id || 0));
                         return;
                     }
 
-                    await showInquirySentDialogAndRedirect();
+                    await showInquirySentDialogAndRedirect(targetListingId, Number(data.inquiry_id || 0));
                     return;
                 }
 
@@ -4154,6 +4824,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         // Open Property Modal
         async function openPropertyModal(propertyId) {
+            if (propertyModalLoading) {
+                return;
+            }
+
             const property = propertyData[propertyId];
             if (!property) {
                 alert('Sorry, property details are unavailable for this listing.');
@@ -4161,26 +4835,43 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             }
 
             const modal = document.getElementById('propertyModal');
+            propertyModalLoading = true;
+            showDetailsLoadingState();
 
             try {
+                const placeholderImage = 'https://via.placeholder.com/640x400?text=No+Image';
+                const imageList = Array.isArray(property.images)
+                    ? property.images.filter((img) => String(img || '').trim() !== '')
+                    : [];
+
+                if (imageList.length === 0) {
+                    imageList.push(placeholderImage);
+                }
+
                 // Set main image
-                const primaryImage = property.images && property.images.length > 0 ? property.images[0] : '';
+                const primaryImage = imageList[0];
                 document.getElementById('modalMainImage').src = primaryImage || 'https://via.placeholder.com/640x400?text=No+Image';
 
                 // Set thumbnails
                 const thumbsContainer = document.getElementById('modalThumbnails');
-                thumbsContainer.innerHTML = property.images.map((img, idx) => `
-                    <img src="${img}" alt="Thumbnail ${idx + 1}" class="modal-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)">
-                `).join('');
+                thumbsContainer.innerHTML = '';
+                imageList.forEach((img, idx) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = img;
+                    thumb.alt = `Thumbnail ${idx + 1}`;
+                    thumb.className = `modal-thumb ${idx === 0 ? 'active' : ''}`;
+                    thumb.addEventListener('click', () => changeMainImage(img, thumb));
+                    thumbsContainer.appendChild(thumb);
+                });
 
                 // Set property details
                 document.getElementById('modalTitle').textContent = property.title;
                 document.getElementById('modalPrice').textContent = property.price;
                 document.getElementById('modalPricePerSqm').textContent = property.pricePerSqm;
                 document.getElementById('modalLocation').textContent = property.location;
-                document.getElementById('modalArea').textContent = property.area;
-                document.getElementById('modalType').textContent = property.type;
-                document.getElementById('modalTitleStatus').textContent = property.titleStatus;
+                setModalFieldValue('area', property.area);
+                setModalFieldValue('type', property.type);
+                setModalFieldValue('title_status', property.titleStatus);
                 document.getElementById('modalDescription').textContent = property.description;
                 document.getElementById('modalListingId').textContent = property.listingId || propertyId;
                 document.getElementById('modalAddressLine').textContent = property.address || property.location || 'Address not available';
@@ -4193,7 +4884,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 document.getElementById('modalTaxDec').textContent = property.hasTaxDeclaration || 'No';
                 document.getElementById('modalLraPlan').textContent = property.hasLraApprovedPlan || 'No';
                 document.getElementById('modalMotherTitle').textContent = property.motherTitleDisclosed || 'No';
-                document.getElementById('modalStatus').textContent = property.listingStatus || 'Available';
+                setModalFieldValue('listing_status', property.listingStatus || 'Available');
 
                 // Set features
                 const featuresContainer = document.getElementById('modalFeatures');
@@ -4240,15 +4931,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 document.body.style.overflow = 'hidden';
 
                 closeDetailsLoadingState();
-
-                if (hasSwal()) {
-                    await fireAppAlert({
-                        icon: 'success',
-                        title: 'Details Loaded',
-                        text: 'Property details are ready.',
-                        confirmButtonText: 'OK'
-                    });
-                }
             } catch (error) {
                 closeDetailsLoadingState();
                 if (hasSwal()) {
@@ -4259,7 +4941,16 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                         confirmButtonText: 'OK'
                     });
                 }
+            } finally {
+                propertyModalLoading = false;
             }
+        }
+
+        function setModalFieldValue(fieldName, fieldValue) {
+            const value = fieldValue || 'N/A';
+            document.querySelectorAll(`[data-modal-field="${fieldName}"]`).forEach((node) => {
+                node.textContent = value;
+            });
         }
 
         const modalMessageSellerButton = document.getElementById('modalMessageSellerBtn');
@@ -4294,6 +4985,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             const modal = document.getElementById('propertyModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            propertyModalLoading = false;
+            closeDetailsLoadingState();
         }
 
         function applySavedButtonState(buttonElement, isSaved) {
@@ -4516,24 +5209,24 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 </div>
 
                 <div class="modal-quick-info">
-                    <div class="quick-item"><strong>Area:</strong> <span id="modalArea" class="quick-value"></span></div>
-                    <div class="quick-item"><strong>Type:</strong> <span id="modalType" class="quick-value"></span></div>
-                    <div class="quick-item"><strong>Status:</strong> <span id="modalStatus" class="quick-value"></span></div>
-                    <div class="quick-item"><strong>Title:</strong> <span id="modalTitleStatus" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Area:</strong> <span data-modal-field="area" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Type:</strong> <span data-modal-field="type" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Status:</strong> <span data-modal-field="listing_status" class="quick-value"></span></div>
+                    <div class="quick-item"><strong>Title:</strong> <span data-modal-field="title_status" class="quick-value"></span></div>
                 </div>
 
                 <div class="modal-details-grid">
                     <div class="detail-item">
                         <span class="detail-label">Land Area</span>
-                        <span id="modalArea" class="detail-value"></span>
+                        <span data-modal-field="area" class="detail-value"></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Property Type</span>
-                        <span id="modalType" class="detail-value"></span>
+                        <span data-modal-field="type" class="detail-value"></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Title Status</span>
-                        <span id="modalTitleStatus" class="detail-value"></span>
+                        <span data-modal-field="title_status" class="detail-value"></span>
                     </div>
                 </div>
                 
@@ -4556,7 +5249,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                         <div class="listing-details-row"><span>Tax Declaration</span><strong id="modalTaxDec"></strong></div>
                         <div class="listing-details-row"><span>LRA Approved Plan</span><strong id="modalLraPlan"></strong></div>
                         <div class="listing-details-row"><span>Mother Title Disclosed</span><strong id="modalMotherTitle"></strong></div>
-                        <div class="listing-details-row"><span>Listing Status</span><strong id="modalStatus"></strong></div>
+                        <div class="listing-details-row"><span>Listing Status</span><strong data-modal-field="listing_status"></strong></div>
                     </div>
                 </div>
                 
@@ -4622,6 +5315,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             <div id="fullMapCanvas" class="full-map-canvas"></div>
             <div id="fullMapLoading" class="map-loading-state">Loading interactive map...</div>
         </div>
+    </div>
+
+    <div id="propertyLoadingOverlay" class="property-loading-overlay" aria-hidden="true">
+        <div class="property-loading-card">Loading property details...</div>
     </div>
 </body>
 </html>
