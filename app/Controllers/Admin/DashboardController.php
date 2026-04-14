@@ -6,22 +6,39 @@ use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\LandListings;
 use App\Models\ReportsModel;
+use App\Models\SellerVerificationModel;
 
 class DashboardController extends BaseController
 {
     protected $userModel;
     protected $listingModel;
     protected $reportsModel;
+    protected $sellerVerificationModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->listingModel = new LandListings();
         $this->reportsModel = new ReportsModel();
+        $this->sellerVerificationModel = new SellerVerificationModel();
     }
 
     public function index()
     {
+        // Fetch all sellers with their verification documents
+        $sellers = $this->userModel->where('roles', 'seller')->findAll();
+        
+        // Enrich sellers with their documents
+        foreach ($sellers as &$seller) {
+            $seller['documents'] = $this->sellerVerificationModel
+                ->where('seller_id', $seller['user_id'])
+                ->findAll();
+            
+            // Create fullname from first_name and last_name
+            $seller['fullname'] = ($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? '');
+            $seller['fullname'] = trim($seller['fullname']);
+        }
+        
         $data = [
             'fullname' => session()->get('fullname') ?? 'Admin',
             'totalUsers' => $this->userModel->countAllResults(),
@@ -37,6 +54,7 @@ class DashboardController extends BaseController
             'totalReports' => $this->reportsModel->where('status', 'pending')->countAllResults(),
             'users' => $this->userModel->findAll(),
             'listings' => $this->listingModel->findAll(),
+            'sellers' => $sellers,
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);
@@ -78,6 +96,54 @@ class DashboardController extends BaseController
         return redirect()->to('/admin/dashboard')->with('success', 'Listing deleted successfully.');
     }
 
+    public function approveSeller()
+    {
+        if ($this->request->isAJAX()) {
+            $sellerId = $this->request->getJSON()->seller_id;
+
+            if (!$sellerId) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Invalid seller ID']);
+            }
+
+            // Update user as active/approved
+            $this->userModel->update($sellerId, ['is_active' => 1]);
+
+            // Mark seller documents as verified
+            $this->sellerVerificationModel
+                ->where('seller_id', $sellerId)
+                ->set(['is_verified' => 1])
+                ->update();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Seller approved successfully'
+            ]);
+        }
+
+        return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+
+    public function rejectSeller()
+    {
+        if ($this->request->isAJAX()) {
+            $sellerId = $this->request->getJSON()->seller_id;
+
+            if (!$sellerId) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Invalid seller ID']);
+            }
+
+            // Deactivate seller
+            $this->userModel->update($sellerId, ['is_active' => 0]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Seller rejected successfully'
+            ]);
+        }
+
+        return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+
     public function viewListing($listingId)
     {
         $listing = $this->listingModel->find($listingId);
@@ -98,5 +164,44 @@ class DashboardController extends BaseController
         ];
 
         return view('Pages/Admin/Listing_Detail', $data);
+    }
+
+    public function getSellerDocument($documentId)
+    {
+        // Log the attempt
+        log_message('info', 'Admin accessing document: ' . $documentId . ' with role: ' . session()->get('roles'));
+        
+        // Verify user is logged in
+        if (!session()->has('user_id')) {
+            log_message('warning', 'Unauthorized document access - no session');
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Not authenticated']);
+        }
+
+        // Verify user is admin
+        $userRole = session()->get('roles');
+        if (strpos($userRole, 'admin') === false) {
+            log_message('warning', 'Unauthorized document access - role: ' . $userRole);
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Access denied']);
+        }
+
+        // Fetch document
+        $document = $this->sellerVerificationModel->find($documentId);
+        if (!$document) {
+            log_message('warning', 'Document not found: ' . $documentId);
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Document not found']);
+        }
+
+        $filePath = WRITEPATH . 'uploads/' . $document['file_path'];
+        
+        if (!file_exists($filePath)) {
+            log_message('warning', 'File not found: ' . $filePath);
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'File not found']);
+        }
+
+        log_message('info', 'Serving document: ' . $filePath);
+        
+        // Serve the file inline (display in browser) instead of downloading
+        return $this->response
+            ->download($filePath, null, true);
     }
 }

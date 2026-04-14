@@ -120,5 +120,9 @@ $routes->group('admin', function ($routes) {
     $routes->post('listings/(:num)/verify', 'Admin\DashboardController::verifyListing/$1');
     $routes->post('listings/(:num)/reject', 'Admin\DashboardController::rejectListing/$1');
     $routes->post('listings/(:num)/delete', 'Admin\DashboardController::deleteListing/$1');
+
+    $routes->post('approve-seller', 'Admin\DashboardController::approveSeller');
+    $routes->post('reject-seller', 'Admin\DashboardController::rejectSeller');
+    $routes->get('document/(:num)/view', 'Admin\DashboardController::getSellerDocument/$1');
 });
 
