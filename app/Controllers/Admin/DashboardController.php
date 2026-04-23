@@ -25,18 +25,30 @@ class DashboardController extends BaseController
 
     public function index()
     {
-        // Fetch all sellers with their verification documents
-        $sellers = $this->userModel->where('roles', 'seller')->findAll();
+        // Fetch sellers who are pending approval (have uploaded documents but not verified)
+        // Get sellers with at least one unverified document or inactive status
+        $db = \Config\Database::connect();
+        
+        $sellers = $db->query("
+            SELECT DISTINCT u.*, COUNT(sv.document_id) as doc_count
+            FROM users u
+            LEFT JOIN seller_verification_documents sv ON u.user_id = sv.seller_id
+            WHERE u.roles = 'seller' 
+            GROUP BY u.user_id
+            ORDER BY u.created_at DESC
+        ")->getResult('array');
         
         // Enrich sellers with their documents
-        foreach ($sellers as &$seller) {
-            $seller['documents'] = $this->sellerVerificationModel
+        $sellersData = [];
+        foreach ($sellers as $seller) {
+            $documents = $this->sellerVerificationModel
                 ->where('seller_id', $seller['user_id'])
                 ->findAll();
             
             // Create fullname from first_name and last_name
-            $seller['fullname'] = ($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? '');
-            $seller['fullname'] = trim($seller['fullname']);
+            $seller['fullname'] = trim(($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? ''));
+            $seller['documents'] = $documents;
+            $sellersData[] = $seller;
         }
         
         $data = [
@@ -52,9 +64,19 @@ class DashboardController extends BaseController
                 'rejected' => $this->listingModel->where('listing_status', 'rejected')->countAllResults(),
             ],
             'totalReports' => $this->reportsModel->where('status', 'pending')->countAllResults(),
+            'reportStats' => [
+                'pending' => $this->reportsModel->where('status', 'pending')->countAllResults(),
+                'resolved' => $this->reportsModel->where('status', 'resolved')->countAllResults(),
+                'suspended' => $this->reportsModel->where('status', 'suspended')->countAllResults(),
+            ],
+            'verificationStats' => [
+                'verified' => $this->sellerVerificationModel->countAllResults(),
+                'pending' => 0,
+                'unverified' => 0,
+            ],
             'users' => $this->userModel->findAll(),
             'listings' => $this->listingModel->findAll(),
-            'sellers' => $sellers,
+            'sellers' => $sellersData,
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);

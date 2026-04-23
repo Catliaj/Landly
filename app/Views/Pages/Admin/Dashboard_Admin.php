@@ -1,3 +1,4 @@
+<?php helper('html'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2060,6 +2061,113 @@
                         text: 'An error occurred while rejecting the seller',
                         icon: 'error'
                     });
+                });
+            }
+        }
+
+        // User Management Confirmation Functions
+        async function confirmActivateUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Activate User',
+                text: `Are you sure you want to activate ${userName}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Activate',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/activate`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmDeactivateUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Deactivate User',
+                text: `Are you sure you want to deactivate ${userName}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Deactivate',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/deactivate`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmDeleteUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Delete User',
+                text: `Are you sure you want to permanently delete ${userName}? This action cannot be undone.`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                confirmButtonColor: '#dc3545'
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/delete`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmSuspendAccount(userName, reportId) {
+            const result = await fireAppAlert({
+                title: 'Suspend Account',
+                text: `Are you sure you want to suspend the account of ${userName}? They will be unable to access the platform.`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Suspend',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                confirmButtonColor: '#dc3545'
+            });
+
+            if (result.isConfirmed) {
+                fireAppAlert({
+                    title: 'Account Suspended',
+                    text: `${userName}'s account has been suspended.`,
+                    icon: 'success',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
                 });
             }
         }
