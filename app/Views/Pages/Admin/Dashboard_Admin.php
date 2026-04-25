@@ -1,3 +1,4 @@
+<?php helper('html'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -884,47 +885,115 @@
         setSection(initial || 'dashboard');
 
         // Modal Functions for Files Gallery
-        function openDocumentsGallery(sellerName, documentPaths) {
+        function openDocumentsGallery(sellerName, documents) {
+            console.log('=== OPENING GALLERY ===');
+            console.log('Seller Name:', sellerName);
+            console.log('Documents:', documents);
+            console.log('Documents Type:', typeof documents);
+            console.log('Documents is Array:', Array.isArray(documents));
+            
             const modal = document.getElementById('filesModal');
             const modalTitle = document.getElementById('modalGalleryTitle');
             const galleryGrid = document.getElementById('modalGalleryGrid');
             
+            if (!modal) {
+                console.error('Modal element not found!');
+                return;
+            }
+            
             modalTitle.textContent = 'Documents from ' + sellerName;
             galleryGrid.innerHTML = '';
             
-            documentPaths.forEach((path, index) => {
+            // Ensure documents is an array
+            let docsArray = documents;
+            if (typeof documents === 'string') {
+                try {
+                    docsArray = JSON.parse(documents);
+                } catch (e) {
+                    console.error('Failed to parse documents JSON:', documents);
+                    docsArray = [];
+                }
+            }
+            
+            console.log('Final Documents Array:', docsArray);
+            
+            if (!docsArray || docsArray.length === 0) {
+                console.log('No documents to display');
+                galleryGrid.innerHTML = '<p style="color: rgba(254,250,224,.65); text-align: center; padding: 40px; grid-column: 1/-1;">No documents available</p>';
+                modal.classList.add('active');
+                return;
+            }
+            
+            // Extract URLs for fullscreen viewer
+            window.currentDocuments = docsArray;
+            
+            docsArray.forEach((doc, index) => {
+                console.log('Adding document', index, doc);
+                
                 const galleryItem = document.createElement('div');
                 galleryItem.className = 'modal-gallery-item';
+                galleryItem.style.cursor = 'pointer';
+                galleryItem.style.position = 'relative';
+                galleryItem.title = doc.type || 'Document ' + (index + 1);
+                
                 galleryItem.onclick = function() {
-                    let currentIndex = index;
-                    showFullImage(documentPaths, currentIndex);
+                    console.log('Clicked document', index);
+                    showFullImage(docsArray, index);
                 };
                 
                 const img = document.createElement('img');
                 img.className = 'modal-gallery-image';
-                img.src = path;
-                img.alt = 'Document ' + (index + 1);
+                img.src = doc.url;
+                img.alt = doc.type || 'Document ' + (index + 1);
+                img.style.cursor = 'pointer';
+                img.style.display = 'block';
+                
+                // Handle image load errors
+                img.onerror = function() {
+                    console.error('Failed to load document image:', doc.url);
+                    galleryItem.style.background = 'rgba(231, 76, 60, 0.2)';
+                    galleryItem.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;"><p style="font-size: 2rem; margin: 0;">📄</p><p style="color: #e74c3c; margin-top: 8px; font-size: 0.8rem;">' + (doc.type || 'Document') + '</p></div>';
+                };
+                
+                img.onload = function() {
+                    console.log('Loaded document image:', doc.url);
+                };
                 
                 galleryItem.appendChild(img);
+                
+                // Add document type label
+                const typeLabel = document.createElement('div');
+                typeLabel.style.cssText = 'position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: rgba(254,250,224,.9); padding: 6px; font-size: 0.75rem; text-align: center; border-radius: 0 0 12px 12px; word-wrap: break-word;';
+                typeLabel.textContent = doc.type || 'Document ' + (index + 1);
+                galleryItem.appendChild(typeLabel);
+                
                 galleryGrid.appendChild(galleryItem);
             });
             
+            console.log('Opening modal, adding active class');
             modal.classList.add('active');
+            console.log('=== GALLERY OPENED ===');
         }
 
-        function showFullImage(images, index) {
+        function showFullImage(documents, index) {
             // Create fullscreen image viewer
+            const currentDoc = documents[index];
             const viewer = document.createElement('div');
             viewer.className = 'modal';
             viewer.style.zIndex = '1001';
             viewer.innerHTML = `
-                <div class="modal-content" style="max-width: 95%; max-height: 95%;">
+                <div class="modal-content" style="max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    <img src="${images[index]}" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 12px;">
-                    <div style="text-align: center; margin-top: 12px; color: rgba(254,250,224,.75);">
-                        ${index + 1} / ${images.length}
-                        ${index > 0 ? `<button class="btn btn-files" onclick="showFullImage(window.currentImages, ${index - 1}); event.stopPropagation();" style="margin-left: 8px;">← Previous</button>` : ''}
-                        ${index < images.length - 1 ? `<button class="btn btn-files" onclick="showFullImage(window.currentImages, ${index + 1}); event.stopPropagation();" style="margin-left: 8px;">Next →</button>` : ''}
+                    <div style="text-align: center; margin-bottom: 12px; color: rgba(254,250,224,.75); width: 100%;">
+                        <p style="margin: 0; font-weight: 600;">${currentDoc.type || 'Document'}</p>
+                    </div>
+                    <img src="${currentDoc.url}" style="max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 12px;" onerror="this.style.display='none'; this.parentElement.innerHTML+='<p style=\"color: #e74c3c; text-align: center;\">Failed to load document. The file may have been deleted.</p>'">
+                    <div style="text-align: center; margin-top: 12px; color: rgba(254,250,224,.75); width: 100%;">
+                        <p style="margin-bottom: 12px;">${index + 1} / ${documents.length}</p>
+                        <div>
+                            ${index > 0 ? `<button class="btn btn-files" onclick="showFullImage(window.currentDocuments, ${index - 1}); event.stopPropagation();" style="margin-left: 8px;">← Previous</button>` : ''}
+                            ${index < documents.length - 1 ? `<button class="btn btn-files" onclick="showFullImage(window.currentDocuments, ${index + 1}); event.stopPropagation();" style="margin-left: 8px;">Next →</button>` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -934,7 +1003,6 @@
                     this.remove();
                 }
             };
-            window.currentImages = images;
             document.body.appendChild(viewer);
         }
 
@@ -1873,6 +1941,236 @@
                 });
             });
         });
+
+        // Setup document gallery button listeners
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('documents-gallery-btn')) {
+                const sellerName = e.target.dataset.sellerName;
+                const documentsJson = e.target.dataset.documents;
+                
+                console.log('=== DOCUMENTS BUTTON CLICKED ===');
+                console.log('Seller Name:', sellerName);
+                console.log('Documents JSON:', documentsJson);
+                
+                try {
+                    const documents = JSON.parse(documentsJson);
+                    console.log('Parsed documents:', documents);
+                    openDocumentsGallery(sellerName, documents);
+                } catch (error) {
+                    console.error('Failed to parse documents:', error);
+                    console.error('Documents JSON was:', documentsJson);
+                    alert('Error loading documents. Check browser console for details.');
+                }
+            }
+        });
+
+        // Seller Approval Functions
+        async function approveSeller(sellerId) {
+            const result = await fireAppAlert({
+                title: 'Approve Seller',
+                text: 'Are you sure you want to approve this seller?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                fetch(`<?php echo base_url('admin/approve-seller'); ?>`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ seller_id: sellerId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fireAppAlert({
+                            title: 'Success',
+                            text: 'Seller approved successfully!',
+                            icon: 'success',
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        fireAppAlert({
+                            title: 'Error',
+                            text: data.message || 'Failed to approve seller',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    fireAppAlert({
+                        title: 'Error',
+                        text: 'An error occurred while approving the seller',
+                        icon: 'error'
+                    });
+                });
+            }
+        }
+
+        async function rejectSeller(sellerId) {
+            const result = await fireAppAlert({
+                title: 'Reject Seller',
+                text: 'Are you sure you want to reject this seller?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Reject',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                fetch(`<?php echo base_url('admin/reject-seller'); ?>`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ seller_id: sellerId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fireAppAlert({
+                            title: 'Success',
+                            text: 'Seller rejected successfully!',
+                            icon: 'success',
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        fireAppAlert({
+                            title: 'Error',
+                            text: data.message || 'Failed to reject seller',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    fireAppAlert({
+                        title: 'Error',
+                        text: 'An error occurred while rejecting the seller',
+                        icon: 'error'
+                    });
+                });
+            }
+        }
+
+        // User Management Confirmation Functions
+        async function confirmActivateUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Activate User',
+                text: `Are you sure you want to activate ${userName}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Activate',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/activate`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmDeactivateUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Deactivate User',
+                text: `Are you sure you want to deactivate ${userName}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Deactivate',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/deactivate`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmDeleteUser(userId, userName) {
+            const result = await fireAppAlert({
+                title: 'Delete User',
+                text: `Are you sure you want to permanently delete ${userName}? This action cannot be undone.`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                confirmButtonColor: '#dc3545'
+            });
+
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `<?php echo base_url('admin/users'); ?>/${userId}/delete`;
+                
+                const csrfField = document.createElement('input');
+                csrfField.type = 'hidden';
+                csrfField.name = '<?php echo csrf_token(); ?>';
+                csrfField.value = '<?php echo csrf_hash(); ?>';
+                form.appendChild(csrfField);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        async function confirmSuspendAccount(userName, reportId) {
+            const result = await fireAppAlert({
+                title: 'Suspend Account',
+                text: `Are you sure you want to suspend the account of ${userName}? They will be unable to access the platform.`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Suspend',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                confirmButtonColor: '#dc3545'
+            });
+
+            if (result.isConfirmed) {
+                fireAppAlert({
+                    title: 'Account Suspended',
+                    text: `${userName}'s account has been suspended.`,
+                    icon: 'success',
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        }
     </script>
 </body>
 </html>
