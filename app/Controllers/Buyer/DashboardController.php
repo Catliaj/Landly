@@ -166,6 +166,111 @@ class DashboardController extends BaseController
         ]);
     }
 
+    public function trackListingView(): ResponseInterface
+    {
+        $buyerId = $this->getCurrentUserId();
+        if ($buyerId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ]);
+        }
+
+        $listingId = (int) ($this->request->getPost('listing_id') ?? 0);
+        if ($listingId <= 0) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid listing id.',
+            ]);
+        }
+
+        $db = Database::connect();
+        if (! $db->tableExists('listing_daily_views')) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => 'listing_daily_views table is missing. Run migrations first.',
+            ]);
+        }
+
+        $listingExists = $db->table('land_listings')
+            ->select('listing_id')
+            ->where('listing_id', $listingId)
+            ->limit(1)
+            ->get()
+            ->getRowArray();
+
+        if (! $listingExists) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Listing not found.',
+            ]);
+        }
+
+        $today = date('Y-m-d');
+        $now = date('Y-m-d H:i:s');
+
+        $db->transStart();
+
+        $db->table('listing_daily_views')
+            ->ignore(true)
+            ->insert([
+                'listing_id' => $listingId,
+                'viewer_user_id' => $buyerId,
+                'view_date' => $today,
+                'created_at' => $now,
+            ]);
+
+        $wasInserted = $db->affectedRows() > 0;
+
+        if (! $wasInserted) {
+            $db->transComplete();
+            return $this->response->setJSON([
+                'status' => 'success',
+                'counted' => false,
+                'message' => 'View already recorded for today.',
+            ]);
+        }
+
+        $analyticsRow = $db->table('listing_analytics')
+            ->select('analytics_id')
+            ->where('listing_id', $listingId)
+            ->limit(1)
+            ->get()
+            ->getRowArray();
+
+        if ($analyticsRow) {
+            $db->table('listing_analytics')
+                ->set('total_views', 'total_views + 1', false)
+                ->set('last_viewed_at', $now)
+                ->where('listing_id', $listingId)
+                ->update();
+        } else {
+            $db->table('listing_analytics')->insert([
+                'listing_id' => $listingId,
+                'total_views' => 1,
+                'total_inquiries' => 0,
+                'total_reservations' => 0,
+                'total_closed' => 0,
+                'last_viewed_at' => $now,
+            ]);
+        }
+
+        $db->transComplete();
+
+        if (! $db->transStatus()) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => 'Unable to record listing view.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'counted' => true,
+            'message' => 'View recorded.',
+        ]);
+    }
+
     private function getCurrentUserProfile(int $userId): array
     {
         if ($userId <= 0) {
@@ -191,7 +296,7 @@ class DashboardController extends BaseController
             'email' => trim((string) ($user['email'] ?? 'N/A')),
             'avatar_url' => $this->resolveUserProfilePictureUrl((string) ($user['profile_picture'] ?? '')),
             'initials' => $this->formatInitials($fullName),
-            'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+            'status_label' => $isActive ? 'Buyer' : 'Inactive Buyer',
             'status_class' => $isActive ? 'active' : 'inactive',
         ];
     }
@@ -212,7 +317,7 @@ class DashboardController extends BaseController
             'initials' => $this->formatInitials($fullName),
             'first_name' => trim((string) ($user['first_name'] ?? '')),
             'last_name' => trim((string) ($user['last_name'] ?? '')),
-            'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+            'status_label' => $isActive ? 'Buyer' : 'Inactive Buyer',
             'status_class' => $isActive ? 'active' : 'inactive',
             'stats' => $this->getBuyerProfileStats($buyerId),
         ];
@@ -1078,9 +1183,10 @@ class DashboardController extends BaseController
         $db = Database::connect();
 
         $rows = $db->table('inquiries i')
-            ->select('i.inquiry_id, i.listing_id, i.seller_id, i.inquiry_status, i.created_at, i.updated_at, l.title, l.price, ms.session_id')
+            ->select('i.inquiry_id, i.listing_id, i.seller_id, i.inquiry_status, i.created_at, i.updated_at, l.title, l.price, ms.session_id, su.first_name AS seller_first_name, su.last_name AS seller_last_name')
             ->join('land_listings l', 'l.listing_id = i.listing_id', 'left')
             ->join('message_sessions ms', 'ms.inquiry_id = i.inquiry_id', 'left')
+            ->join('users su', 'su.user_id = i.seller_id', 'left')
             ->where('i.buyer_id', $buyerId)
             ->orderBy('i.created_at', 'DESC')
             ->get()
@@ -1102,11 +1208,17 @@ class DashboardController extends BaseController
             $listingId = (int) ($row['listing_id'] ?? 0);
             $title = trim((string) ($row['title'] ?? 'Untitled Listing'));
             $status = strtolower(trim((string) ($row['inquiry_status'] ?? 'pending')));
+            $sellerName = trim((string) (($row['seller_first_name'] ?? '') . ' ' . ($row['seller_last_name'] ?? '')));
+            if ($sellerName === '') {
+                $sellerName = 'Seller';
+            }
 
             $inquiries[] = [
                 'inquiry_id' => (int) ($row['inquiry_id'] ?? 0),
                 'listing_id' => $listingId,
                 'session_id' => (int) ($row['session_id'] ?? 0),
+                'seller_name' => $sellerName,
+                'seller_initials' => $this->formatInitials($sellerName),
                 'title' => $title,
                 'price_label' => $this->formatPeso((float) ($row['price'] ?? 0)),
                 'image_url' => $this->resolveListingImageUrl($primaryImages[$listingId] ?? null, $title),

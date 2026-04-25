@@ -48,6 +48,7 @@ $routes->group('buyer', function ($routes) {
     // Land listing routes for buyers
     $routes->get('listings', 'Buyer\LandListingController::listAll');
     $routes->get('listings/(:num)', 'Buyer\LandListingController::view/$1');
+    $routes->post('listings/track-view', 'Buyer\DashboardController::trackListingView');
     
     // Favorites routes
     $routes->get('favorites', 'Buyer\Favorites::index');

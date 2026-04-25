@@ -223,3 +223,31 @@ These Models are used by multiple roles. If you modify them, check that it doesn
 - Auth filters (if you change auth logic, verify all login flows still work)
 - Session logic (if you modify session, test logout for all roles)
 - Any Model that is used by buyer or seller
+
+## Testing Rule (MUST FOLLOW)
+
+Before pushing any changes, the AI must ensure that:
+
+- A unit test is created for every:
+  - New function added
+  - Existing function that has been modified
+
+- The unit test must:
+  - Cover the main expected behavior
+  - Include edge cases if applicable
+  - Validate inputs and outputs properly
+  - Follow the existing testing structure of the project
+
+- The AI should:
+  - Check if a corresponding test file already exists
+  - Update existing tests if behavior is changed
+  - Create a new test file if none exists
+
+- All tests must pass before pushing or finalizing the task.
+
+**Goal:** Reduce bugs, prevent regressions, and ensure stability across admin, buyer, and seller dashboards.
+
+No code should be pushed or considered complete unless:
+
+- All related unit tests are implemented
+- All tests pass successfully

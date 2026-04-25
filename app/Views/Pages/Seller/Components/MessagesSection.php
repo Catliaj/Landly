@@ -159,6 +159,11 @@
         }
 
         function getCounterpartyLabel(session) {
+            const buyerName = String(session.buyer_name || '').trim();
+            if (buyerName !== '') {
+                return buyerName;
+            }
+
             const buyerId = Number(session.buyer_id || 0);
             return buyerId > 0 ? `Buyer #${buyerId}` : 'Buyer';
         }
@@ -174,7 +179,7 @@
 
             const buyerLabel = getCounterpartyLabel(session);
             chatName.textContent = buyerLabel;
-            chatListing.textContent = `Re: ${session.listing_title || 'Property Inquiry'}`;
+            chatListing.textContent = `Listing: ${session.listing_title || 'Property Inquiry'}`;
             chatAvatar.textContent = getInitials(buyerLabel);
             setInquiryControls(session);
         }
@@ -306,7 +311,7 @@
                                 <span class="message-sender">${escapeHtml(buyerLabel)}</span>
                                 <span class="message-time">${escapeHtml(formatRelativeTime(session.last_message_at))}</span>
                             </div>
-                            <p class="message-preview">${escapeHtml(`Re: ${listingTitle}`)}</p>
+                            <p class="message-preview">${escapeHtml(`Listing: ${listingTitle}`)}</p>
                         </div>
                     </div>
                 `;

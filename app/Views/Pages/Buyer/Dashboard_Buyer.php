@@ -1146,10 +1146,61 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             margin-bottom: 12px;
         }
 
-        .inquiry-property {
+        .inquiry-user {
             display: flex;
             align-items: center;
             gap: 12px;
+        }
+
+        .inquiry-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green-700), var(--green-900));
+            color: var(--cream-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border: 1px solid rgba(149, 213, 178, 0.25);
+        }
+
+        .inquiry-user-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--cream-100);
+            margin: 0;
+        }
+
+        .inquiry-user-info span {
+            font-size: 0.8rem;
+            color: rgba(254, 250, 224, 0.6);
+        }
+
+        .inquiry-property {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border: 1px solid rgba(149, 213, 178, 0.15);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        .inquiry-property-title {
+            font-size: 0.9rem;
+            color: rgba(254, 250, 224, 0.9);
+            font-weight: 600;
+        }
+
+        .inquiry-property-detail {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .inquiry-property-thumb {
@@ -2946,10 +2997,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     <div class="user-details">
                         <h4><?= esc((string) ($userProfile['full_name'] ?? 'Buyer')) ?></h4>
                         <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?></span>
+                        <br>
                         <div class="member-badge <?= esc((string) ($userProfile['status_class'] ?? 'inactive')) ?>">
                             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
+                            
                             <?= esc((string) ($userProfile['status_label'] ?? 'Inactive Buyer')) ?>
                         </div>
                     </div>
@@ -4727,6 +4780,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             const targetListingId = Number(listingId || 0);
             const targetInquiryId = Number(inquiryId || 0);
 
+            if (typeof closePropertyModal === 'function') {
+                closePropertyModal();
+            }
+
             if (typeof window.openBuyerConversation === 'function') {
                 try {
                     await window.openBuyerConversation({
@@ -4822,6 +4879,26 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             }
         }
 
+        async function trackListingView(listingId) {
+            const targetListingId = Number(listingId || 0);
+            if (!targetListingId) {
+                return;
+            }
+
+            try {
+                await fetch('<?= base_url('buyer/listings/track-view') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: 'listing_id=' + encodeURIComponent(String(targetListingId))
+                });
+            } catch (error) {
+                console.warn('Unable to track listing view:', error);
+            }
+        }
+
         // Open Property Modal
         async function openPropertyModal(propertyId) {
             if (propertyModalLoading) {
@@ -4833,6 +4910,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 alert('Sorry, property details are unavailable for this listing.');
                 return;
             }
+
+            trackListingView(propertyId);
 
             const modal = document.getElementById('propertyModal');
             propertyModalLoading = true;
@@ -4953,24 +5032,18 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             });
         }
 
-        const modalMessageSellerButton = document.getElementById('modalMessageSellerBtn');
-        if (modalMessageSellerButton) {
-            modalMessageSellerButton.addEventListener('click', (event) => {
-                const listingId = Number(document.getElementById('propertyModal').dataset.listingId || 0);
-                createInquiryForListing(event, listingId);
-            });
+        function handleModalMessageSellerClick(event) {
+            const listingId = Number(document.getElementById('propertyModal')?.dataset?.listingId || 0);
+            createInquiryForListing(event, listingId);
         }
 
-        const modalSavePropertyButton = document.getElementById('modalSavePropertyBtn');
-        if (modalSavePropertyButton) {
-            modalSavePropertyButton.addEventListener('click', (event) => {
-                const listingId = Number(modalSavePropertyButton.dataset.listingId || document.getElementById('propertyModal').dataset.listingId || 0);
-                if (!listingId) {
-                    return;
-                }
+        function handleModalSavePropertyClick(event, buttonElement) {
+            const listingId = Number(buttonElement?.dataset?.listingId || document.getElementById('propertyModal')?.dataset?.listingId || 0);
+            if (!listingId || !buttonElement) {
+                return;
+            }
 
-                toggleFavorite(event, modalSavePropertyButton, listingId);
-            });
+            toggleFavorite(event, buttonElement, listingId);
         }
 
         // Change main image in gallery
@@ -5288,11 +5361,11 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                             </div>
                         </div>
                         <div class="seller-card-actions">
-                            <button class="btn-contact-seller" id="modalMessageSellerBtn" type="button">
+                            <button class="btn-contact-seller" id="modalMessageSellerBtn" type="button" onclick="handleModalMessageSellerClick(event)">
                                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                                 Message Seller
                             </button>
-                            <button class="btn-save-property" id="modalSavePropertyBtn" type="button" title="Save Property" aria-pressed="false">
+                            <button class="btn-save-property" id="modalSavePropertyBtn" type="button" title="Save Property" aria-pressed="false" onclick="handleModalSavePropertyClick(event, this)">
                                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                 <span class="btn-save-property-text">Save Property</span>
                             </button>
