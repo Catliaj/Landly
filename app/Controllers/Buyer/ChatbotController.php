@@ -14,6 +14,11 @@ class ChatbotController extends BaseController
     private $geoapifyApiKey;
     private $geminiApiBase = 'https://generativelanguage.googleapis.com/v1beta/models/';
     private $geminiModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+    private const PROPERTY_CATEGORIES = [
+        'residential_land' => 'Residential',
+        'agricultural_land' => 'Agricultural',
+        'commercial_land' => 'Commercial',
+    ];
     private const NASUGBU_BARANGAYS = [
         'aga', 'balaytigui', 'banilad', 'bilaran', 'bucana', 'bulihan', 'bunducan', 'butucan',
         'calayo', 'catandaan', 'cogunan', 'dayap', 'kaylaway', 'kayrilaw', 'latag', 'looc',
@@ -82,6 +87,27 @@ class ChatbotController extends BaseController
                     'status' => 'success',
                     'message' => $greetingResponse,
                     'listings' => [],
+                ]);
+            }
+
+            $requestedPropertyType = $this->extractPropertyTypeFromMessage($userMessage);
+            if ($this->isCategoryInquiry($userMessage, $requestedPropertyType)) {
+                $session->set('landly_ai_last_topic', 'property');
+
+                $availableListings = $this->getAvailableNasugbuListings(80);
+                $listingObjects = array_map(
+                    fn(array $listing): array => $this->buildListingDataObject($listing, $this->shouldIncludeSurroundings($userMessage)),
+                    $availableListings
+                );
+
+                if ($requestedPropertyType !== null) {
+                    $listingObjects = $this->filterListingsByPropertyType($listingObjects, $requestedPropertyType);
+                }
+
+                return $this->response->setStatusCode(200)->setJSON([
+                    'status' => 'success',
+                    'message' => $this->buildCategoryReply($requestedPropertyType, $listingObjects, $buyerFirstName),
+                    'listings' => array_slice($listingObjects, 0, 3),
                 ]);
             }
 
@@ -296,7 +322,7 @@ class ChatbotController extends BaseController
 
     private function isPropertyRelatedQuery(string $message): bool
     {
-        return preg_match('/\b(land|lot|listing|property|properties|real estate|beach|school|church|hospital|barangay|brgy|nasugbu|price|budget|sqm|hectare|farm|residential|commercial|agricultural)\b/i', $message) === 1;
+        return preg_match('/\b(land|lot|listing|property|properties|real estate|beach|school|church|hospital|barangay|brgy|nasugbu|price|budget|sqm|hectare|farm|residential|commercial|agricultural|category|categories)\b/i', $message) === 1;
     }
 
     private function matchTrainingIntent(string $message): array
@@ -322,6 +348,103 @@ class ChatbotController extends BaseController
         }
 
         return ['name' => '', 'reply_type' => ''];
+    }
+
+    private function extractPropertyTypeFromMessage(string $message): ?string
+    {
+        $normalizedMessage = $this->normalizeTrainingText($message);
+        if ($normalizedMessage === '') {
+            return null;
+        }
+
+        foreach (array_keys(self::PROPERTY_CATEGORIES) as $propertyType) {
+            foreach ($this->getPropertyTypeKeywords($propertyType) as $keyword) {
+                if ($keyword !== '' && str_contains($normalizedMessage, $keyword)) {
+                    return $propertyType;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function isCategoryInquiry(string $message, ?string $propertyType = null): bool
+    {
+        $normalizedMessage = $this->normalizeTrainingText($message);
+        if ($normalizedMessage === '') {
+            return false;
+        }
+
+        if ($propertyType === null) {
+            $propertyType = $this->extractPropertyTypeFromMessage($message);
+        }
+
+        if ($propertyType === null) {
+            return false;
+        }
+
+        if (preg_match('/\b(category|categories|type|types)\b/i', $message) === 1) {
+            return true;
+        }
+
+        return preg_match('/\b(available|availability|list|show|what|which|do you have|have)\b/i', $message) === 1;
+    }
+
+    private function getPropertyTypeKeywords(string $propertyType): array
+    {
+        return match ($propertyType) {
+            'residential_land' => ['residential land', 'residential category', 'residential lot', 'residential'],
+            'agricultural_land' => ['agricultural land', 'agricultural category', 'agricultural lot', 'farm lot', 'farm'],
+            'commercial_land' => ['commercial land', 'commercial category', 'commercial lot', 'commercial'],
+            default => [],
+        };
+    }
+
+    private function filterListingsByPropertyType(array $listings, string $propertyType): array
+    {
+        $normalizedPropertyType = strtolower(trim($propertyType));
+        if ($normalizedPropertyType === '') {
+            return $listings;
+        }
+
+        return array_values(array_filter($listings, static function (array $listing) use ($normalizedPropertyType): bool {
+            $listingType = strtolower(trim((string) ($listing['property_type'] ?? '')));
+            return $listingType === $normalizedPropertyType;
+        }));
+    }
+
+    private function formatPropertyCategoryLabel(?string $propertyType): string
+    {
+        if ($propertyType === null || $propertyType === '') {
+            return 'Unspecified';
+        }
+
+        return self::PROPERTY_CATEGORIES[$propertyType] ?? 'Unspecified';
+    }
+
+    private function buildCategoryReply(?string $propertyType, array $listingDataObjects, ?string $buyerFirstName = null): string
+    {
+        $namePrefix = $this->buildBuyerNamePrefix($buyerFirstName);
+
+        if ($propertyType === null) {
+            return $namePrefix . 'Available property categories are ' . implode(', ', array_values(self::PROPERTY_CATEGORIES)) . '.';
+        }
+
+        $categoryLabel = $this->formatPropertyCategoryLabel($propertyType);
+
+        if ($listingDataObjects === []) {
+            return $namePrefix . 'No available ' . $categoryLabel . ' listings in Nasugbu at the moment. Available categories are ' . implode(', ', array_values(self::PROPERTY_CATEGORIES)) . '.';
+        }
+
+        $lines = [];
+        foreach (array_slice($listingDataObjects, 0, 3) as $listing) {
+            $title = trim((string) ($listing['title'] ?? 'Property'));
+            $location = trim((string) ($listing['location'] ?? 'Location unavailable'));
+            $price = number_format((int) ($listing['price'] ?? 0));
+            $lines[] = $title . ' - ' . $location . ' - ₱' . $price;
+        }
+
+        return $namePrefix . 'Here are the available ' . $categoryLabel . ' listings in Nasugbu: ' . implode('; ', $lines) . '.';
     }
 
     private function normalizeTrainingText(string $text): string
@@ -578,12 +701,22 @@ STYLE:
         return preg_match('/^\s*(yes|yup|yeah|yep|oo|opo|sige|sure|go|ok|okay)\s*[!.?]*\s*$/i', $message) === 1;
     }
 
+    private function normalizePropertyType(string $propertyType): string
+    {
+        return match (strtolower(trim($propertyType))) {
+            'residential', 'residential_land' => 'residential_land',
+            'agricultural', 'agricultural_land', 'farm', 'farm lot' => 'agricultural_land',
+            'commercial', 'commercial_land' => 'commercial_land',
+            default => '',
+        };
+    }
+
     private function getAvailableNasugbuListings(int $limit = 80): array
     {
         try {
             $landListingsModel = new LandListings();
             $builder = $landListingsModel->builder();
-            $builder->select('land_listings.listing_id, land_listings.title, land_listings.description, land_listings.barangay, land_listings.city, land_listings.province, land_listings.price, land_listings.developing_area, land_listings.listing_status, land_listings.is_verified_listing, land_listings.created_at');
+            $builder->select('land_listings.listing_id, land_listings.title, land_listings.description, land_listings.barangay, land_listings.city, land_listings.province, land_listings.price, land_listings.developing_area, land_listings.property_type, land_listings.listing_status, land_listings.is_verified_listing, land_listings.created_at');
 
             $db = Database::connect();
             if ($db->tableExists('listing_locations')) {
@@ -599,7 +732,7 @@ STYLE:
 
             $builder->groupStart();
             $builder->where('is_verified_listing', 'true');
-            $builder->orWhere('is_verified_listing', '1');
+                $builder->orWhere('is_verified_listing', '1');
             $builder->orWhere('is_verified_listing', 'pending');
             $builder->orWhere('is_verified_listing', '');
             $builder->groupEnd();
@@ -619,7 +752,7 @@ STYLE:
             if (count($rows) === 0) {
                 log_message('notice', 'No Nasugbu-filtered listings found. Fetching all available listings.');
                 $builder = $landListingsModel->builder();
-                $builder->select('land_listings.listing_id, land_listings.title, land_listings.description, land_listings.barangay, land_listings.city, land_listings.province, land_listings.price, land_listings.developing_area, land_listings.listing_status, land_listings.is_verified_listing, land_listings.created_at');
+                $builder->select('land_listings.listing_id, land_listings.title, land_listings.description, land_listings.barangay, land_listings.city, land_listings.province, land_listings.price, land_listings.developing_area, land_listings.property_type, land_listings.listing_status, land_listings.is_verified_listing, land_listings.created_at');
                 if ($db->tableExists('listing_locations')) {
                     $builder->select('listing_locations.latitude AS listing_latitude, listing_locations.longitude AS listing_longitude');
                     $builder->join('listing_locations', 'listing_locations.listing_id = land_listings.listing_id', 'left');
@@ -957,7 +1090,7 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
         try {
             $landListingsModel = new LandListings();
             $builder = $landListingsModel->builder();
-            $builder->select('listing_id, title, description, barangay, city, province, price, developing_area, listing_status, is_verified_listing, created_at');
+            $builder->select('listing_id, title, description, barangay, city, province, price, developing_area, property_type, listing_status, is_verified_listing, created_at');
 
             $db = Database::connect();
             if ($db->tableExists('listing_locations')) {
@@ -1187,7 +1320,7 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
         try {
             $landListingsModel = new LandListings();
             $builder = $landListingsModel->builder();
-            $builder->select('listing_id, title, description, barangay, city, province, price, developing_area, listing_status, is_verified_listing, created_at');
+            $builder->select('listing_id, title, description, barangay, city, province, price, developing_area, property_type, listing_status, is_verified_listing, created_at');
 
             $db = Database::connect();
             if ($db->tableExists('listing_locations')) {
@@ -1232,11 +1365,14 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
     {
         $coordinates = $this->extractListingCoordinates($listing);
         $isAvailable = $this->isListingAvailable($listing);
+        $normalizedPropertyType = $this->normalizePropertyType((string) ($listing['property_type'] ?? ''));
 
         return [
             'id' => (int) ($listing['listing_id'] ?? 0),
             'title' => trim((string) ($listing['title'] ?? 'Untitled Property')),
             'location' => $this->formatLocation($listing),
+            'property_type' => trim((string) ($listing['property_type'] ?? '')),
+            'property_category' => $this->formatPropertyCategoryLabel($normalizedPropertyType),
             'price' => (int) ($listing['price'] ?? 0),
             'size' => (float) ($listing['developing_area'] ?? 0),
             'size_sqm' => (float) ($listing['developing_area'] ?? 0),
@@ -1531,7 +1667,7 @@ RESPONSE FORMAT:
 
     private function isAvailabilityQuestion(string $message): bool
     {
-        if (preg_match('/\b(available|availability|for sale|open)\b/i', $message) !== 1) {
+        if (preg_match('/\b(available|availability|for sale|open|category|categories)\b/i', $message) !== 1) {
             return false;
         }
 

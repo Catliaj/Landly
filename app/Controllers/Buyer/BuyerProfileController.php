@@ -138,7 +138,7 @@ class BuyerProfileController extends BaseController
 			'initials' => $this->formatInitials($fullName),
 			'first_name' => trim((string) ($user['first_name'] ?? '')),
 			'last_name' => trim((string) ($user['last_name'] ?? '')),
-			'status_label' => $isActive ? 'Active Buyer' : 'Inactive Buyer',
+			'status_label' => $isActive ? 'Buyer' : 'Inactive Buyer',
 			'status_class' => $isActive ? 'active' : 'inactive',
 			'stats' => $this->getBuyerProfileStats($buyerId),
 		];

@@ -10,22 +10,24 @@
             <?php foreach ($buyerInquiries as $inquiry): ?>
                 <div class="inquiry-card" data-inquiry-id="<?= (int) ($inquiry['inquiry_id'] ?? 0) ?>">
                     <div class="inquiry-header">
-                        <div class="inquiry-property">
-                            <div class="inquiry-property-thumb">
-                                <img src="<?= esc((string) ($inquiry['image_url'] ?? '')) ?>" alt="<?= esc((string) ($inquiry['title'] ?? 'Property')) ?>">
-                            </div>
-                            <div class="inquiry-property-info">
-                                <h4><?= esc((string) ($inquiry['title'] ?? 'Untitled Listing')) ?></h4>
-                                <span><?= esc((string) ($inquiry['price_label'] ?? '₱0.00')) ?></span>
+                        <div class="inquiry-user">
+                            <div class="inquiry-user-avatar"><?= esc((string) ($inquiry['seller_initials'] ?? 'SE')) ?></div>
+                            <div class="inquiry-user-info">
+                                <h4><?= esc((string) ($inquiry['seller_name'] ?? 'Seller')) ?></h4>
+                                <span><?= esc((string) ($inquiry['date_label'] ?? 'Date unavailable')) ?></span>
                             </div>
                         </div>
                         <span class="inquiry-status <?= esc((string) ($inquiry['status_class'] ?? 'pending')) ?>"><?= esc((string) ($inquiry['status_label'] ?? 'Pending')) ?></span>
+                    </div>
+                    <div class="inquiry-property">
+                        <div class="inquiry-property-title"><?= esc((string) ($inquiry['title'] ?? 'Untitled Listing')) ?></div>
+                        <div class="inquiry-property-detail"><?= esc((string) ($inquiry['price_label'] ?? '₱0.00')) ?></div>
                     </div>
                     <div class="inquiry-message">
                         <?= esc((string) ($inquiry['message_preview'] ?? 'Inquiry submitted.')) ?>
                     </div>
                     <div class="inquiry-footer">
-                        <span class="inquiry-date"><?= esc((string) ($inquiry['date_label'] ?? 'Date unavailable')) ?></span>
+                        <span class="inquiry-date">Listing Inquiry</span>
                         <div class="inquiry-actions">
                             <button class="inquiry-btn view" onclick="openInquiryConversation(<?= (int) ($inquiry['session_id'] ?? 0) ?>, <?= (int) ($inquiry['listing_id'] ?? 0) ?>, <?= (int) ($inquiry['inquiry_id'] ?? 0) ?>)">View Conversation</button>
                         </div>
@@ -100,6 +102,12 @@
             return 'Inquiry submitted. Waiting for seller response.';
         }
 
+        function initials(firstName, lastName) {
+            const first = String(firstName || '').trim().charAt(0);
+            const last = String(lastName || '').trim().charAt(0);
+            return (first + last).toUpperCase() || 'SE';
+        }
+
         function renderInquiries(inquiries) {
             const buyerInquiries = (Array.isArray(inquiries) ? inquiries : [])
                 .filter((inquiry) => Number(inquiry.buyer_id || 0) === currentUserId);
@@ -116,22 +124,28 @@
             listContainer.innerHTML = buyerInquiries.map((inquiry) => {
                 const status = String(inquiry.inquiry_status || 'pending').toLowerCase();
                 const mappedClass = statusClass(status);
+                const sellerName = `${inquiry.seller_first_name || ''} ${inquiry.seller_last_name || ''}`.trim() || 'Seller';
+                const sellerInitials = initials(inquiry.seller_first_name, inquiry.seller_last_name);
 
                 return `
                     <div class="inquiry-card" data-inquiry-id="${Number(inquiry.inquiry_id || 0)}">
                         <div class="inquiry-header">
-                            <div class="inquiry-property">
-                                <div class="inquiry-property-thumb"></div>
-                                <div class="inquiry-property-info">
-                                    <h4>${escapeHtml(inquiry.listing_title || 'Untitled Listing')}</h4>
-                                    <span>₱${Number(inquiry.listing_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <div class="inquiry-user">
+                                <div class="inquiry-user-avatar">${escapeHtml(sellerInitials)}</div>
+                                <div class="inquiry-user-info">
+                                    <h4>${escapeHtml(sellerName)}</h4>
+                                    <span>${escapeHtml(formatDate(inquiry.created_at, inquiry.updated_at))}</span>
                                 </div>
                             </div>
                             <span class="inquiry-status ${escapeHtml(mappedClass)}">${escapeHtml(statusLabel(status))}</span>
                         </div>
+                        <div class="inquiry-property">
+                            <div class="inquiry-property-title">${escapeHtml(inquiry.listing_title || 'Untitled Listing')}</div>
+                            <div class="inquiry-property-detail">₱${Number(inquiry.listing_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        </div>
                         <div class="inquiry-message">${escapeHtml(previewText(status))}</div>
                         <div class="inquiry-footer">
-                            <span class="inquiry-date">${escapeHtml(formatDate(inquiry.created_at, inquiry.updated_at))}</span>
+                            <span class="inquiry-date">Listing Inquiry</span>
                             <div class="inquiry-actions">
                                 <button class="inquiry-btn view" onclick="openInquiryConversation(${Number(inquiry.session_id || 0)}, ${Number(inquiry.listing_id || 0)}, ${Number(inquiry.inquiry_id || 0)})">View Conversation</button>
                             </div>

@@ -151,11 +151,16 @@
 
             const sellerLabel = getCounterpartyLabel(session);
             chatName.textContent = sellerLabel;
-            chatListing.textContent = `Re: ${session.listing_title || 'Property Inquiry'}`;
+            chatListing.textContent = `Listing: ${session.listing_title || 'Property Inquiry'}`;
             chatAvatar.textContent = getInitials(sellerLabel);
         }
 
         function getCounterpartyLabel(session) {
+            const sellerName = String(session.seller_name || '').trim();
+            if (sellerName !== '') {
+                return sellerName;
+            }
+
             const sellerId = Number(session.seller_id || 0);
             return sellerId > 0 ? `Seller #${sellerId}` : 'Seller';
         }
@@ -191,7 +196,7 @@
                                 <span class="message-sender">${escapeHtml(sellerLabel)}</span>
                                 <span class="message-time">${escapeHtml(formatRelativeTime(session.last_message_at))}</span>
                             </div>
-                            <p class="message-preview">${escapeHtml(`Re: ${listingTitle}`)}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}</p>
+                            <p class="message-preview">${escapeHtml(`Listing: ${listingTitle}`)}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}</p>
                         </div>
                         ${unreadCount > 0 ? '<span class="message-unread-dot"></span>' : ''}
                     </div>
