@@ -295,6 +295,7 @@ class MessageController extends BaseController
 			->select('ms.session_id, ms.listing_id, ms.inquiry_id, ms.buyer_id, ms.seller_id, ms.session_status, ms.last_message_at, ms.started_at, l.title AS listing_title, i.inquiry_status')
 			->select("CONCAT(COALESCE(buyer.first_name, ''), ' ', COALESCE(buyer.last_name, '')) AS buyer_name", false)
 			->select("CONCAT(COALESCE(seller.first_name, ''), ' ', COALESCE(seller.last_name, '')) AS seller_name", false)
+			->select('buyer.profile_picture AS buyer_profile_picture, seller.profile_picture AS seller_profile_picture')
 			->select('(SELECT COUNT(*) FROM messages m WHERE m.session_id = ms.session_id AND m.sender_id != ' . (int) $userId . ' AND m.is_read = 0) AS unread_count', false)
 			->join('land_listings l', 'l.listing_id = ms.listing_id', 'left')
 			->join('inquiries i', 'i.inquiry_id = ms.inquiry_id', 'left')
@@ -311,6 +312,9 @@ class MessageController extends BaseController
 		$sessions = array_map(static function (array $session): array {
 			$session['buyer_name'] = trim((string) ($session['buyer_name'] ?? ''));
 			$session['seller_name'] = trim((string) ($session['seller_name'] ?? ''));
+			$session['buyer_avatar_url'] = MessageController::resolveProfilePictureUrl((string) ($session['buyer_profile_picture'] ?? ''));
+			$session['seller_avatar_url'] = MessageController::resolveProfilePictureUrl((string) ($session['seller_profile_picture'] ?? ''));
+			$session['last_message_at'] = (string) ($session['last_message_at'] ?? '');
 			return $session;
 		}, $sessions);
 
@@ -344,5 +348,19 @@ class MessageController extends BaseController
 		} catch (\Throwable $e) {
 			log_message('error', 'Notification insert failed: {message}', ['message' => $e->getMessage()]);
 		}
+	}
+
+	private static function resolveProfilePictureUrl(string $profilePicture): string
+	{
+		$profilePicture = trim($profilePicture);
+		if ($profilePicture === '') {
+			return '';
+		}
+
+		if (preg_match('#^(?:https?:)?//#i', $profilePicture) === 1 || str_starts_with($profilePicture, 'data:')) {
+			return $profilePicture;
+		}
+
+		return base_url('media/profile?path=' . rawurlencode($profilePicture));
 	}
 }

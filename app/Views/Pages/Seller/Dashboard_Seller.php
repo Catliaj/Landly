@@ -23,7 +23,9 @@ $userProfile = $userProfile ?? [
     <title>Seller Dashboard | Landly</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --green-900: #0d2818;
@@ -97,6 +99,7 @@ $userProfile = $userProfile ?? [
 
         /* === SIDEBAR === */
         .sidebar {
+            --bs-offcanvas-width: var(--sidebar-width);
             width: var(--sidebar-width);
             background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
             backdrop-filter: blur(20px);
@@ -105,10 +108,26 @@ $userProfile = $userProfile ?? [
             top: 0;
             left: 0;
             height: 100vh;
-            z-index: 100;
+            z-index: 1045;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
+            border-top: none;
+        }
+
+        .sidebar.offcanvas {
+            padding: 0;
+            color: var(--cream-100);
+        }
+
+        .sidebar .offcanvas-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+        }
+
+        .sidebar .btn-close {
+            filter: invert(1);
+            opacity: 0.9;
         }
 
         .sidebar-header {
@@ -340,6 +359,8 @@ $userProfile = $userProfile ?? [
             margin-left: var(--sidebar-width);
             padding: 30px;
             min-height: 100vh;
+            position: relative;
+            z-index: 1;
         }
 
         /* Top Bar */
@@ -2068,15 +2089,7 @@ $userProfile = $userProfile ?? [
             }
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
+        @media (max-width: 991.98px) {
             .main-content {
                 margin-left: 0;
                 padding: 20px;
@@ -2114,19 +2127,30 @@ $userProfile = $userProfile ?? [
                 overflow-x: auto;
                 padding-bottom: 10px;
             }
+        }
+
+        @media (min-width: 992px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                visibility: visible !important;
+            }
+
+            .main-content {
+                margin-left: var(--sidebar-width) !important;
+            }
 
             .mobile-menu-btn {
-                display: flex;
+                display: none !important;
             }
         }
 
         .mobile-menu-btn {
-            display: none;
+            display: grid;
             width: 44px;
             height: 44px;
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(210, 180, 140, 0.2);
+            border: 1px solid rgba(149, 213, 178, 0.2);
             place-items: center;
             cursor: pointer;
         }
@@ -2170,8 +2194,19 @@ $userProfile = $userProfile ?? [
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
+        <aside class="sidebar offcanvas offcanvas-lg offcanvas-start" id="sellerSidebar" tabindex="-1" aria-labelledby="sellerSidebarLabel">
+            <div class="offcanvas-header d-lg-none">
+                <a href="<?= base_url('/') ?>" class="brand" id="sellerSidebarLabel">
+                    <div class="brand-badge">L</div>
+                    <div>
+                        <div class="brand-text">Landly</div>
+                        <div class="brand-subtitle">Seller Portal</div>
+                    </div>
+                </a>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" data-bs-target="#sellerSidebar" aria-label="Close"></button>
+            </div>
+
+            <div class="sidebar-header d-none d-lg-block">
                 <a href="<?= base_url('/') ?>" class="brand">
                     <div class="brand-badge">L</div>
                     <div>
@@ -2181,75 +2216,77 @@ $userProfile = $userProfile ?? [
                 </a>
             </div>
 
-            <div class="user-profile">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?php if (! empty($userProfile['avatar_url'])): ?>
-                            <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
-                        <?php else: ?>
-                            <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="user-details">
-                        <h4><?= esc((string) ($userProfile['full_name'] ?? 'Seller')) ?></h4>
-                        <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?> • <?= esc((string) ($userProfile['account_status_label'] ?? 'Inactive Seller')) ?></span>
-                        <div class="verification-badge <?= esc((string) ($userProfile['verification_class'] ?? 'pending')) ?>">
-                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                            <?= esc((string) ($userProfile['verification_label'] ?? 'Not Verified')) ?>
+            <div class="offcanvas-body p-0 d-flex flex-column">
+                <div class="user-profile">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <?php if (! empty($userProfile['avatar_url'])): ?>
+                                <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
+                            <?php else: ?>
+                                <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="user-details">
+                            <h4><?= esc((string) ($userProfile['full_name'] ?? 'Seller')) ?></h4>
+                            <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?> • <?= esc((string) ($userProfile['account_status_label'] ?? 'Inactive Seller')) ?></span>
+                            <div class="verification-badge <?= esc((string) ($userProfile['verification_class'] ?? 'pending')) ?>">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                <?= esc((string) ($userProfile['verification_label'] ?? 'Not Verified')) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-title">Main</div>
-                    <a href="#" class="nav-item active" data-section="dashboard">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="listings">
-                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        <span>My Listings</span>
-                        <span class="nav-badge" id="seller-nav-listings-count"><?= (int) ($listingCounts['all'] ?? 0) ?></span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="add-listing">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                        <span>Add Listing</span>
-                    </a>
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <div class="nav-section-title">Main</div>
+                        <a href="#" class="nav-item active" data-section="dashboard">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="nav-item" data-section="listings">
+                            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            <span>My Listings</span>
+                            <span class="nav-badge" id="seller-nav-listings-count"><?= (int) ($listingCounts['all'] ?? 0) ?></span>
+                        </a>
+                        <a href="#" class="nav-item" data-section="add-listing">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                            <span>Add Listing</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="nav-section-title">Communication</div>
+                        <a href="#" class="nav-item" data-section="messages">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <span>Messages</span>
+                            <span class="nav-badge" id="seller-nav-messages-count"><?= (int) ($sidebarCounts['unread_messages'] ?? 0) ?></span>
+                        </a>
+                        <a href="#" class="nav-item" data-section="inquiries">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Inquiries</span>
+                            <span class="nav-badge" id="seller-nav-inquiries-count"><?= (int) ($sidebarCounts['accepted_inquiries'] ?? 0) ?></span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="nav-section-title">Account</div>
+                        <a href="#" class="nav-item" data-section="verification">
+                            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <span>Verification</span>
+                        </a>
+                    </div>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <button class="logout-btn" onclick="window.location.href='<?= base_url('/') ?>'">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </button>
                 </div>
-
-                <div class="nav-section">
-                    <div class="nav-section-title">Communication</div>
-                    <a href="#" class="nav-item" data-section="messages">
-                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <span>Messages</span>
-                        <span class="nav-badge" id="seller-nav-messages-count"><?= (int) ($sidebarCounts['unread_messages'] ?? 0) ?></span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="inquiries">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                        <span>Inquiries</span>
-                        <span class="nav-badge" id="seller-nav-inquiries-count"><?= (int) ($sidebarCounts['accepted_inquiries'] ?? 0) ?></span>
-                    </a>
-                </div>
-
-                <div class="nav-section">
-                    <div class="nav-section-title">Account</div>
-                    <a href="#" class="nav-item" data-section="verification">
-                        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        <span>Verification</span>
-                    </a>
-                </div>
-            </nav>
-
-            <div class="sidebar-footer">
-                <button class="logout-btn" onclick="window.location.href='<?= base_url('/') ?>'">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    Logout
-                </button>
             </div>
         </aside>
 
@@ -2262,7 +2299,7 @@ $userProfile = $userProfile ?? [
                     <p id="page-subheading">Welcome back! Here's what's happening with your listings.</p>
                 </div>
                 <div class="top-actions">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <button class="mobile-menu-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sellerSidebar" aria-controls="sellerSidebar" aria-label="Open menu">
                         <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                     <div class="notification-wrapper">
@@ -2298,6 +2335,9 @@ $userProfile = $userProfile ?? [
 
             <!-- Inquiries Section -->
             <?= view('Pages/Seller/Components/InquiriesSection', ['sellerInquiries' => $sellerInquiries ?? []]) ?>
+
+            <!-- Verification Section -->
+            <?= view('Pages/Seller/Components/VerificationSection') ?>
 
             <!-- Analytics Section -->
             <!-- <section id="section-analytics" class="content-section">
@@ -2421,15 +2461,19 @@ $userProfile = $userProfile ?? [
                 </div>
             </section> -->
 
-            <!-- Verification Section -->
-            <?= view('Pages/Seller/Components/VerificationSection') ?>
+          
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         // Navigation functionality
         const navItems = document.querySelectorAll('.nav-item[data-section]');
         const sections = document.querySelectorAll('.content-section');
+        const sellerSidebarElement = document.getElementById('sellerSidebar');
+        const sellerSidebarOffcanvas = (sellerSidebarElement && window.bootstrap && window.bootstrap.Offcanvas)
+            ? window.bootstrap.Offcanvas.getOrCreateInstance(sellerSidebarElement)
+            : null;
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
         const SELLER_SECTION_STORAGE_KEY = 'sellerDashboardActiveSection';
@@ -2537,7 +2581,7 @@ $userProfile = $userProfile ?? [
 
         function formatNotificationDate(dateValue) {
             if (!dateValue) return 'Just now';
-            const date = new Date(dateValue.replace(' ', 'T'));
+            const date = new window.Date(dateValue.replace(' ', 'T'));
             if (Number.isNaN(date.getTime())) return String(dateValue);
             return date.toLocaleString();
         }
@@ -2773,7 +2817,7 @@ $userProfile = $userProfile ?? [
                 return;
             }
 
-            const now = Date.now();
+            const now = window.Date.now();
             if (!force && (now - dashboardRefreshState.lastRefreshAt) < dashboardRefreshState.minIntervalMs) {
                 return;
             }
@@ -2790,7 +2834,7 @@ $userProfile = $userProfile ?? [
                 }
 
                 const html = await response.text();
-                const parser = new DOMParser();
+                const parser = new window.DOMParser();
                 const nextDoc = parser.parseFromString(html, 'text/html');
                 const nextSection = nextDoc.getElementById('section-dashboard');
 
@@ -2799,7 +2843,7 @@ $userProfile = $userProfile ?? [
                 }
 
                 dashboardSection.innerHTML = nextSection.innerHTML;
-                dashboardRefreshState.lastRefreshAt = Date.now();
+                dashboardRefreshState.lastRefreshAt = window.Date.now();
             } catch (error) {
             } finally {
                 dashboardRefreshState.inFlight = false;
@@ -2821,8 +2865,54 @@ $userProfile = $userProfile ?? [
         fetchNotifications();
         refreshSellerSidebarCounts();
 
+        function closeSellerSidebarOnMobile() {
+            const isMobileViewport = window.matchMedia('(max-width: 991.98px)').matches;
+            const isSidebarOpen = sellerSidebarElement?.classList.contains('show');
+            const activeInstance = sellerSidebarOffcanvas
+                || (window.bootstrap?.Offcanvas ? window.bootstrap.Offcanvas.getInstance(sellerSidebarElement) : null);
+
+            if (!isMobileViewport || !isSidebarOpen || !activeInstance) {
+                return;
+            }
+
+            activeInstance.hide();
+        }
+
+        function syncSellerSidebarForViewport() {
+            if (!sellerSidebarElement) {
+                return;
+            }
+
+            const isDesktopViewport = window.matchMedia('(min-width: 992px)').matches;
+            if (!isDesktopViewport) {
+                return;
+            }
+
+            sellerSidebarElement.classList.remove('show', 'hiding');
+            sellerSidebarElement.removeAttribute('aria-modal');
+            sellerSidebarElement.removeAttribute('role');
+            sellerSidebarElement.style.removeProperty('visibility');
+            sellerSidebarElement.style.removeProperty('transform');
+            sellerSidebarElement.style.removeProperty('transition');
+
+            document.querySelectorAll('.offcanvas-backdrop').forEach((backdrop) => backdrop.remove());
+            document.body.classList.remove('offcanvas-open', 'modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+
+        syncSellerSidebarForViewport();
+        window.addEventListener('resize', syncSellerSidebarForViewport);
+        window.addEventListener('pageshow', syncSellerSidebarForViewport);
+
         function showSection(sectionName) {
             if (!sectionInfo[sectionName]) {
+                sectionName = 'dashboard';
+            }
+
+            const targetSectionId = `section-${sectionName}`;
+            const hasTargetSection = Boolean(document.getElementById(targetSectionId));
+            if (!hasTargetSection) {
                 sectionName = 'dashboard';
             }
 
@@ -2865,9 +2955,11 @@ $userProfile = $userProfile ?? [
 
             refreshRealtimeOnSectionChange(sectionName);
 
-            // Close mobile sidebar
-            document.querySelector('.sidebar').classList.remove('open');
+            // Close mobile offcanvas sidebar
+            closeSellerSidebarOnMobile();
         }
+
+        window.showSection = showSection;
 
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
@@ -2880,10 +2972,20 @@ $userProfile = $userProfile ?? [
         const initialSectionFromHash = (window.location.hash || '').replace('#', '').trim();
         let initialSection = sectionInfo[initialSectionFromHash] ? initialSectionFromHash : '';
 
+        if (initialSection && !document.getElementById(`section-${initialSection}`)) {
+            initialSection = '';
+        }
+
         if (!initialSection) {
             try {
                 const savedSection = localStorage.getItem(SELLER_SECTION_STORAGE_KEY) || '';
-                initialSection = sectionInfo[savedSection] ? savedSection : '';
+                initialSection = sectionInfo[savedSection] && document.getElementById(`section-${savedSection}`)
+                    ? savedSection
+                    : '';
+
+                if (!initialSection && savedSection) {
+                    localStorage.removeItem(SELLER_SECTION_STORAGE_KEY);
+                }
             } catch (error) {
                 initialSection = '';
             }
@@ -2900,11 +3002,6 @@ $userProfile = $userProfile ?? [
             refreshSellerSidebarCounts();
             refreshSellerDashboardSection(true);
         });
-
-        // Mobile menu toggle
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
-        }
 
         const listingFilterBtns = document.querySelectorAll('#section-listings .filter-btn[data-filter]');
         const listingCards = Array.from(document.querySelectorAll('#section-listings .listing-card'));

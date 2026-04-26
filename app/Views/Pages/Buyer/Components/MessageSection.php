@@ -1,8 +1,367 @@
 <section id="section-messages" class="content-section">
-    <div class="messages-container">
-        <div class="messages-list">
-            <div class="messages-list-header">
+    <style>
+        #section-messages .messages-shell {
+            display: grid;
+            grid-template-columns: 350px minmax(0, 1fr);
+            gap: 25px;
+            min-height: calc(100vh - 200px);
+        }
+
+        #section-messages .messages-list,
+        #section-messages .message-chat {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(149, 213, 178, 0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        #section-messages .messages-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #section-messages .messages-list-header,
+        #section-messages .chat-header,
+        #section-messages .chat-input {
+            backdrop-filter: blur(8px);
+        }
+
+        #section-messages .messages-list-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+        }
+
+        #section-messages .messages-list-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--cream-100);
+            margin: 0;
+        }
+
+        #section-messages .messages-list-body {
+            overflow-y: auto;
+            min-height: 0;
+            flex: 1;
+        }
+
+        #section-messages .message-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px 18px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-items: center;
+        }
+
+        #section-messages .message-item:hover,
+        #section-messages .message-item.active {
+            background: rgba(149, 213, 178, 0.08);
+        }
+
+        #section-messages .message-item.unread {
+            background: rgba(149, 213, 178, 0.06);
+        }
+
+        #section-messages .message-item.unread .message-sender,
+        #section-messages .message-item.unread .message-preview {
+            font-weight: 600;
+            color: var(--cream-100);
+        }
+
+        #section-messages .message-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: var(--green-900);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        #section-messages .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        #section-messages .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        #section-messages .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        #section-messages .message-sender {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--cream-100);
+        }
+
+        #section-messages .message-time {
+            font-size: 0.75rem;
+            color: rgba(254, 250, 224, 0.45);
+            white-space: nowrap;
+        }
+
+        #section-messages .message-preview-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        #section-messages .message-preview {
+            font-size: 0.8rem;
+            color: rgba(254, 250, 224, 0.68);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        #section-messages .message-unread-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        #section-messages .message-chat {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        #section-messages .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+            justify-content: space-between;
+        }
+
+        #section-messages .chat-header-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        #section-messages .chat-back-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(149, 213, 178, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--cream-100);
+            flex-shrink: 0;
+        }
+
+        #section-messages .chat-user-info {
+            min-width: 0;
+        }
+
+        #section-messages .chat-user-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--cream-100);
+            margin: 0;
+        }
+
+        #section-messages .chat-user-info span {
+            font-size: 0.8rem;
+            color: rgba(254, 250, 224, 0.5);
+        }
+
+        #section-messages .chat-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.76rem;
+            color: rgba(254, 250, 224, 0.55);
+            white-space: nowrap;
+        }
+
+        #section-messages .chat-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.12);
+        }
+
+        #section-messages .chat-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            min-height: 0;
+            scroll-behavior: smooth;
+        }
+
+        #section-messages .chat-message {
+            max-width: min(70%, 480px);
+            margin-bottom: 15px;
+        }
+
+        #section-messages .chat-message.received {
+            margin-right: auto;
+        }
+
+        #section-messages .chat-message.sent {
+            margin-left: auto;
+        }
+
+        #section-messages .chat-bubble {
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        #section-messages .chat-message.received .chat-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--cream-100);
+            border-bottom-left-radius: 4px;
+        }
+
+        #section-messages .chat-message.sent .chat-bubble {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--green-900);
+            border-bottom-right-radius: 4px;
+        }
+
+        #section-messages .chat-time {
+            font-size: 0.7rem;
+            color: rgba(254, 250, 224, 0.4);
+            margin-top: 5px;
+        }
+
+        #section-messages .chat-message.sent .chat-time {
+            text-align: right;
+        }
+
+        #section-messages .chat-input {
+            display: flex;
+            gap: 12px;
+            padding: 18px 20px 20px;
+            border-top: 1px solid rgba(149, 213, 178, 0.1);
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(15, 40, 24, 0.92), rgba(13, 40, 24, 0.98));
+        }
+
+        #section-messages .chat-input input {
+            flex: 1;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(149, 213, 178, 0.2);
+            border-radius: 30px;
+            color: var(--cream-100);
+            font-size: 0.9rem;
+            outline: none;
+            min-width: 0;
+        }
+
+        #section-messages .chat-input input:focus {
+            border-color: var(--accent);
+        }
+
+        #section-messages .chat-send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border: none;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        #section-messages .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(149, 213, 178, 0.4);
+        }
+
+        #section-messages .chat-send-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--green-900);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        @media (max-width: 991.98px) {
+            #section-messages .messages-shell {
+                grid-template-columns: 1fr;
+                min-height: auto;
+                height: calc(100vh - 180px);
+            }
+
+            #section-messages .messages-list,
+            #section-messages .message-chat {
+                height: 100%;
+            }
+
+            #section-messages .messages-list {
+                min-height: 0;
+            }
+
+            #section-messages .message-chat {
+                display: none;
+            }
+
+            #section-messages.chat-open .messages-list {
+                display: none;
+            }
+
+            #section-messages.chat-open .message-chat {
+                display: flex;
+                height: 100%;
+            }
+
+            #section-messages.chat-open .chat-back-btn {
+                display: inline-flex;
+            }
+
+            #section-messages .chat-message {
+                max-width: 88%;
+            }
+        }
+    </style>
+
+    <div class="messages-shell">
+        <div class="messages-list" data-role="conversation-list">
+            <div class="messages-list-header d-flex align-items-center justify-content-between gap-3">
                 <h3>Conversations</h3>
+                <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis d-none d-md-inline-flex" id="buyerConversationTotalBadge">0</span>
             </div>
             <div class="messages-list-body" id="buyerConversationList">
                 <div class="message-item active">
@@ -18,12 +377,21 @@
             </div>
         </div>
 
-        <div class="message-chat">
+        <div class="message-chat" data-role="chat-panel">
             <div class="chat-header">
-                <div class="message-avatar" id="buyerChatAvatar">--</div>
-                <div class="chat-user-info">
-                    <h4 id="buyerChatName">Select a conversation</h4>
-                    <span id="buyerChatListing">Choose a conversation from the left</span>
+                <div class="chat-header-main">
+                    <button class="chat-back-btn" id="buyerChatBackBtn" type="button" aria-label="Back to conversations">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <div class="message-avatar" id="buyerChatAvatar">--</div>
+                    <div class="chat-user-info">
+                        <h4 id="buyerChatName">Select a conversation</h4>
+                        <span id="buyerChatListing">Choose a conversation from the left</span>
+                    </div>
+                </div>
+                <div class="chat-status" id="buyerChatStatus" hidden>
+                    <span class="chat-status-dot"></span>
+                    <span>Online</span>
                 </div>
             </div>
             <div class="chat-body" id="buyerChatBody">
@@ -64,6 +432,9 @@
         const chatName = document.getElementById('buyerChatName');
         const chatListing = document.getElementById('buyerChatListing');
         const chatAvatar = document.getElementById('buyerChatAvatar');
+        const chatBackBtn = document.getElementById('buyerChatBackBtn');
+        const conversationTotalBadge = document.getElementById('buyerConversationTotalBadge');
+        const chatStatus = document.getElementById('buyerChatStatus');
 
         const state = {
             sessions: [],
@@ -73,6 +444,8 @@
         let pollingTimer = null;
         let pollingInFlight = false;
         const POLLING_INTERVAL_MS = 5000;
+        const BUYER_MESSAGES_MOBILE_BREAKPOINT = window.matchMedia('(max-width: 991.98px)');
+        const DateCtor = window.Date;
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -97,17 +470,44 @@
             return (parts[0][0] + parts[1][0]).toUpperCase();
         }
 
+        function getAvatarMarkup(session) {
+            const avatarUrl = String(session.seller_avatar_url || '').trim();
+            const label = getCounterpartyLabel(session);
+
+            if (avatarUrl !== '') {
+                return `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(label)}">`;
+            }
+
+            return escapeHtml(getInitials(label));
+        }
+
+        function isBuyerMessagesMobile() {
+            return BUYER_MESSAGES_MOBILE_BREAKPOINT.matches;
+        }
+
+        function setBuyerMessagesView(chatOpen) {
+            section.classList.toggle('chat-open', Boolean(chatOpen) && isBuyerMessagesMobile());
+        }
+
+        function showConversationListView() {
+            setBuyerMessagesView(false);
+        }
+
+        function showChatView() {
+            setBuyerMessagesView(true);
+        }
+
         function formatRelativeTime(dateText) {
             if (!dateText) {
                 return 'Now';
             }
 
-            const value = new window.Date(dateText.replace(' ', 'T'));
+            const value = new DateCtor(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
 
-            const diffMs = window.Date.now() - value.getTime();
+            const diffMs = DateCtor.now() - value.getTime();
             const diffMin = Math.max(0, Math.floor(diffMs / 60000));
 
             if (diffMin < 1) return 'Now';
@@ -128,7 +528,7 @@
                 return 'Now';
             }
 
-            const value = new window.Date(dateText.replace(' ', 'T'));
+            const value = new DateCtor(dateText.replace(' ', 'T'));
             if (Number.isNaN(value.getTime())) {
                 return 'Now';
             }
@@ -146,6 +546,9 @@
                 chatName.textContent = 'Select a conversation';
                 chatListing.textContent = 'Choose a conversation from the left';
                 chatAvatar.textContent = '--';
+                if (chatStatus) {
+                    chatStatus.hidden = true;
+                }
                 return;
             }
 
@@ -153,6 +556,9 @@
             chatName.textContent = sellerLabel;
             chatListing.textContent = `Listing: ${session.listing_title || 'Property Inquiry'}`;
             chatAvatar.textContent = getInitials(sellerLabel);
+            if (chatStatus) {
+                chatStatus.hidden = false;
+            }
         }
 
         function getCounterpartyLabel(session) {
@@ -166,6 +572,10 @@
         }
 
         function renderSessions() {
+            if (conversationTotalBadge) {
+                conversationTotalBadge.textContent = String(state.sessions.length);
+            }
+
             if (!state.sessions.length) {
                 conversationList.innerHTML = `
                     <div class="message-item active">
@@ -187,18 +597,22 @@
                 const sellerLabel = getCounterpartyLabel(session);
                 const listingTitle = session.listing_title || 'Property Inquiry';
                 const unreadCount = Number(session.unread_count || 0);
+                const avatarMarkup = getAvatarMarkup(session);
+                const previewText = String(session.last_message_preview || session.last_message || `Listing: ${listingTitle}`);
 
                 return `
                     <div class="message-item ${isActive ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}" data-session-id="${session.session_id}">
-                        <div class="message-avatar">${escapeHtml(getInitials(sellerLabel))}</div>
+                        <div class="message-avatar">${avatarMarkup}</div>
                         <div class="message-content">
                             <div class="message-header">
                                 <span class="message-sender">${escapeHtml(sellerLabel)}</span>
                                 <span class="message-time">${escapeHtml(formatRelativeTime(session.last_message_at))}</span>
                             </div>
-                            <p class="message-preview">${escapeHtml(`Listing: ${listingTitle}`)}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}</p>
+                            <div class="message-preview-row">
+                                <p class="message-preview">${escapeHtml(previewText || `Listing: ${listingTitle}`)}</p>
+                                ${unreadCount > 0 ? `<span class="message-unread-badge">${unreadCount > 99 ? '99+' : unreadCount}</span>` : ''}
+                            </div>
                         </div>
-                        ${unreadCount > 0 ? '<span class="message-unread-dot"></span>' : ''}
                     </div>
                 `;
             }).join('');
@@ -241,7 +655,13 @@
 
             const data = await response.json();
             const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-            state.sessions = sessions.filter((session) => Number(session.buyer_id) === currentUserId);
+            state.sessions = sessions
+                .filter((session) => Number(session.buyer_id) === currentUserId)
+                .sort((left, right) => {
+                    const rightTime = new DateCtor(String(right.last_message_at || '')).getTime() || 0;
+                    const leftTime = new DateCtor(String(left.last_message_at || '')).getTime() || 0;
+                    return rightTime - leftTime;
+                });
 
             if (!state.activeSessionId && state.sessions.length > 0) {
                 state.activeSessionId = Number(state.sessions[0].session_id);
@@ -264,6 +684,14 @@
 
             const activeSession = state.sessions.find((session) => Number(session.session_id) === Number(sessionId));
             setChatHeader(activeSession || null);
+
+            if (activeSession) {
+                activeSession.unread_count = 0;
+                renderSessions();
+                if (typeof refreshBuyerSidebarCounts === 'function') {
+                    refreshBuyerSidebarCounts();
+                }
+            }
         }
 
         async function refreshMessagesData() {
@@ -330,6 +758,10 @@
             renderSessions();
             sendButton.disabled = false;
             await fetchMessages(state.activeSessionId);
+
+            if (isBuyerMessagesMobile()) {
+                showChatView();
+            }
         }
 
         async function startConversationSession(listingId, inquiryId) {
@@ -401,6 +833,10 @@
             }
 
             await selectSession(targetSessionId);
+
+            if (isBuyerMessagesMobile()) {
+                showChatView();
+            }
         };
 
         async function sendCurrentMessage() {
@@ -460,6 +896,10 @@
             }
         });
 
+        chatBackBtn?.addEventListener('click', () => {
+            showConversationListView();
+        });
+
         sendButton.addEventListener('click', sendCurrentMessage);
         chatInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -470,10 +910,27 @@
 
         window.addEventListener('buyer:section-changed', () => {
             updatePollingState();
+            if (isBuyerMessagesMobile()) {
+                showConversationListView();
+            }
         });
 
         document.addEventListener('visibilitychange', () => {
             updatePollingState();
+        });
+
+        BUYER_MESSAGES_MOBILE_BREAKPOINT.addEventListener('change', () => {
+            if (isBuyerMessagesMobile()) {
+                showConversationListView();
+            } else {
+                setBuyerMessagesView(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (!isBuyerMessagesMobile()) {
+                setBuyerMessagesView(false);
+            }
         });
 
         initPromise = (async function initMessaging() {
@@ -505,6 +962,9 @@
             }
 
             updatePollingState();
+            if (isBuyerMessagesMobile()) {
+                showConversationListView();
+            }
         })();
     })();
 </script>
