@@ -25,6 +25,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
     <title>Buyer Dashboard | Landly</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -100,18 +101,35 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         /* === SIDEBAR === */
         .sidebar {
+            --bs-offcanvas-width: var(--sidebar-width);
             width: var(--sidebar-width);
             background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
             backdrop-filter: blur(20px);
             border-right: 1px solid rgba(149, 213, 178, 0.15);
+            border-top: none;
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
-            z-index: 100;
+            z-index: 1045;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
+        }
+
+        .sidebar.offcanvas {
+            padding: 0;
+            color: var(--cream-100);
+        }
+
+        .sidebar .offcanvas-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+        }
+
+        .sidebar .btn-close {
+            filter: invert(1);
+            opacity: 0.9;
         }
 
         .sidebar-header {
@@ -343,6 +361,45 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             margin-left: var(--sidebar-width);
             padding: 30px;
             min-height: 100vh;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .mobile-topbar {
+            display: none;
+            margin-bottom: 16px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.2);
+            background: rgba(13, 40, 24, 0.75);
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-topbar .container-fluid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .mobile-topbar-brand {
+            color: var(--cream-100);
+            text-decoration: none;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        .mobile-topbar-brand span {
+            display: block;
+            font-family: "Inter", system-ui, sans-serif;
+            font-size: 0.68rem;
+            font-style: normal;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-top: 3px;
         }
 
         /* Top Bar */
@@ -688,6 +745,28 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         .content-section.active {
             display: block;
+        }
+
+        .content-section .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content-section table {
+            width: 100%;
+        }
+
+        .content-section img {
+            max-width: 100%;
+        }
+
+        button,
+        .btn-primary,
+        .btn-secondary,
+        .inquiry-btn,
+        .chat-send-btn {
+            touch-action: manipulation;
         }
 
         /* Dashboard Grid */
@@ -1719,18 +1798,14 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             }
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
+        @media (max-width: 991.98px) {
             .main-content {
                 margin-left: 0;
                 padding: 20px;
+            }
+
+            .mobile-topbar {
+                display: block;
             }
 
             .stats-grid {
@@ -1761,14 +1836,25 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 overflow-x: auto;
                 padding-bottom: 10px;
             }
+        }
 
-            .mobile-menu-btn {
-                display: flex;
+        @media (min-width: 992px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                visibility: visible !important;
+            }
+
+            .main-content {
+                margin-left: var(--sidebar-width) !important;
+            }
+
+            .mobile-topbar {
+                display: none !important;
             }
         }
 
         .mobile-menu-btn {
-            display: none;
+            display: grid;
             width: 44px;
             height: 44px;
             border-radius: 12px;
@@ -2666,12 +2752,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 flex-direction: column;
             }
 
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-            }
-
             .main-content {
                 margin-left: 0;
                 padding: 14px;
@@ -2690,16 +2770,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
             .search-box {
                 width: 100%;
-            }
-
-            .sidebar-nav {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .nav-item {
-                flex: 1 1 calc(50% - 8px);
             }
 
             .content-section {
@@ -2974,8 +3044,19 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
+        <aside class="sidebar offcanvas offcanvas-lg offcanvas-start" id="buyerSidebar" tabindex="-1" aria-labelledby="buyerSidebarLabel">
+            <div class="offcanvas-header d-lg-none">
+                <a href="<?= base_url('/') ?>" class="brand" id="buyerSidebarLabel">
+                    <div class="brand-badge">L</div>
+                    <div>
+                        <div class="brand-text">Landly</div>
+                        <div class="brand-subtitle">Buyer Portal</div>
+                    </div>
+                </a>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" data-bs-target="#buyerSidebar" aria-label="Close"></button>
+            </div>
+
+            <div class="sidebar-header d-none d-lg-block">
                 <a href="<?= base_url('/') ?>" class="brand">
                     <div class="brand-badge">L</div>
                     <div>
@@ -2985,31 +3066,32 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 </a>
             </div>
 
-            <div class="user-profile">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?php if (! empty($userProfile['avatar_url'])): ?>
-                            <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
-                        <?php else: ?>
-                            <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="user-details">
-                        <h4><?= esc((string) ($userProfile['full_name'] ?? 'Buyer')) ?></h4>
-                        <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?></span>
-                        <br>
-                        <div class="member-badge <?= esc((string) ($userProfile['status_class'] ?? 'inactive')) ?>">
-                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            
-                            <?= esc((string) ($userProfile['status_label'] ?? 'Inactive Buyer')) ?>
+            <div class="offcanvas-body p-0 d-flex flex-column">
+                <div class="user-profile">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <?php if (! empty($userProfile['avatar_url'])): ?>
+                                <img src="<?= esc((string) $userProfile['avatar_url']) ?>" alt="<?= esc((string) $userProfile['full_name']) ?>">
+                            <?php else: ?>
+                                <?= esc((string) ($userProfile['initials'] ?? 'NA')) ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="user-details">
+                            <h4><?= esc((string) ($userProfile['full_name'] ?? 'Buyer')) ?></h4>
+                            <span><?= esc((string) ($userProfile['email'] ?? 'N/A')) ?></span>
+                            <br>
+                            <div class="member-badge <?= esc((string) ($userProfile['status_class'] ?? 'inactive')) ?>">
+                                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                
+                                <?= esc((string) ($userProfile['status_label'] ?? 'Inactive Buyer')) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <nav class="sidebar-nav">
+                <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
                     <a href="#" class="nav-item active" data-section="browse">
@@ -3044,18 +3126,31 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                         <span>My Profile</span>
                     </a>
                 </div>
-            </nav>
+                </nav>
 
-            <div class="sidebar-footer">
-                <button class="logout-btn" id="buyerLogoutBtn" type="button">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    Logout
-                </button>
+                <div class="sidebar-footer">
+                    <button class="logout-btn" id="buyerLogoutBtn" type="button">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </button>
+                </div>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
+            <nav class="mobile-topbar navbar d-lg-none">
+                <div class="container-fluid px-0">
+                    <button class="mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#buyerSidebar" aria-controls="buyerSidebar" aria-label="Open menu">
+                        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <a href="<?= base_url('/') ?>" class="mobile-topbar-brand">
+                        Landly
+                        <span>Buyer Portal</span>
+                    </a>
+                </div>
+            </nav>
+
             <!-- Top Bar -->
             <div class="top-bar">
                 <div class="page-title">
@@ -3063,9 +3158,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                     <p id="page-subheading">Find the perfect property from our curated listings.</p>
                 </div>
                 <div class="top-actions">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
-                        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                    </button>
                     <div class="notification-wrapper">
                         <button class="notification-btn" id="header-notification-btn" type="button" aria-label="Open notifications" aria-expanded="false">
                             <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -3125,10 +3217,15 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         <div class="chatbot-footer">LandlyBot</div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         // Navigation functionality
         const navItems = document.querySelectorAll('.nav-item[data-section]');
         const sections = document.querySelectorAll('.content-section');
+        const buyerSidebarElement = document.getElementById('buyerSidebar');
+        const buyerSidebarOffcanvas = (buyerSidebarElement && window.bootstrap && window.bootstrap.Offcanvas)
+            ? window.bootstrap.Offcanvas.getOrCreateInstance(buyerSidebarElement)
+            : null;
         const pageHeading = document.getElementById('page-heading');
         const pageSubheading = document.getElementById('page-subheading');
         const BUYER_SECTION_STORAGE_KEY = 'buyerDashboardActiveSection';
@@ -3501,6 +3598,61 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             return normalizeBuyerSectionName(activeNavItem?.dataset?.section || '');
         }
 
+        function initializeBuyerResponsiveContent() {
+            document.querySelectorAll('.content-section table').forEach((tableElement) => {
+                if (tableElement.closest('.table-responsive')) {
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-responsive';
+                tableElement.parentNode.insertBefore(wrapper, tableElement);
+                wrapper.appendChild(tableElement);
+            });
+        }
+
+        initializeBuyerResponsiveContent();
+
+        function closeBuyerSidebarOnMobile() {
+            const isMobileViewport = window.matchMedia('(max-width: 991.98px)').matches;
+            const isSidebarOpen = buyerSidebarElement?.classList.contains('show');
+            const activeInstance = buyerSidebarOffcanvas
+                || (window.bootstrap?.Offcanvas ? window.bootstrap.Offcanvas.getInstance(buyerSidebarElement) : null);
+
+            if (!isMobileViewport || !isSidebarOpen || !activeInstance) {
+                return;
+            }
+
+            activeInstance.hide();
+        }
+
+        function syncBuyerSidebarForViewport() {
+            if (!buyerSidebarElement) {
+                return;
+            }
+
+            const isDesktopViewport = window.matchMedia('(min-width: 992px)').matches;
+            if (!isDesktopViewport) {
+                return;
+            }
+
+            buyerSidebarElement.classList.remove('show', 'hiding');
+            buyerSidebarElement.removeAttribute('aria-modal');
+            buyerSidebarElement.removeAttribute('role');
+            buyerSidebarElement.style.removeProperty('visibility');
+            buyerSidebarElement.style.removeProperty('transform');
+            buyerSidebarElement.style.removeProperty('transition');
+
+            document.querySelectorAll('.offcanvas-backdrop').forEach((backdrop) => backdrop.remove());
+            document.body.classList.remove('offcanvas-open', 'modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+
+        syncBuyerSidebarForViewport();
+        window.addEventListener('resize', syncBuyerSidebarForViewport);
+        window.addEventListener('pageshow', syncBuyerSidebarForViewport);
+
         function showSection(sectionName) {
             sectionName = normalizeBuyerSectionName(sectionName);
             if (!sectionInfo[sectionName]) {
@@ -3547,8 +3699,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
             refreshRealtimeOnBuyerSectionChange(sectionName);
 
-            // Close mobile sidebar
-            document.querySelector('.sidebar').classList.remove('open');
+            // Close mobile offcanvas sidebar
+            closeBuyerSidebarOnMobile();
         }
 
         navItems.forEach(item => {
@@ -3740,11 +3892,6 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 sendBuyerChatbotMessage();
             }
         });
-
-        // Mobile menu toggle
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
-        }
 
         function normalizePropertyTypeKey(propertyType) {
             const raw = String(propertyType || '').trim().toLowerCase();
@@ -4038,7 +4185,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             return `
                 <div class="listing-card" onclick="openPropertyModal(${Number(listing.listing_id || 0)})" data-property-id="${Number(listing.listing_id || 0)}" data-property-type="${escapeHtml(listing.property_type_key || '')}">
                     <div class="listing-card-image">
-                        <img src="${escapeHtml(listing.image_url || '')}" alt="${escapeHtml(listing.title || 'Land Listing')}">
+                        <img class="img-fluid" src="${escapeHtml(listing.image_url || '')}" alt="${escapeHtml(listing.title || 'Land Listing')}">
                         <span class="listing-card-badge listing-status ${escapeHtml(listing.status_class || 'available')}">${escapeHtml(listing.status_label || 'Available')}</span>
                         <div class="listing-card-actions">
                             <button class="listing-card-action favorite-btn${savedClass}" data-listing-id="${Number(listing.listing_id || 0)}" title="${escapeHtml(savedTitle)}" aria-pressed="${savedPressed}" onclick="toggleFavorite(event, this, ${Number(listing.listing_id || 0)})">
