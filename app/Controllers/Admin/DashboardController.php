@@ -77,6 +77,7 @@ class DashboardController extends BaseController
             'users' => $this->userModel->findAll(),
             'listings' => $this->listingModel->findAll(),
             'sellers' => $sellersData,
+            'reports' => $this->reportsModel->findAll(),
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);
@@ -106,10 +107,54 @@ class DashboardController extends BaseController
         return redirect()->to('/admin/dashboard')->with('success', 'Listing verified successfully.');
     }
 
+    public function approveListing($listingId)
+    {
+        if ($this->request->isAJAX()) {
+            if (!$listingId) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Invalid listing ID']);
+            }
+
+            // Update listing as approved/verified
+            $this->listingModel->update($listingId, [
+                'is_verified_listing' => 'verified',
+                'listing_status' => 'approved'
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Listing approved successfully'
+            ]);
+        }
+
+        return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+    }
+
     public function rejectListing($listingId)
     {
-        $this->listingModel->update($listingId, ['listing_status' => 'rejected']);
-        return redirect()->to('/admin/dashboard')->with('success', 'Listing rejected.');
+        if ($this->request->isAJAX()) {
+            if (!$listingId) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Invalid listing ID']);
+            }
+
+            $reason = $this->request->getJSON()->reason ?? null;
+
+            // Update listing as rejected
+            $updateData = ['listing_status' => 'rejected'];
+            
+            // Optionally store rejection reason if your database supports it
+            if ($reason) {
+                $updateData['rejection_reason'] = $reason;
+            }
+
+            $this->listingModel->update($listingId, $updateData);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Listing rejected successfully'
+            ]);
+        }
+
+        return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
     }
 
     public function deleteListing($listingId)
@@ -170,22 +215,24 @@ class DashboardController extends BaseController
     {
         $listing = $this->listingModel->find($listingId);
         if (! $listing) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException("Listing not found.");
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Listing not found'
+            ])->setStatusCode(404);
         }
 
         $listingImages = model('ListingImages')->where('listing_id', $listingId)->findAll();
         $listingDocuments = model('ListingDocuments')->where('listing_id', $listingId)->findAll();
         $seller = $this->userModel->find($listing['seller_id']);
 
-        $data = [
-            'fullname' => session()->get('fullname') ?? 'Admin',
+        // Return JSON for AJAX requests
+        return $this->response->setJSON([
+            'success' => true,
             'listing' => $listing,
             'images' => $listingImages,
             'documents' => $listingDocuments,
             'seller' => $seller,
-        ];
-
-        return view('Pages/Admin/Listing_Detail', $data);
+        ]);
     }
 
     public function getSellerDocument($documentId)

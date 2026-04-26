@@ -20,6 +20,11 @@
             --accent: #95d5b2;
             --accent-dark: #74c69d;
             --sidebar-width: 280px;
+            --chart-teal: #1D9E75;
+            --chart-amber: #EF9F27;
+            --chart-red: #E24B4A;
+            --chart-gray: #888780;
+            --chart-green: #639922;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", system-ui, sans-serif; }
@@ -44,7 +49,7 @@
             width: var(--sidebar-width);
             background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(149, 213, 178, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             position: fixed;
             top: 0;
             left: 0;
@@ -62,92 +67,341 @@
         .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); color: var(--green-900); display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; animation: pulse 3s ease-in-out infinite; }
         .brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.5px; }
         .brand-subtitle { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
-        .sidebar-nav { flex: 1; padding: 20px 0; overflow-y: auto; }
-        .nav-item { display: flex; align-items: center; gap: 12px; margin: 0 12px 8px; padding: 12px 16px; border-radius: 14px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease; }
-        .nav-item:hover, .nav-item.active { background: rgba(149, 213, 178, 0.2); color: var(--accent); transform: translateX(2px); }
-        .main-content { margin-left: var(--sidebar-width); padding: 28px; width: calc(100% - var(--sidebar-width)); }
+        .sidebar-nav { flex: 1; padding: 20px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease, color 0.2s ease; font-size: 14px; }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.07); color: var(--accent); }
+        .nav-item.active { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+        .main-content { margin-left: var(--sidebar-width); padding: 32px; width: calc(100% - var(--sidebar-width)); background: #0f1f0f; }
+        .section-content { display: none; }
+        .section-content.active { display: block; }
         .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
-        .page-title h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-style: italic; color: var(--cream-100); }
-        .page-title p { color: rgba(245,245,220,0.85); margin-top: 6px; }
+        .page-title h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-style: italic; color: #ffffff; font-weight: 700; }
+        .page-title p { color: rgba(254, 250, 224, 0.85); margin-top: 6px; }
         .section-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .section-links a { text-decoration: none; padding: 8px 14px; border-radius: 999px; background: rgba(210, 180, 140, 0.25); color: var(--green-900); font-weight: 600; border: 1px solid rgba(210,180,140,.4); }
         .section-links a:hover { background: rgba(210, 180, 140, 0.4); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 16px; }
-        .stat-card h3 { font-size: 1rem; color: rgba(254,250,224,.8); margin-bottom: 8px; }
-        .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: #fff; display: block; }
-        .content-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
-        .content-card h3 { margin-bottom: 12px; }
+        .stats-grid { display: grid; gap: 12px; }
+        .stats-row-1 { grid-template-columns: repeat(5, 1fr); }
+        .stats-row-2 { grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
+        .stats-row-label { font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; display: block; }
+        .stat-card { background: #1e3a1e; border-radius: 10px; padding: 20px; border: none; border-left: 4px solid #4a7a4a; transition: all 0.2s ease; }
+        .stat-card:hover { box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); }
+        .stat-card h3 { font-size: 12px; color: rgba(255, 255, 255, 0.55); margin-bottom: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 600; color: #ffffff; display: block; margin-top: 8px; }
+        .content-card { background: #1e3a1e; border-radius: 12px; padding: 28px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 20px; }
+        .content-card h3 { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 20px; border-left: 3px solid #4a7a4a; padding-left: 12px; }
         table { width: 100%; border-collapse: collapse; }
-        .section-content { display: none; }
-        .section-content.active { display: block; }
-        .section-links a.active { background: var(--cream-200); border-color: var(--cream-200); }
-        .sidebar-nav a.active { background: rgba(210, 180, 140, 0.26); color: var(--green-900); }
-        table th, table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid rgba(149,213,178,.15); font-size: .9rem; }
-        table th { color: rgba(254,250,224,.8); font-weight:600; }
-        table td { color: rgba(254,250,224,.65); }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 0.74rem; font-weight: 600; }
-        .badge.available { background: rgba(46,204,113,.15); color: #2ecc71; }
-        .badge.pending { background: rgba(241,196,15,.15); color: #f1c40f; }
-        .badge.reserved { background: rgba(52,152,219,.15); color: #3498db; }
-        .badge.closed { background: rgba(231, 76, 60,.15); color: #e74c3c; }
-        .btn { border: none; color: var(--green-900); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: .8rem; margin-right: 6px; transition: all .15s ease; }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 0 12px rgba(0,0,0,.15); }
-        .btn-success { background: var(--accent); }
-        .btn-warning { background: #efc46a; }
-        .btn-danger { background: #d96f5b; color: #fff; }
-        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; margin-top: 20px; }
-        .listing-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 0; overflow: hidden; display: flex; flex-direction: column; transition: all .2s ease; }
-        .listing-card:hover { border-color: rgba(149,213,178,.35); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
-        .listing-card-image { width: 100%; height: 180px; background: rgba(149,213,178,.1); object-fit: cover; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,.5); font-size: .9rem; }
-        .listing-card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-        .listing-card-title { font-size: 1.1rem; font-weight: 700; color: var(--cream-100); margin-bottom: 8px; }
-        .listing-card-seller { font-size: .8rem; color: rgba(254,250,224,.65); margin-bottom: 10px; }
-        .listing-card-description { font-size: .85rem; color: rgba(254,250,224,.75); margin-bottom: 12px; line-height: 1.4; flex: 1; }
-        .listing-card-actions { display: flex; flex-wrap: nowrap; gap: 6px; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(149,213,178,.15); }
-        .btn-sm { padding: 6px 10px; font-size: .75rem; margin-right: 0; flex: 1; text-align: center; }
-        .btn-approved { background: rgba(46,204,113,.2); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); }
-        .btn-approved:hover { background: rgba(46,204,113,.3); }
-        .btn-rejected { background: rgba(231, 76, 60,.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60,.3); }
-        .btn-rejected:hover { background: rgba(231, 76, 60,.3); }
-        .btn-incomplete { background: rgba(241,196,15,.2); color: #f1c40f; border: 1px solid rgba(241,196,15,.3); }
-        .btn-incomplete:hover { background: rgba(241,196,15,.3); }
-        .btn-view { background: rgba(149,213,178,.2); color: #95d5b2; border: 1px solid rgba(149,213,178,.3); }
-        .btn-view:hover { background: rgba(149,213,178,.3); }
-        .sellers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; margin-top: 20px; }
-        .seller-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 20px; display: flex; gap: 20px; transition: all .2s ease; }
-        .seller-card:hover { border-color: rgba(149,213,178,.35); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
-        .seller-profile-pic { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; background: rgba(149,213,178,.1); flex-shrink: 0; }
-        .seller-card-info { flex: 1; display: flex; flex-direction: column; }
-        .seller-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
-        .seller-card-name { font-size: 1.1rem; font-weight: 700; color: var(--cream-100); }
-        .seller-card-id { font-size: .8rem; color: rgba(254,250,224,.65); }
-        .seller-card-details { font-size: .85rem; color: rgba(254,250,224,.75); margin-bottom: 12px; line-height: 1.5; }
-        .seller-documents { margin-top: auto; padding-top: 12px; margin-bottom: 16px; border-top: 1px solid rgba(149,213,178,.15); }
-        .seller-documents-title { font-size: .75rem; color: rgba(254,250,224,.6); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-        .seller-documents { margin-top: auto; padding-top: 12px; margin-bottom: 16px; border-top: 1px solid rgba(149,213,178,.15); }
-        .seller-documents-title { font-size: .75rem; color: rgba(254,250,224,.6); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-        .btn-files { background: rgba(149,213,178,.2); color: #95d5b2; border: 1px solid rgba(149,213,178,.3); padding: 8px 14px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; display: inline-block; }
-        .btn-files:hover { background: rgba(149,213,178,.35); transform: scale(1.02); }
-        .seller-card-actions { display: flex; gap: 10px; flex-shrink: 0; }
-        .btn-approve { background: rgba(46,204,113,.3); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); padding: 8px 12px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; font-size: .8rem; white-space: nowrap; }
-        .btn-approve:hover { background: rgba(46,204,113,.4); }
-        .btn-reject { background: rgba(231, 76, 60,.3); color: #e74c3c; border: 1px solid rgba(231, 76, 60,.3); padding: 8px 12px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all .2s ease; font-size: .8rem; white-space: nowrap; }
-        .btn-reject:hover { background: rgba(231, 76, 60,.4); }
+        table thead { background: rgba(0,0,0,0.2); }
+        table thead th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.45); padding: 12px 16px; font-weight: 600; text-align: left; }
+        table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        table tbody td { font-size: 14px; color: rgba(255,255,255,0.85); padding: 14px 16px; }
+        .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; border: 1px solid; }
+        .badge.active { background: #0d3d1f; color: #4ade80; border-color: #1a6b38; }
+        .badge.pending { background: #3d2e00; color: #fbbf24; border-color: #6b4f00; }
+        .badge.verified { background: #0d3d1f; color: #4ade80; border-color: #1a6b38; }
+        .badge.rejected { background: #3d0d0d; color: #f87171; border-color: #6b1a1a; }
+        .badge.suspended { background: #3d0d0d; color: #f87171; border-color: #6b1a1a; }
+        .badge.available { background: #0d3d1f; color: #4ade80; border-color: #1a6b38; }
+        .badge.closed { background: #3d0d0d; color: #f87171; border-color: #6b1a1a; }
+        .badge.reserved { background: #3d2e00; color: #fbbf24; border-color: #6b4f00; }
+        .btn { border: none; padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; color: #fff; }
+        .btn:hover { transform: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .btn-primary, .btn-approve { background: #1a6b38; color: #fff; }
+        .btn-primary:hover, .btn-approve:hover { background: #22883f; }
+        .btn-danger, .btn-reject { background: #6b1a1a; color: #fff; }
+        .btn-danger:hover, .btn-reject:hover { background: #8b2020; }
+        .btn-neutral, .btn-view, .btn-deactivate { background: transparent; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); }
+        .btn-neutral:hover, .btn-view:hover, .btn-deactivate:hover { background: rgba(255,255,255,0.07); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-success { background: #1a6b38; color: #fff; }
+        .btn-success:hover { background: #22883f; }
+        .btn-warning { background: #6b6b1a; color: #fff; }
+        .btn-warning:hover { background: #888820; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
+        .listing-card { background: #162e16; border-radius: 12px; padding: 0; overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.07); }
+        .listing-card:hover { border-color: rgba(255,255,255,0.14); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+        .listing-card-image { width: 100%; height: 180px; background: #2a7a6a; object-fit: cover; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,0.5); font-size: 40px; position: relative; border-radius: 12px 12px 0 0; }
+        .listing-card-content { padding: 16px 20px 20px; flex: 1; display: flex; flex-direction: column; }
+        .listing-card-title { font-size: 17px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
+        .listing-card-seller { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+        .listing-card-description { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 10px; line-height: 1.4; flex: 1; max-height: 2.8em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .listing-card-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; margin-right: 0; flex: 1; text-align: center; border-radius: 7px; }
+        .btn-neutral.btn-sm { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+        .btn-neutral.btn-sm:hover { background: rgba(255,255,255,0.07); }
+        .btn-primary.btn-sm { background: #1a6b38; border: none; color: #fff; }
+        .btn-primary.btn-sm:hover { background: #22883f; }
+        .btn-danger.btn-sm { background: #6b1a1a; border: none; color: #fff; }
+        .btn-danger.btn-sm:hover { background: #8b2020; }
+        .btn-approved { background: #0d3d1f; color: #4ade80; border: 1px solid #1a6b38; }
+        .btn-approved:hover { background: #124a27; }
+        .btn-rejected { background: #3d0d0d; color: #f87171; border: 1px solid #6b1a1a; }
+        .btn-rejected:hover { background: #521010; }
+        .btn-incomplete { background: #3d2e00; color: #fbbf24; border: 1px solid #6b4f00; }
+        .btn-incomplete:hover { background: #524000; }
+        .sellers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; margin-top: 20px; }
+        .seller-card { background: #162e16; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.07); }
+        .seller-card:hover { border-color: rgba(255,255,255,0.14); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+        .seller-profile-pic { width: 80px; height: 100px; border-radius: 8px; background: #2a7a6a; color: #fff; font-size: 32px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .seller-card-info { flex: 1; }
+        .seller-card-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+        .seller-card-header > div:first-child { flex: 1; }
+        .seller-card-name { font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
+        .seller-card-id { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+        .seller-card-details { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 12px; }
+        .seller-card-details strong { color: rgba(255,255,255,0.45); font-weight: 600; }
+        .seller-documents { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 12px; margin-top: 12px; }
+        .seller-documents-title { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .btn-files { background: transparent; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); padding: 7px 16px; font-weight: 500; cursor: pointer; border-radius: 7px; transition: all 0.15s ease; display: inline-block; font-size: 13px; }
+        .btn-files:hover { background: rgba(255,255,255,0.07); }
+        .seller-card-actions { display: flex; gap: 8px; margin-left: auto; }
+        .btn-approve { background: #1a6b38; color: #fff; padding: 7px 16px; border: none; font-weight: 500; cursor: pointer; border-radius: 7px; transition: all 0.15s ease; display: inline-flex; font-size: 13px; }
+        .btn-approve:hover { background: #22883f; }
+        .btn-reject { background: #6b1a1a; color: #fff; padding: 7px 16px; border: none; font-weight: 500; cursor: pointer; border-radius: 7px; transition: all 0.15s ease; display: inline-flex; font-size: 13px; }
+        .btn-reject:hover { background: #8b2020; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
         .gallery-thumbnail { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; cursor: pointer; transition: all .2s ease; border: 1px solid rgba(149,213,178,.15); }
         .gallery-thumbnail:hover { transform: scale(1.05); border-color: rgba(149,213,178,.35); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(15, 27, 27, 0.85) 0%, rgba(5, 12, 12, 0.95) 70%, rgba(2, 6, 6, 0.98) 100%); backdrop-filter: blur(2px); animation: fadeIn .3s ease; }
-        .modal::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(149, 213, 178, 0.02) 49%, rgba(149, 213, 178, 0.02) 51%, transparent 52%); background-size: 60px 60px; background-position: 0 0; pointer-events: none; z-index: -1; }
-        .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 24px; width: 95%; max-width: 1400px; max-height: 90vh; overflow: auto; position: relative; }
-        .modal-close { position: absolute; top: 12px; right: 12px; color: var(--cream-100); font-size: 28px; font-weight: bold; cursor: pointer; background: rgba(0,0,0,.3); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .2s ease; }
-        .modal-close:hover { background: rgba(0,0,0,.5); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(2px); align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1a3a1a; border-radius: 14px; padding: 28px 32px; border: 1px solid rgba(255,255,255,0.1); max-width: 520px; width: 90%; box-shadow: 0 24px 48px rgba(0,0,0,0.4); max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 18px; font-weight: 600; color: #ffffff; margin: 0; }
+        .modal-close { position: absolute; top: 12px; right: 12px; color: rgba(255,255,255,0.5); font-size: 28px; font-weight: bold; cursor: pointer; background: rgba(255,255,255,0.07); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; padding: 0; }
+        .modal-close:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+        .modal-body { margin-bottom: 20px; }
+        .modal-body label { font-size: 12px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .modal-body p { font-size: 14px; color: rgba(255,255,255,0.85); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .confirmation-icon { width: 48px; height: 48px; background: rgba(239,68,68,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
         .modal-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
         .modal-gallery-item { cursor: pointer; border-radius: 12px; overflow: hidden; border: 1px solid rgba(149,213,178,.2); transition: all .2s ease; }
         .modal-gallery-item:hover { border-color: rgba(149,213,178,.5); transform: scale(1.03); }
         .modal-gallery-image { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .modal-title { color: var(--cream-100); margin-bottom: 16px; font-size: 1.2rem; font-weight: 700; }
+        
+        /* Listing Details Modal Styles */
+        #listingDetailsModal .modal-content {
+            max-width: 780px;
+            width: 100%;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+        
+        .listing-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            background: #162e16;
+            flex-shrink: 0;
+        }
+        
+        .listing-modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .listing-modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .listing-modal-left {
+            padding: 20px 20px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-right: 1px solid rgba(255,255,255,0.07);
+            overflow-y: auto;
+        }
+        
+        .listing-modal-image {
+            width: 100%;
+            height: 200px;
+            background: #2a7a6a;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .listing-modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .listing-modal-image--empty {
+            color: rgba(255,255,255,0.3);
+            font-size: 36px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-direction: row;
+        }
+        
+        .listing-modal-image--empty span {
+            font-size: 14px;
+        }
+        
+        .listing-modal-description {
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+        
+        .listing-modal-description-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        .listing-modal-description-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .listing-modal-location-price {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .listing-modal-field-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .listing-modal-field-value {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .listing-modal-right {
+            padding: 20px 24px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+        
+        .listing-modal-details-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        
+        .listing-modal-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .listing-modal-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .listing-modal-detail-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 3px;
+        }
+        
+        .listing-modal-detail-value {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+        }
+        
+        .listing-modal-footer {
+            padding: 14px 24px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            background: #162e16;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .listing-modal-footer button {
+            padding: 8px 20px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .listing-modal-footer .btn-close {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .listing-modal-footer .btn-close:hover {
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .listing-modal-footer .btn-approve {
+            background: #1a6b38;
+            color: #fff;
+        }
+        
+        .listing-modal-footer .btn-approve:hover {
+            background: #22883f;
+        }
+        
+        .listing-modal-footer .btn-reject {
+            background: #6b1a1a;
+            color: #fff;
+        }
+        
+        .listing-modal-footer .btn-reject:hover {
+            background: #8b2020;
+        }
+        
+        /* Modal close button positioning */
+        #listingDetailsModal .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+        }
+        
         .report-reason { background: rgba(241,196,15,.15); color: #f1c40f; padding: 4px 10px; border-radius: 6px; font-size: .8rem; font-weight: 500; display: inline-block; }
         .report-badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block; cursor: pointer; transition: all .2s ease; }
         .report-badge.filed { background: rgba(46,204,113,.15); color: #2ecc71; }
@@ -166,6 +420,31 @@
             background: rgba(0,0,0,.4);
             border-color: rgba(149,213,178,.5);
         }
+        
+        /* Filter Bar Global Styles */
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; padding: 16px; background: rgba(0,0,0,0.15); border-radius: 8px; flex-wrap: wrap; align-items: center; }
+        .filter-bar label { font-size: 12px; color: rgba(255,255,255,0.45); margin-right: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-bar select, .filter-bar input { background: #1a3a1a; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; padding: 7px 12px; font-size: 13px; outline: none; font-family: inherit; }
+        .filter-bar select:focus, .filter-bar input:focus { border-color: rgba(255,255,255,0.35); }
+        .filter-bar option { background: #0f1f0f; color: #fff; }
+        
+        /* Report badge styles */
+        .report-badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s ease; font-size: 12px; }
+        .report-badge.filed { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .report-badge.against { background: rgba(231, 76, 60,0.15); color: #e74c3c; }
+        .report-badge:hover { transform: scale(1.05); }
+        
+        /* Table utility classes */
+        .table-empty-state { text-align: center; padding: 48px; color: rgba(255,255,255,0.35); font-size: 14px; font-style: italic; }
+        .user-row { cursor: pointer; transition: all 0.2s ease; }
+        .user-row:hover { background: rgba(255, 255, 255, 0.03); }
+        
+        /* Gallery styles */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+        .gallery-thumbnail { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; cursor: pointer; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1); }
+        .gallery-thumbnail:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.3); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         @media (max-width: 980px) {
             .dashboard-container { display: block; }
@@ -176,6 +455,8 @@
             .section-links { width: 100%; justify-content: center; flex-wrap: wrap; }
             .section-links a { padding: 8px 10px; font-size: 0.82rem; }
             .stats-grid { grid-template-columns: 1fr; }
+            .stats-row-1 { grid-template-columns: 1fr; }
+            .stats-row-2 { grid-template-columns: 1fr; margin-bottom: 32px; }
             .listings-grid { grid-template-columns: 1fr; }
             table { font-size: 0.78rem; }
             .table-wrapper, .content-card { overflow-x: auto; }
@@ -186,41 +467,129 @@
             .btn-sm { flex: 1; min-width: calc(50% - 4px); }
             .sellers-grid { grid-template-columns: 1fr; }
             .seller-card { flex-direction: column; }
-            .seller-profile-pic { width: 100px; height: 100px; }
-            .modal-gallery { grid-template-columns: repeat(2, 1fr); }
+            .seller-card-header { flex-direction: column; }
+            .seller-profile-pic { width: 100%; }
+            .seller-card-actions { margin-left: 0; margin-top: 12px; width: 100%; }
             .chatbot { right: 12px; bottom: 12px; width: 260px; }
             .chatbot-content { height: 340px; }
+            
+            /* Responsive modal styles */
+            #listingDetailsModal .modal-content {
+                max-width: 95vw;
+                width: 95vw;
+                max-height: 95vh;
+            }
+            
+            .listing-modal-body {
+                grid-template-columns: 1fr;
+            }
+            
+            .listing-modal-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.07);
+                padding: 20px;
+            }
+            
+            .listing-modal-right {
+                padding: 20px;
+            }
+            
+            .listing-modal-image {
+                height: 150px;
+            }
+            
+            .listing-modal-details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            #listingDetailsModal .modal-content {
+                max-width: 98vw;
+                width: 98vw;
+                max-height: 98vh;
+                border-radius: 10px;
+            }
+            
+            .listing-modal-header {
+                padding: 14px 16px;
+            }
+            
+            .listing-modal-header h2 {
+                font-size: 16px;
+            }
+            
+            .listing-modal-footer {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+            
+            .listing-modal-footer button {
+                flex: 1;
+                min-width: 80px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .listing-modal-image {
+                height: 120px;
+            }
+            
+            .listing-modal-left,
+            .listing-modal-right {
+                padding: 16px;
+            }
+            
+            .listing-modal-details-title {
+                font-size: 14px;
+            }
+            
+            .listing-modal-description-label,
+            .listing-modal-detail-label {
+                font-size: 9px;
+            }
+            
+            .listing-modal-field-value,
+            .listing-modal-detail-value {
+                font-size: 13px;
+            }
+            
+            .listing-modal-description-text {
+                font-size: 12px;
+            }
         }
 
         /* Analytics Dashboard Styles */
-        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .chart-card { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border: 1px solid rgba(149,213,178,.15); border-radius: 18px; padding: 20px; position: relative; }
-        .chart-card h3 { color: rgba(254,250,224,.9); margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; }
+        .analytics-section { margin-bottom: 32px; }
+        .section-header { font-size: 16px; font-weight: 500; color: rgba(255, 255, 255, 0.9); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .chart-card { background: #1e3a1e; border-radius: 12px; padding: 24px; position: relative; border: none; }
+        .chart-card h3 { color: rgba(255, 255, 255, 0.9); margin-bottom: 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .chart-container { position: relative; height: 320px; width: 100%; }
         .gauge-container { display: flex; justify-content: center; align-items: center; }
         .gauge-chart { max-width: 300px; margin: 0 auto; }
-        .chart-legend { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(149,213,178,.15); }
-        .legend-item { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .9rem; }
+        .chart-legend { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.8); }
         .legend-color { width: 12px; height: 12px; border-radius: 3px; }
-        .analytics-section { margin-top: 28px; }
 
         .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid rgba(149, 213, 178, 0.1);
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: auto;
         }
 
         .logout-btn {
             display: flex;
+            width: 100%;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            width: 100%;
-            padding: 12px;
-            background: rgba(231, 76, 60, 0.15);
-            border: 1px solid rgba(231, 76, 60, 0.3);
-            border-radius: 12px;
-            color: #e74c3c;
-            font-size: 0.9rem;
+            padding: 12px 16px;
+            background: rgba(226, 75, 74, 0.15);
+            border: 1px solid rgba(226, 75, 74, 0.3);
+            border-radius: 8px;
+            color: #e24b4a;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -400,18 +769,18 @@
     <!-- Dashboard Data Configuration -->
     <script type="application/json" id="dashboardData">
     {
-        "totalBuyers": <?php echo isset($totalBuyers) ? intval($totalBuyers) : 245; ?>,
-        "totalSellers": <?php echo isset($totalSellers) ? intval($totalSellers) : 187; ?>,
-        "totalAdmins": <?php echo isset($totalAdmins) ? intval($totalAdmins) : 5; ?>,
-        "listingPending": <?php echo isset($listingStats['pending']) ? intval($listingStats['pending']) : 38; ?>,
-        "listingVerified": <?php echo isset($listingStats['verified']) ? intval($listingStats['verified']) : 156; ?>,
-        "listingRejected": <?php echo isset($listingStats['rejected']) ? intval($listingStats['rejected']) : 12; ?>,
-        "reportPending": <?php echo isset($reportStats['pending']) ? intval($reportStats['pending']) : 18; ?>,
-        "reportResolved": <?php echo isset($reportStats['resolved']) ? intval($reportStats['resolved']) : 34; ?>,
-        "reportSuspended": <?php echo isset($reportStats['suspended']) ? intval($reportStats['suspended']) : 7; ?>,
-        "verificationVerified": <?php echo isset($verificationStats['verified']) ? intval($verificationStats['verified']) : 287; ?>,
-        "verificationPending": <?php echo isset($verificationStats['pending']) ? intval($verificationStats['pending']) : 98; ?>,
-        "verificationUnverified": <?php echo isset($verificationStats['unverified']) ? intval($verificationStats['unverified']) : 52; ?>
+        "totalBuyers": <?php echo isset($totalBuyers) ? intval($totalBuyers) : 0; ?>,
+        "totalSellers": <?php echo isset($totalSellers) ? intval($totalSellers) : 0; ?>,
+        "totalAdmins": <?php echo isset($totalAdmins) ? intval($totalAdmins) : 0; ?>,
+        "listingPending": <?php echo isset($listingStats['pending']) ? intval($listingStats['pending']) : 0; ?>,
+        "listingVerified": <?php echo isset($listingStats['verified']) ? intval($listingStats['verified']) : 0; ?>,
+        "listingRejected": <?php echo isset($listingStats['rejected']) ? intval($listingStats['rejected']) : 0; ?>,
+        "reportPending": <?php echo isset($reportStats['pending']) ? intval($reportStats['pending']) : 0; ?>,
+        "reportResolved": <?php echo isset($reportStats['resolved']) ? intval($reportStats['resolved']) : 0; ?>,
+        "reportSuspended": <?php echo isset($reportStats['suspended']) ? intval($reportStats['suspended']) : 0; ?>,
+        "verificationVerified": <?php echo isset($verificationStats['verified']) ? intval($verificationStats['verified']) : 0; ?>,
+        "verificationPending": <?php echo isset($verificationStats['pending']) ? intval($verificationStats['pending']) : 0; ?>,
+        "verificationUnverified": <?php echo isset($verificationStats['unverified']) ? intval($verificationStats['unverified']) : 0; ?>
     }
     </script>
 </head>
@@ -459,16 +828,50 @@
             <?php endif; ?>
 
             <section id="dashboard-section" class="section-content active">
-                <div class="stats-grid">
-                <div class="stat-card"><h3>Total Users</h3><div class="stat-value">512</div></div>
-                <div class="stat-card"><h3>Total Buyers</h3><div class="stat-value">245</div></div>
-                <div class="stat-card"><h3>Total Sellers</h3><div class="stat-value">187</div></div>
-                <div class="stat-card"><h3>Total Admins</h3><div class="stat-value">5</div></div>
-                <div class="stat-card"><h3>Total Listings</h3><div class="stat-value">206</div></div>
-                <div class="stat-card"><h3>Pending Verifications</h3><div class="stat-value">38</div></div>
-                <div class="stat-card"><h3>Verified Listings</h3><div class="stat-value">156</div></div>
-                <div class="stat-card"><h3>Rejected Listings</h3><div class="stat-value">12</div></div>
-                <div class="stat-card"><h3>Total Reports</h3><div class="stat-value">59</div></div>
+                <!-- Row 1: User & Content Metrics -->
+                <label class="stats-row-label">User & Content Metrics</label>
+                <div class="stats-grid stats-row-1">
+                    <div class="stat-card">
+                        <h3>Total Users</h3>
+                        <div class="stat-value"><?= isset($totalUsers) ? esc($totalUsers) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Buyers</h3>
+                        <div class="stat-value"><?= isset($totalBuyers) ? esc($totalBuyers) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Sellers</h3>
+                        <div class="stat-value"><?= isset($totalSellers) ? esc($totalSellers) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Admins</h3>
+                        <div class="stat-value"><?= isset($totalAdmins) ? esc($totalAdmins) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Listings</h3>
+                        <div class="stat-value"><?= isset($totalListings) ? esc($totalListings) : 0; ?></div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Listing & Report Status -->
+                <label class="stats-row-label">Listing & Report Status</label>
+                <div class="stats-grid stats-row-2">
+                    <div class="stat-card">
+                        <h3>Pending Verifications</h3>
+                        <div class="stat-value"><?= isset($listingStats['pending']) ? esc($listingStats['pending']) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Verified Listings</h3>
+                        <div class="stat-value"><?= isset($listingStats['verified']) ? esc($listingStats['verified']) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Rejected Listings</h3>
+                        <div class="stat-value"><?= isset($listingStats['rejected']) ? esc($listingStats['rejected']) : 0; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Reports</h3>
+                        <div class="stat-value"><?= isset($totalReports) ? esc($totalReports) : 0; ?></div>
+                    </div>
                 </div>
 
                 <!-- Analytics Section -->
@@ -576,49 +979,97 @@
 
             <!-- Listing Details Modal -->
             <div id="listingDetailsModal" class="modal">
-                <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-content">
                     <button class="modal-close" onclick="closeListingDetailsModal()">&times;</button>
-                    <div id="listingDetailsContent" style="color: var(--cream-100);">
-                        <div id="detailListingImage" style="width: 100%; height: 400px; background: linear-gradient(135deg, #2a6c62, #1f4f48); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,.5); font-size: 3rem; margin-bottom: 24px; overflow: hidden;">
-                            🏞️
-                        </div>
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-                            <div>
-                                <h2 id="detailListingTitle" style="font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: var(--cream-100);"></h2>
-                                <p id="detailListingSeller" style="color: rgba(254,250,224,.7); margin-bottom: 24px; font-size: 1rem;"></p>
-                                <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                                    <h3 style="color: rgba(254,250,224,.9); margin-bottom: 12px; font-weight: 600;">Full Description</h3>
-                                    <p id="detailListingDescription" style="color: rgba(254,250,224,.75); line-height: 1.8; font-size: 1rem;"></p>
+                    
+                    <!-- Header -->
+                    <div class="listing-modal-header">
+                        <h2>
+                            <span id="detailListingTitle"></span>
+                            <span id="detailListingStatus"></span>
+                        </h2>
+                    </div>
+                    
+                    <!-- Body: Two-column layout -->
+                    <div class="listing-modal-body">
+                        <!-- Left Column: Image + Description -->
+                        <div class="listing-modal-left">
+                            <!-- Image -->
+                            <div class="listing-modal-image" id="detailListingImage">
+                                <div class="listing-modal-image--empty">
+                                    <span>🏞️</span>
+                                    <span>Property Image</span>
                                 </div>
                             </div>
-                            <div>
-                                <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px;">
-                                    <h3 style="color: rgba(254,250,224,.9); margin-bottom: 16px; font-weight: 600; font-size: 1.1rem;">Details</h3>
-                                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                                        <div>
-                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Listing ID</p>
-                                            <p id="detailListingId" style="color: var(--cream-100); font-weight: 600;"></p>
-                                        </div>
-                                        <div>
-                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status</p>
-                                            <p id="detailListingStatus" style="color: var(--cream-100); font-weight: 600;"></p>
-                                        </div>
-                                        <div>
-                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Posted Date</p>
-                                            <p id="detailListingDate" style="color: var(--cream-100); font-weight: 600;"></p>
-                                        </div>
-                                        <div>
-                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Location</p>
-                                            <p id="detailListingLocation" style="color: var(--cream-100); font-weight: 600;"></p>
-                                        </div>
-                                        <div>
-                                            <p style="color: rgba(254,250,224,.6); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Price</p>
-                                            <p id="detailListingPrice" style="color: var(--accent); font-weight: 700; font-size: 1.2rem;"></p>
-                                        </div>
-                                    </div>
+                            
+                            <!-- Description -->
+                            <div class="listing-modal-description">
+                                <label class="listing-modal-description-label">Full Description</label>
+                                <p class="listing-modal-description-text" id="detailListingDescription"></p>
+                            </div>
+                            
+                            <!-- Location & Price -->
+                            <div class="listing-modal-location-price">
+                                <div>
+                                    <span class="listing-modal-field-label">📍 Location</span>
+                                    <span class="listing-modal-field-value" id="detailListingLocation"></span>
+                                </div>
+                                <div>
+                                    <span class="listing-modal-field-label">💰 Price</span>
+                                    <span class="listing-modal-field-value" id="detailListingPrice"></span>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Right Column: Details Panel -->
+                        <div class="listing-modal-right">
+                            <h3 class="listing-modal-details-title">Details</h3>
+                            
+                            <div class="listing-modal-details-grid">
+                                <!-- Listing ID -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Listing ID</span>
+                                    <span class="listing-modal-detail-value" id="detailListingId"></span>
+                                </div>
+                                
+                                <!-- Status -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Status</span>
+                                    <span class="listing-modal-detail-value" id="detailListingStatusDetail"></span>
+                                </div>
+                                
+                                <!-- Seller -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Seller</span>
+                                    <span class="listing-modal-detail-value" id="detailListingSeller"></span>
+                                </div>
+                                
+                                <!-- Created Date -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Created Date</span>
+                                    <span class="listing-modal-detail-value" id="detailListingDate"></span>
+                                </div>
+                                
+                                <!-- Land Area (if available) -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Land Area</span>
+                                    <span class="listing-modal-detail-value" id="detailListingArea">N/A</span>
+                                </div>
+                                
+                                <!-- Land Type (if available) -->
+                                <div class="listing-modal-detail-item">
+                                    <span class="listing-modal-detail-label">Land Type</span>
+                                    <span class="listing-modal-detail-value" id="detailListingType">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="listing-modal-footer">
+                        <button class="listing-modal-footer-btn btn-close" onclick="closeListingDetailsModal()">Close</button>
+                        <button class="listing-modal-footer-btn btn-approve" onclick="approveListing(currentListingId, currentListingTitle)">Approve</button>
+                        <button class="listing-modal-footer-btn btn-reject" onclick="rejectListing(currentListingId, currentListingTitle)">Reject</button>
                     </div>
                 </div>
             </div>
@@ -1033,62 +1484,41 @@
 
         // Report Management Functions
         function viewReportDetails(reportId) {
-            // Sample report data - in production, this would come from the database
-            const reportData = {
-                'R001': {
-                    report_id: 'R001',
-                    subject: 'Fake Documents',
-                    reporter: 'John Buyer',
-                    target: 'Maria Santos',
-                    reason: 'Fraudulent Documents Submitted',
-                    description: 'The seller submitted counterfeit identification and property documents. The documents appear to be forged or manipulated, and the seller has misrepresented their identity and property ownership.',
-                    status: 'Pending',
-                    date: 'Apr 10, 2026'
-                },
-                'R002': {
-                    report_id: 'R002',
-                    subject: 'Misrepresented Property',
-                    reporter: 'Jane Investor',
-                    target: 'Juan Dela Cruz',
-                    reason: 'Property Photos Don\'t Match Actual',
-                    description: 'The photos used in the listing do not match the actual property condition. The property appears to be in a much worse state than advertised, with significant structural and maintenance issues.',
-                    status: 'Pending',
-                    date: 'Apr 09, 2026'
-                },
-                'R003': {
-                    report_id: 'R003',
-                    subject: 'Unprofessional Conduct',
-                    reporter: 'Ana Rodriguez',
-                    target: 'Carlos Lopez',
-                    reason: 'Harassment and Rude Behavior',
-                    description: 'During property negotiations, the user engaged in unprofessional and disrespectful communication, including harassment and threats.',
-                    status: 'Resolved',
-                    date: 'Apr 08, 2026'
-                }
-            };
-
-            const report = reportData[reportId] || {
-                report_id: reportId,
-                subject: 'Report Details',
-                reporter: 'Unknown',
-                target: 'Unknown',
-                reason: 'Unknown',
-                description: 'Report details not found.',
-                status: 'Pending',
-                date: new Date().toLocaleDateString()
-            };
-
-            document.getElementById('detailReportId').textContent = report.report_id;
-            document.getElementById('detailSubject').textContent = report.subject;
-            document.getElementById('detailReporter').textContent = report.reporter;
-            document.getElementById('detailTarget').textContent = report.target;
-            document.getElementById('detailReason').textContent = report.reason;
-            document.getElementById('detailDescription').textContent = report.description;
-            document.getElementById('detailStatus').textContent = report.status;
-            document.getElementById('detailDate').textContent = report.date;
-
-            const modal = document.getElementById('reportDetailsModal');
-            modal.classList.add('active');
+            // Fetch report data from the server
+            fetch(`/admin/reports/${reportId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.success) {
+                        const report = data.report;
+                        document.getElementById('detailReportId').textContent = report.report_id || reportId;
+                        document.getElementById('detailSubject').textContent = report.subject || '';
+                        document.getElementById('detailReporter').textContent = report.reported_by_name || '';
+                        document.getElementById('detailTarget').textContent = report.reported_against_name || '';
+                        document.getElementById('detailReason').textContent = report.reason || '';
+                        document.getElementById('detailDescription').textContent = report.description || '';
+                        document.getElementById('detailStatus').textContent = report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : '';
+                        document.getElementById('detailDate').textContent = report.created_at ? new Date(report.created_at).toLocaleDateString() : '';
+                    } else {
+                        document.getElementById('detailReportId').textContent = reportId;
+                        document.getElementById('detailSubject').textContent = 'Report not found';
+                        document.getElementById('detailReporter').textContent = '';
+                        document.getElementById('detailTarget').textContent = '';
+                        document.getElementById('detailReason').textContent = '';
+                        document.getElementById('detailDescription').textContent = 'The report data could not be loaded from the database.';
+                        document.getElementById('detailStatus').textContent = '';
+                        document.getElementById('detailDate').textContent = '';
+                    }
+                    const modal = document.getElementById('reportDetailsModal');
+                    modal.classList.add('active');
+                })
+                .catch(error => {
+                    console.error('Error fetching report:', error);
+                    document.getElementById('detailReportId').textContent = reportId;
+                    document.getElementById('detailSubject').textContent = 'Error Loading Report';
+                    document.getElementById('detailDescription').textContent = 'An error occurred while loading the report details. Please try again.';
+                    const modal = document.getElementById('reportDetailsModal');
+                    modal.classList.add('active');
+                });
         }
 
         function closeReportModal() {
@@ -1109,22 +1539,103 @@
         }
 
         // === Listing Details Modal Functions ===
+        let currentListingId = null;
+        let currentListingTitle = null;
+        
         function viewListingDetails(listingId, title, sellerName) {
+            // Store for footer buttons
+            currentListingId = listingId;
+            currentListingTitle = title;
+            
+            // Clear all fields
             document.getElementById('detailListingId').textContent = listingId;
             document.getElementById('detailListingTitle').textContent = title;
-            document.getElementById('detailListingSeller').textContent = 'Seller: ' + sellerName;
-            document.getElementById('detailListingDescription').textContent = 'Beautiful and well-maintained property with strategic location. Features excellent accessibility, nearby schools and commercial establishments. Perfect for residential living or investment purposes. The property is ready for immediate occupancy and has good potential for appreciation.';
-            document.getElementById('detailListingStatus').innerHTML = '<span class="badge available">Pending Verification</span>';
-            document.getElementById('detailListingDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('detailListingLocation').textContent = 'Metro Manila, Philippines';
-            document.getElementById('detailListingPrice').textContent = '₱2,500,000';
+            document.getElementById('detailListingSeller').textContent = sellerName;
+            document.getElementById('detailListingDescription').textContent = 'Loading...';
+            document.getElementById('detailListingStatusDetail').textContent = 'Loading...';
+            document.getElementById('detailListingDate').textContent = 'Loading...';
+            document.getElementById('detailListingLocation').textContent = 'Loading...';
+            document.getElementById('detailListingPrice').textContent = 'Loading...';
+            document.getElementById('detailListingStatus').innerHTML = '<span class="badge pending">Loading...</span>';
             
-            // Set image
+            // Set image placeholder
             const imageDiv = document.getElementById('detailListingImage');
-            imageDiv.style.background = 'linear-gradient(135deg, #2a6c62, #1f4f48)';
-            imageDiv.innerHTML = '🏞️ Property Image';
-            imageDiv.style.fontSize = '3rem';
-            imageDiv.style.color = 'rgba(254,250,224,.5)';
+            imageDiv.innerHTML = '<div class="listing-modal-image--empty"><span>🏞️</span><span>Property Image</span></div>';
+            
+            // Fetch listing details from the server
+            fetch(`/admin/listings/${listingId}/view`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.success && data.listing) {
+                        const listing = data.listing;
+                        
+                        // Populate description
+                        document.getElementById('detailListingDescription').textContent = listing.description || 'No description provided';
+                        
+                        // Populate location
+                        const location = [listing.barangay, listing.city, listing.province].filter(Boolean).join(', ');
+                        document.getElementById('detailListingLocation').textContent = location || 'No location provided';
+                        
+                        // Populate price
+                        if (listing.price) {
+                            document.getElementById('detailListingPrice').textContent = '₱' + Number(listing.price).toLocaleString();
+                        } else {
+                            document.getElementById('detailListingPrice').textContent = 'N/A';
+                        }
+                        
+                        // Populate date
+                        if (listing.created_at) {
+                            try {
+                                const date = new Date(listing.created_at);
+                                document.getElementById('detailListingDate').textContent = date.toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                });
+                            } catch (e) {
+                                document.getElementById('detailListingDate').textContent = listing.created_at;
+                            }
+                        } else {
+                            document.getElementById('detailListingDate').textContent = 'N/A';
+                        }
+                        
+                        // Determine status
+                        let statusClass = 'pending';
+                        let statusText = 'Pending';
+                        if (listing.is_verified_listing === 'verified' || listing.listing_status === 'approved') {
+                            statusClass = 'available';
+                            statusText = 'Approved';
+                        } else if (listing.listing_status === 'rejected' || listing.is_verified_listing === 'rejected') {
+                            statusClass = 'closed';
+                            statusText = 'Rejected';
+                        }
+                        
+                        document.getElementById('detailListingStatus').innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
+                        document.getElementById('detailListingStatusDetail').textContent = statusText;
+                        
+                        // Populate land area if available
+                        const areaElement = document.getElementById('detailListingArea');
+                        if (listing.land_area) {
+                            areaElement.textContent = listing.land_area + ' sq.m';
+                        } else {
+                            areaElement.textContent = 'N/A';
+                        }
+                        
+                        // Populate land type if available
+                        const typeElement = document.getElementById('detailListingType');
+                        if (listing.land_type) {
+                            typeElement.textContent = listing.land_type;
+                        } else {
+                            typeElement.textContent = 'N/A';
+                        }
+                    } else {
+                        document.getElementById('detailListingDescription').textContent = 'Unable to load listing details.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading listing details:', error);
+                    document.getElementById('detailListingDescription').textContent = 'Unable to load listing details.';
+                });
             
             const modal = document.getElementById('listingDetailsModal');
             modal.classList.add('active');
@@ -1133,6 +1644,128 @@
         function closeListingDetailsModal() {
             const modal = document.getElementById('listingDetailsModal');
             modal.classList.remove('active');
+        }
+
+        // Approve Listing Function
+        function approveListing(listingId, listingTitle) {
+            Swal.fire({
+                title: 'Approve Listing?',
+                html: `<p>Are you sure you want to approve <strong>${listingTitle}</strong>?</p>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'landly-swal',
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Send approval request
+                    fetch(`/admin/listings/${listingId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Approved!',
+                                text: 'Listing has been approved successfully.',
+                                icon: 'success',
+                                customClass: { popup: 'landly-swal' }
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to approve listing.',
+                                icon: 'error',
+                                customClass: { popup: 'landly-swal' }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while approving the listing.',
+                            icon: 'error',
+                            customClass: { popup: 'landly-swal' }
+                        });
+                    });
+                }
+            });
+        }
+
+        // Reject Listing Function
+        function rejectListing(listingId, listingTitle) {
+            Swal.fire({
+                title: 'Reject Listing?',
+                html: `<p>Are you sure you want to reject <strong>${listingTitle}</strong>?</p>
+                       <textarea id="rejectReason" placeholder="Reason for rejection (optional)" style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px; border: 1px solid rgba(149,213,178,.3); background: rgba(0,0,0,.3); color: var(--cream-100); min-height: 80px;"></textarea>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Reject',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'landly-swal',
+                    confirmButton: 'swal2-deny',
+                    cancelButton: 'swal2-cancel'
+                },
+                didOpen: () => {
+                    // Focus on textarea
+                    setTimeout(() => {
+                        document.getElementById('rejectReason').focus();
+                    }, 100);
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const reason = document.getElementById('rejectReason').value;
+                    
+                    // Send rejection request
+                    fetch(`/admin/listings/${listingId}/reject`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ reason: reason })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Rejected!',
+                                text: 'Listing has been rejected successfully.',
+                                icon: 'success',
+                                customClass: { popup: 'landly-swal' }
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to reject listing.',
+                                icon: 'error',
+                                customClass: { popup: 'landly-swal' }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while rejecting the listing.',
+                            icon: 'error',
+                            customClass: { popup: 'landly-swal' }
+                        });
+                    });
+                }
+            });
         }
 
         // Close listing modal when clicking outside
@@ -1160,7 +1793,7 @@
             fireAppAlert({
                 icon: 'success',
                 title: 'Reply Sent',
-                html: `Reply sent to report <strong>${reportId}</strong><br><br><em>${replyText}</em><br><br><small style="color: rgba(254,250,224,.7);">In production, this would be saved to the database</small>`,
+                html: `Reply sent to report <strong>${reportId}</strong><br><br><em>${replyText}</em>`,
                 confirmButtonText: 'OK'
             });
             closeReplyModal();
@@ -1183,51 +1816,40 @@
             const profileEmoji = role === 'Seller' ? '🏢' : (role === 'Admin' ? '👨‍💼' : '👤');
             document.getElementById('userProfilePic').textContent = profileEmoji;
             
-            // Sample listings - in production, these would come from database
-            const userListings = [
-                {
-                    id: 'L001',
-                    title: 'Beach Front Property',
-                    location: 'Palawan',
-                    status: 'Verified',
-                    date: 'Mar 10, 2026',
-                    price: '₱2,500,000'
-                },
-                {
-                    id: 'L002',
-                    title: 'Agricultural Land',
-                    location: 'Tagaytay',
-                    status: 'Pending',
-                    date: 'Mar 05, 2026',
-                    price: '₱1,200,000'
-                },
-                {
-                    id: 'L003',
-                    title: 'Residential Lot',
-                    location: 'Metro Manila',
-                    status: 'Verified',
-                    date: 'Feb 28, 2026',
-                    price: '₱800,000'
-                }
-            ];
-            
+            // Fetch user listings from the server if seller
             const listingsContainer = document.getElementById('userListingsContainer');
             const noListingsMessage = document.getElementById('noListingsMessage');
             
             // Only show listings if user is a seller
             if (role === 'Seller' || role === 'seller') {
-                listingsContainer.innerHTML = userListings.map(listing => `
-                    <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px; cursor: pointer; transition: all .2s ease;" onmouseover="this.style.borderColor='rgba(149,213,178,.5)'" onmouseout="this.style.borderColor='rgba(149,213,178,.2)'">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                            <h4 style="color: var(--cream-100); font-weight: 600; margin: 0; font-size: 1rem;">${listing.title}</h4>
-                            <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${listing.status === 'Verified' ? 'rgba(46,204,113,.2); color: #2ecc71;' : 'rgba(241,196,15,.2); color: #f1c40f;'}">${listing.status}</span>
-                        </div>
-                        <p style="color: rgba(254,250,224,.7); font-size: 0.9rem; margin: 8px 0;">📍 ${listing.location}</p>
-                        <p style="color: var(--accent); font-weight: 700; font-size: 1.1rem; margin: 8px 0;">${listing.price}</p>
-                        <p style="color: rgba(254,250,224,.5); font-size: 0.85rem; margin: 0;">Posted: ${listing.date}</p>
-                    </div>
-                `).join('');
-                noListingsMessage.style.display = 'none';
+                // Fetch listings for this seller
+                fetch(`/admin/user/${userId}/listings`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.listings && data.listings.length > 0) {
+                            listingsContainer.innerHTML = data.listings.map(listing => `
+                                <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px; cursor: pointer; transition: all .2s ease;" onmouseover="this.style.borderColor='rgba(149,213,178,.5)'" onmouseout="this.style.borderColor='rgba(149,213,178,.2)'">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                        <h4 style="color: var(--cream-100); font-weight: 600; margin: 0; font-size: 1rem;">${listing.title || 'Untitled'}</h4>
+                                        <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${listing.is_verified_listing === 'verified' || listing.listing_status === 'approved' ? 'rgba(46,204,113,.2); color: #2ecc71;' : (listing.listing_status === 'rejected' ? 'rgba(231, 76, 60,.2); color: #e74c3c;' : 'rgba(241,196,15,.2); color: #f1c40f;')}">${listing.is_verified_listing === 'verified' || listing.listing_status === 'approved' ? 'Verified' : (listing.listing_status === 'rejected' ? 'Rejected' : 'Pending')}</span>
+                                    </div>
+                                    <p style="color: rgba(254,250,224,.7); font-size: 0.9rem; margin: 8px 0;">📍 ${listing.barangay}, ${listing.city}, ${listing.province}</p>
+                                    <p style="color: var(--accent); font-weight: 700; font-size: 1.1rem; margin: 8px 0;">₱${Number(listing.price).toLocaleString()}</p>
+                                    <p style="color: rgba(254,250,224,.5); font-size: 0.85rem; margin: 0;">Posted: ${new Date(listing.created_at).toLocaleDateString()}</p>
+                                </div>
+                            `).join('');
+                            noListingsMessage.style.display = 'none';
+                        } else {
+                            listingsContainer.innerHTML = '';
+                            noListingsMessage.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching listings:', error);
+                        listingsContainer.innerHTML = '';
+                        noListingsMessage.textContent = 'Unable to load listings.';
+                        noListingsMessage.style.display = 'block';
+                    });
             } else {
                 listingsContainer.innerHTML = '';
                 noListingsMessage.style.display = 'block';
@@ -1264,7 +1886,7 @@
                     fireAppAlert({
                         icon: 'success',
                         title: 'Account Suspended',
-                        html: `Account for <strong>${userName}</strong> has been suspended.<br><br><small style="color: rgba(254,250,224,.7);">In production, this would update the user status in the database</small>`,
+                        html: `Account for <strong>${userName}</strong> has been suspended.`,
                         confirmButtonText: 'OK'
                     });
                 }
@@ -1576,7 +2198,7 @@
                     fireAppAlert({
                         icon: 'success',
                         title: 'Reply Sent',
-                        html: `Reply sent to report <strong>${reportId}</strong><br><br><small style="color: rgba(254,250,224,.7);">In production, this would be saved to the database</small>`,
+                        html: `Reply sent to report <strong>${reportId}</strong>`,
                         confirmButtonText: 'OK'
                     });
                 }
@@ -1626,13 +2248,23 @@
                     borderWidth: 1
                 }
             },
+            scales: {
+                x: {
+                    ticks: { color: 'rgba(254,250,224,.6)' },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                y: {
+                    ticks: { color: 'rgba(254,250,224,.6)' },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                }
+            },
             scale: {
                 ticks: { color: 'rgba(254,250,224,.6)' },
-                grid: { color: 'rgba(149,213,178,.1)' }
+                grid: { color: 'rgba(255,255,255,0.05)' }
             }
         };
 
-        // Initialize chart data from PHP variables (sample data if not available)
+        // Initialize chart data from database variables passed by the controller
         let dashboardData = {};
         try {
             const dataElement = document.getElementById('dashboardData');
@@ -1641,35 +2273,35 @@
             }
         } catch (e) {
             console.error('Error parsing dashboard data:', e);
-            // Use defaults if parsing fails
+            // Use zeros if parsing fails
             dashboardData = {
-                totalBuyers: 245,
-                totalSellers: 187,
-                totalAdmins: 5,
-                listingPending: 38,
-                listingVerified: 156,
-                listingRejected: 12,
-                reportPending: 18,
-                reportResolved: 34,
-                reportSuspended: 7,
-                verificationVerified: 287,
-                verificationPending: 98,
-                verificationUnverified: 52
+                totalBuyers: 0,
+                totalSellers: 0,
+                totalAdmins: 0,
+                listingPending: 0,
+                listingVerified: 0,
+                listingRejected: 0,
+                reportPending: 0,
+                reportResolved: 0,
+                reportSuspended: 0,
+                verificationVerified: 0,
+                verificationPending: 0,
+                verificationUnverified: 0
             };
         }
 
-        const totalBuyers = dashboardData.totalBuyers || 245;
-        const totalSellers = dashboardData.totalSellers || 187;
-        const totalAdmins = dashboardData.totalAdmins || 5;
-        const listingPending = dashboardData.listingPending || 38;
-        const listingVerified = dashboardData.listingVerified || 156;
-        const listingRejected = dashboardData.listingRejected || 12;
-        const reportPending = dashboardData.reportPending || 18;
-        const reportResolved = dashboardData.reportResolved || 34;
-        const reportSuspended = dashboardData.reportSuspended || 7;
-        const verificationVerified = dashboardData.verificationVerified || 287;
-        const verificationPending = dashboardData.verificationPending || 98;
-        const verificationUnverified = dashboardData.verificationUnverified || 52;
+        const totalBuyers = dashboardData.totalBuyers || 0;
+        const totalSellers = dashboardData.totalSellers || 0;
+        const totalAdmins = dashboardData.totalAdmins || 0;
+        const listingPending = dashboardData.listingPending || 0;
+        const listingVerified = dashboardData.listingVerified || 0;
+        const listingRejected = dashboardData.listingRejected || 0;
+        const reportPending = dashboardData.reportPending || 0;
+        const reportResolved = dashboardData.reportResolved || 0;
+        const reportSuspended = dashboardData.reportSuspended || 0;
+        const verificationVerified = dashboardData.verificationVerified || 0;
+        const verificationPending = dashboardData.verificationPending || 0;
+        const verificationUnverified = dashboardData.verificationUnverified || 0;
 
         // 1. USER CATEGORY PIE CHART
         const userCategoryCtx = document.getElementById('userCategoryChart');
@@ -1679,7 +2311,6 @@
                 data: {
                     labels: ['Buyers', 'Sellers', 'Admins'],
                     datasets: [{
-                        // [SAMPLE DATA] Replace with real counts from database
                         data: [totalBuyers, totalSellers, totalAdmins],
                         backgroundColor: [
                             'rgba(149,213,178,.8)',
@@ -1716,7 +2347,6 @@
                     labels: ['Pending', 'Verified', 'Rejected'],
                     datasets: [{
                         label: 'Listings',
-                        // [SAMPLE DATA] Displayed from database or sample values
                         data: [listingPending, listingVerified, listingRejected],
                         backgroundColor: [
                             'rgba(241,196,15,.8)',
@@ -1761,7 +2391,6 @@
                 data: {
                     labels: ['Pending', 'Resolved', 'Suspended'],
                     datasets: [{
-                        // [SAMPLE DATA] Displayed from database or sample values
                         data: [reportPending, reportResolved, reportSuspended],
                         backgroundColor: [
                             'rgba(241,196,15,.8)',
@@ -1797,7 +2426,6 @@
                 data: {
                     labels: ['Verified', 'Pending', 'Unverified'],
                     datasets: [{
-                        // [SAMPLE DATA] Displayed from database or sample values
                         data: [verificationVerified, verificationPending, verificationUnverified],
                         backgroundColor: [
                             'rgba(46,204,113,.8)',
@@ -1835,8 +2463,7 @@
                     datasets: [
                         {
                             label: 'New Users',
-                            // [SAMPLE DATA] Update with real weekly new user counts
-                            data: [32, 48, 41, 67, 85, 62, 94],
+                            data: [],
                             borderColor: 'rgba(149,213,178,.8)',
                             backgroundColor: 'rgba(149,213,178,.1)',
                             borderWidth: 2,
@@ -1849,8 +2476,7 @@
                         },
                         {
                             label: 'New Listings',
-                            // [SAMPLE DATA] Update with real weekly new listing counts
-                            data: [18, 32, 41, 28, 56, 38, 67],
+                            data: [],
                             borderColor: 'rgba(210,180,140,.8)',
                             backgroundColor: 'rgba(210,180,140,.1)',
                             borderWidth: 2,
@@ -1863,8 +2489,7 @@
                         },
                         {
                             label: 'Reports Filed',
-                            // [SAMPLE DATA] Update with real weekly report counts
-                            data: [5, 8, 3, 12, 6, 9, 15],
+                            data: [],
                             borderColor: 'rgba(231,76,60,.8)',
                             backgroundColor: 'rgba(231,76,60,.1)',
                             borderWidth: 2,

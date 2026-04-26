@@ -119,6 +119,7 @@ $routes->group('admin', function ($routes) {
     $routes->post('users/(:num)/delete', 'Admin\DashboardController::deleteUser/$1');
 
     $routes->post('listings/(:num)/verify', 'Admin\DashboardController::verifyListing/$1');
+    $routes->post('listings/(:num)/approve', 'Admin\DashboardController::approveListing/$1');
     $routes->post('listings/(:num)/reject', 'Admin\DashboardController::rejectListing/$1');
     $routes->post('listings/(:num)/delete', 'Admin\DashboardController::deleteListing/$1');
 

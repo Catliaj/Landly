@@ -16,46 +16,53 @@
                             <?php
                                 $sellerId = $listing['seller_id'] ?? null;
                                 $sellerName = $sellerMap[$sellerId] ?? 'Unknown Seller';
-                                $listingTitle = esc($listing['title'] ?? 'Untitled Listing');
+                                $listingTitle = esc($listing['title'] ?? '');
                                 $listingDesc = esc(strlen($listing['description'] ?? '') > 100 ? substr($listing['description'], 0, 100) . '...' : ($listing['description'] ?? ''));
                                 $location = esc(($listing['barangay'] ?? '') . ', ' . ($listing['city'] ?? '') . ', ' . ($listing['province'] ?? ''));
-                                $price = isset($listing['price']) ? '₱' . number_format($listing['price'], 0) : 'N/A';
+                                $price = isset($listing['price']) ? '₱' . number_format($listing['price'], 0) : '';
                                 $listingId = $listing['listing_id'];
                                 $listingStatus = $listing['listing_status'] ?? 'pending';
                                 $isVerified = $listing['is_verified_listing'] ?? 'pending';
                                 
-                                // Determine current status button class
-                                $statusButton = '';
+                                // Determine current status
                                 if ($isVerified === 'verified' || $listingStatus === 'approved') {
-                                    $statusButton = 'btn-approved';
-                                    $statusText = 'Approved';
+                                    $statusClass = 'verified';
+                                    $statusText = 'Verified';
                                 } elseif ($listingStatus === 'rejected' || $isVerified === 'rejected') {
-                                    $statusButton = 'btn-rejected';
+                                    $statusClass = 'rejected';
                                     $statusText = 'Rejected';
                                 } else {
-                                    $statusButton = 'btn-incomplete';
+                                    $statusClass = 'pending';
                                     $statusText = 'Pending';
                                 }
                             ?>
                             <div class="listing-card">
-                                <div class="listing-card-image" style="background: linear-gradient(135deg, #2a6c62, #1f4f48); color: var(--cream-100); font-size: 2rem;">🏞️</div>
+                                <div class="listing-card-image" style="position: relative;">
+                                    🏞️
+                                    <!-- Status Badge Top Right -->
+                                    <div style="position: absolute; top: 12px; right: 12px;">
+                                        <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                                    </div>
+                                </div>
                                 <div class="listing-card-content">
                                     <div class="listing-card-title"><?php echo $listingTitle; ?></div>
                                     <div class="listing-card-seller">By: <?php echo esc($sellerName); ?></div>
                                     <div class="listing-card-description"><?php echo $listingDesc; ?></div>
-                                    <div style="font-size: 0.85rem; color: rgba(254,250,224,.65); margin-bottom: 8px;">
-                                        📍 <?php echo $location; ?> | 💰 <?php echo $price; ?>
+                                    <div style="font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 10px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                        <span>📍 <?php echo $location; ?></span>
+                                        <span>💰 <?php echo $price; ?></span>
                                     </div>
                                     <div class="listing-card-actions">
-                                        <button type="button" class="btn btn-sm btn-view" onclick="viewListingDetails('<?php echo $listingId; ?>', '<?php echo $listingTitle; ?>', '<?php echo esc($sellerName); ?>')">View Details</button>
-                                        <button class="btn btn-sm <?php echo $statusButton; ?>" type="button" disabled><?php echo $statusText; ?></button>
+                                        <button type="button" class="btn btn-neutral btn-sm" onclick="viewListingDetails('<?php echo $listingId; ?>', '<?php echo $listingTitle; ?>', '<?php echo esc($sellerName); ?>')">View</button>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="approveListing('<?php echo $listingId; ?>', '<?php echo $listingTitle; ?>')">Approve</button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="rejectListing('<?php echo $listingId; ?>', '<?php echo $listingTitle; ?>')">Reject</button>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="listing-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                            <p style="color: rgba(254,250,224,.65);">No listings found in the system.</p>
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px;">
+                            <p class="table-empty-state">No listings found in the system.</p>
                         </div>
                     <?php endif; ?>
                 </div>
