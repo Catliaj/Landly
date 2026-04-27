@@ -71,7 +71,7 @@
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease, color 0.2s ease; font-size: 14px; }
         .nav-item:hover { background: rgba(255, 255, 255, 0.07); color: var(--accent); }
         .nav-item.active { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
-        .main-content { margin-left: var(--sidebar-width); padding: 32px; width: calc(100% - var(--sidebar-width)); background: #0f1f0f; }
+        .main-content { margin-left: var(--sidebar-width); padding: 32px; width: calc(100% - var(--sidebar-width)); }
         .section-content { display: none; }
         .section-content.active { display: block; }
         .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
@@ -1337,18 +1337,11 @@
 
         // Modal Functions for Files Gallery
         function openDocumentsGallery(sellerName, documents) {
-            console.log('=== OPENING GALLERY ===');
-            console.log('Seller Name:', sellerName);
-            console.log('Documents:', documents);
-            console.log('Documents Type:', typeof documents);
-            console.log('Documents is Array:', Array.isArray(documents));
-            
             const modal = document.getElementById('filesModal');
             const modalTitle = document.getElementById('modalGalleryTitle');
             const galleryGrid = document.getElementById('modalGalleryGrid');
             
             if (!modal) {
-                console.error('Modal element not found!');
                 return;
             }
             
@@ -1361,15 +1354,11 @@
                 try {
                     docsArray = JSON.parse(documents);
                 } catch (e) {
-                    console.error('Failed to parse documents JSON:', documents);
                     docsArray = [];
                 }
             }
             
-            console.log('Final Documents Array:', docsArray);
-            
             if (!docsArray || docsArray.length === 0) {
-                console.log('No documents to display');
                 galleryGrid.innerHTML = '<p style="color: rgba(254,250,224,.65); text-align: center; padding: 40px; grid-column: 1/-1;">No documents available</p>';
                 modal.classList.add('active');
                 return;
@@ -1379,8 +1368,6 @@
             window.currentDocuments = docsArray;
             
             docsArray.forEach((doc, index) => {
-                console.log('Adding document', index, doc);
-                
                 const galleryItem = document.createElement('div');
                 galleryItem.className = 'modal-gallery-item';
                 galleryItem.style.cursor = 'pointer';
@@ -1388,7 +1375,6 @@
                 galleryItem.title = doc.type || 'Document ' + (index + 1);
                 
                 galleryItem.onclick = function() {
-                    console.log('Clicked document', index);
                     showFullImage(docsArray, index);
                 };
                 
@@ -1401,13 +1387,11 @@
                 
                 // Handle image load errors
                 img.onerror = function() {
-                    console.error('Failed to load document image:', doc.url);
                     galleryItem.style.background = 'rgba(231, 76, 60, 0.2)';
                     galleryItem.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;"><p style="font-size: 2rem; margin: 0;">📄</p><p style="color: #e74c3c; margin-top: 8px; font-size: 0.8rem;">' + (doc.type || 'Document') + '</p></div>';
                 };
                 
                 img.onload = function() {
-                    console.log('Loaded document image:', doc.url);
                 };
                 
                 galleryItem.appendChild(img);
@@ -1421,9 +1405,7 @@
                 galleryGrid.appendChild(galleryItem);
             });
             
-            console.log('Opening modal, adding active class');
             modal.classList.add('active');
-            console.log('=== GALLERY OPENED ===');
         }
 
         function showFullImage(documents, index) {
@@ -1512,7 +1494,6 @@
                     modal.classList.add('active');
                 })
                 .catch(error => {
-                    console.error('Error fetching report:', error);
                     document.getElementById('detailReportId').textContent = reportId;
                     document.getElementById('detailSubject').textContent = 'Error Loading Report';
                     document.getElementById('detailDescription').textContent = 'An error occurred while loading the report details. Please try again.';
@@ -1602,7 +1583,7 @@
                         // Determine status
                         let statusClass = 'pending';
                         let statusText = 'Pending';
-                        if (listing.is_verified_listing === 'verified' || listing.listing_status === 'approved') {
+                        if (listing.is_verified_listing === 'true' || listing.listing_status === 'approved') {
                             statusClass = 'available';
                             statusText = 'Approved';
                         } else if (listing.listing_status === 'rejected' || listing.is_verified_listing === 'rejected') {
@@ -1633,7 +1614,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading listing details:', error);
                     document.getElementById('detailListingDescription').textContent = 'Unable to load listing details.';
                 });
             
@@ -1667,7 +1647,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '<?php echo csrf_hash(); ?>'
                         }
                     })
                     .then(response => response.json())
@@ -1732,7 +1713,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '<?php echo csrf_hash(); ?>'
                         },
                         body: JSON.stringify({ reason: reason })
                     })
@@ -1831,7 +1813,7 @@
                                 <div style="background: rgba(149,213,178,.08); border: 1px solid rgba(149,213,178,.2); border-radius: 12px; padding: 16px; cursor: pointer; transition: all .2s ease;" onmouseover="this.style.borderColor='rgba(149,213,178,.5)'" onmouseout="this.style.borderColor='rgba(149,213,178,.2)'">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                                         <h4 style="color: var(--cream-100); font-weight: 600; margin: 0; font-size: 1rem;">${listing.title || 'Untitled'}</h4>
-                                        <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${listing.is_verified_listing === 'verified' || listing.listing_status === 'approved' ? 'rgba(46,204,113,.2); color: #2ecc71;' : (listing.listing_status === 'rejected' ? 'rgba(231, 76, 60,.2); color: #e74c3c;' : 'rgba(241,196,15,.2); color: #f1c40f;')}">${listing.is_verified_listing === 'verified' || listing.listing_status === 'approved' ? 'Verified' : (listing.listing_status === 'rejected' ? 'Rejected' : 'Pending')}</span>
+                                        <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${listing.is_verified_listing === 'true' || listing.listing_status === 'approved' ? 'rgba(46,204,113,.2); color: #2ecc71;' : (listing.listing_status === 'rejected' ? 'rgba(231, 76, 60,.2); color: #e74c3c;' : 'rgba(241,196,15,.2); color: #f1c40f;')}">${listing.is_verified_listing === 'true' || listing.listing_status === 'approved' ? 'Verified' : (listing.listing_status === 'rejected' ? 'Rejected' : 'Pending')}</span>
                                     </div>
                                     <p style="color: rgba(254,250,224,.7); font-size: 0.9rem; margin: 8px 0;">📍 ${listing.barangay}, ${listing.city}, ${listing.province}</p>
                                     <p style="color: var(--accent); font-weight: 700; font-size: 1.1rem; margin: 8px 0;">₱${Number(listing.price).toLocaleString()}</p>
@@ -1845,7 +1827,6 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Error fetching listings:', error);
                         listingsContainer.innerHTML = '';
                         noListingsMessage.textContent = 'Unable to load listings.';
                         noListingsMessage.style.display = 'block';
@@ -2272,7 +2253,6 @@
                 dashboardData = JSON.parse(dataElement.textContent);
             }
         } catch (e) {
-            console.error('Error parsing dashboard data:', e);
             // Use zeros if parsing fails
             dashboardData = {
                 totalBuyers: 0,
@@ -2573,17 +2553,10 @@
                 const sellerName = e.target.dataset.sellerName;
                 const documentsJson = e.target.dataset.documents;
                 
-                console.log('=== DOCUMENTS BUTTON CLICKED ===');
-                console.log('Seller Name:', sellerName);
-                console.log('Documents JSON:', documentsJson);
-                
                 try {
                     const documents = JSON.parse(documentsJson);
-                    console.log('Parsed documents:', documents);
                     openDocumentsGallery(sellerName, documents);
                 } catch (error) {
-                    console.error('Failed to parse documents:', error);
-                    console.error('Documents JSON was:', documentsJson);
                     alert('Error loading documents. Check browser console for details.');
                 }
             }
@@ -2630,7 +2603,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
                     fireAppAlert({
                         title: 'Error',
                         text: 'An error occurred while approving the seller',
@@ -2680,7 +2652,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
                     fireAppAlert({
                         title: 'Error',
                         text: 'An error occurred while rejecting the seller',
@@ -2688,6 +2659,64 @@
                     });
                 });
             }
+        }
+
+        // Seller Status Filtering Function
+        function filterSellersByStatus(status) {
+            // Update active filter button
+            document.querySelectorAll('.seller-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'transparent';
+                btn.style.color = 'rgba(254,250,224,.6)';
+            });
+            
+            // Set active button based on status parameter
+            const activeBtn = document.querySelector(`.seller-filter-btn[data-filter="${status}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'rgba(149,213,178,.2)';
+                activeBtn.style.color = 'var(--accent)';
+            }
+            
+            // Filter seller cards
+            const cards = document.querySelectorAll('.seller-card');
+            cards.forEach(card => {
+                if (status === 'all') {
+                    card.style.display = '';
+                } else {
+                    const cardStatus = card.getAttribute('data-status');
+                    card.style.display = cardStatus === status ? '' : 'none';
+                }
+            });
+        }
+
+        // Listing Status Filtering Function
+        function filterListingsByStatus(status) {
+            // Update active filter button
+            document.querySelectorAll('.listing-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'transparent';
+                btn.style.color = 'rgba(254,250,224,.6)';
+            });
+            
+            // Set active button based on status parameter
+            const activeBtn = document.querySelector(`.listing-filter-btn[data-filter="${status}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'rgba(149,213,178,.2)';
+                activeBtn.style.color = 'var(--accent)';
+            }
+            
+            // Filter listing cards
+            const cards = document.querySelectorAll('.listing-card');
+            cards.forEach(card => {
+                if (status === 'all') {
+                    card.style.display = '';
+                } else {
+                    const cardStatus = card.getAttribute('data-status');
+                    card.style.display = cardStatus === status ? '' : 'none';
+                }
+            });
         }
 
         // User Management Confirmation Functions
