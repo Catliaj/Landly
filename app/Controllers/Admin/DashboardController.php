@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use App\Models\LandListings;
 use App\Models\ReportsModel;
 use App\Models\SellerVerificationModel;
+use App\Models\ListingImages;
 
 class DashboardController extends BaseController
 {
@@ -14,6 +15,7 @@ class DashboardController extends BaseController
     protected $listingModel;
     protected $reportsModel;
     protected $sellerVerificationModel;
+    protected $listingImagesModel;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class DashboardController extends BaseController
         $this->listingModel = new LandListings();
         $this->reportsModel = new ReportsModel();
         $this->sellerVerificationModel = new SellerVerificationModel();
+        $this->listingImagesModel = new ListingImages();
     }
 
     public function index()
@@ -38,7 +41,7 @@ class DashboardController extends BaseController
             ORDER BY u.created_at DESC
         ")->getResult('array');
         
-        // Enrich sellers with their documents
+        // Enrich sellers with their documents and resolve profile pictures
         $sellersData = [];
         foreach ($sellers as $seller) {
             $documents = $this->sellerVerificationModel
@@ -48,7 +51,119 @@ class DashboardController extends BaseController
             // Create fullname from first_name and last_name
             $seller['fullname'] = trim(($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? ''));
             $seller['documents'] = $documents;
+            
+            // Resolve profile picture URL
+            $profilePicture = trim((string) ($seller['profile_picture'] ?? ''));
+            if ($profilePicture !== '') {
+                if (preg_match('#^(?:https?:)?//#i', $profilePicture) === 1 || str_starts_with($profilePicture, 'data:')) {
+                    $seller['profile_picture_url'] = $profilePicture;
+                } else {
+                    $seller['profile_picture_url'] = base_url('media/profile?path=' . rawurlencode($profilePicture));
+                }
+            } else {
+                $seller['profile_picture_url'] = null;
+            }
+            
             $sellersData[] = $seller;
+        }
+        
+        // Fetch all listings with image data
+        $listings = $this->listingModel->findAll();
+        $listingsData = [];
+        foreach ($listings as $listing) {
+            $listingId = $listing['listing_id'];
+            
+            // Get primary image for this listing
+            $primaryImage = $db->table('listing_images')
+                ->where('listing_id', $listingId)
+                ->where('is_primary', 1)
+                ->get()
+                ->getRow('array');
+            
+            if ($primaryImage && !empty($primaryImage['image_path'])) {
+                $imagePath = trim($primaryImage['image_path']);
+                if (preg_match('#^(?:https?:)?//#i', $imagePath) === 1 || str_starts_with($imagePath, 'data:')) {
+                    $listing['image_url'] = $imagePath;
+                } else {
+                    $listing['image_url'] = base_url(ltrim(str_replace('\\', '/', $imagePath), '/'));
+                }
+            } else {
+                // Fall back to SVG placeholder with listing title
+                $title = trim($listing['title'] ?? '') ?: 'Land Listing';
+                $svg = sprintf(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480"><rect width="800" height="480" fill="#183127"/><rect x="36" y="36" width="728" height="408" rx="30" fill="#234236"/><text x="50%%" y="50%%" text-anchor="middle" dominant-baseline="middle" fill="#d2b48c" font-family="Arial, sans-serif" font-size="34">%s</text></svg>',
+                    htmlspecialchars($title, ENT_QUOTES, 'UTF-8')
+                );
+                $listing['image_url'] = 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+            }
+            
+            $listingsData[] = $listing;
+        }
+        
+        // Enrich users with verification status and report counts
+        $usersData = [];
+        $allUsers = $this->userModel->findAll();
+        foreach ($allUsers as $user) {
+            $userId = $user['user_id'];
+            
+            // Get seller verification status (only applies to sellers)
+            $verificationStatus = 'unverified';
+            if ($user['roles'] === 'seller') {
+                $verifiedDocs = $this->sellerVerificationModel
+                    ->where('seller_id', $userId)
+                    ->where('is_verified', 1)
+                    ->countAllResults();
+                
+                $pendingDocs = $this->sellerVerificationModel
+                    ->where('seller_id', $userId)
+                    ->where('is_verified', 0)
+                    ->where('reviewed_at', null)
+                    ->countAllResults();
+                
+                if ($verifiedDocs > 0) {
+                    $verificationStatus = 'verified';
+                } elseif ($pendingDocs > 0) {
+                    $verificationStatus = 'pending';
+                }
+            }
+            
+            // Get report counts
+            $reportsFiled = $this->reportsModel
+                ->where('reported_by', $userId)
+                ->countAllResults();
+            
+            $reportsAgainst = $this->reportsModel
+                ->where('reported_against', $userId)
+                ->countAllResults();
+            
+            $user['verification_status'] = $verificationStatus;
+            $user['reports_filed'] = $reportsFiled;
+            $user['reports_against'] = $reportsAgainst;
+            
+            $usersData[] = $user;
+        }
+        
+        // Enrich reports with user names
+        $reportsData = [];
+        $allReports = $this->reportsModel->findAll();
+        $userMap = [];
+        foreach ($allUsers as $u) {
+            $userMap[$u['user_id']] = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+        }
+        
+        foreach ($allReports as $report) {
+            $reportedById = $report['reported_by'] ?? null;
+            $reportedAgainstId = $report['reported_against'] ?? null;
+            
+            $report['reported_by_name'] = !empty($reportedById) && isset($userMap[$reportedById]) 
+                ? $userMap[$reportedById] 
+                : 'Unknown User';
+            
+            $report['reported_against_name'] = !empty($reportedAgainstId) && isset($userMap[$reportedAgainstId])
+                ? $userMap[$reportedAgainstId]
+                : 'Unknown User';
+            
+            $reportsData[] = $report;
         }
         
         $data = [
@@ -59,9 +174,9 @@ class DashboardController extends BaseController
             'totalAdmins' => $this->userModel->where('roles', 'admin')->countAllResults(),
             'totalListings' => $this->listingModel->countAllResults(),
             'listingStats' => [
-                'pending' => $this->listingModel->where('listing_status', 'pending')->countAllResults(),
-                'verified' => $this->listingModel->where('is_verified_listing', 'verified')->countAllResults(),
-                'rejected' => $this->listingModel->where('listing_status', 'rejected')->countAllResults(),
+                'pending' => $this->listingModel->where('is_verified_listing', 'pending')->countAllResults(),
+                'verified' => $this->listingModel->where('is_verified_listing', 'true')->countAllResults(),
+                'rejected' => $this->listingModel->where('is_verified_listing', 'rejected')->countAllResults(),
             ],
             'totalReports' => $this->reportsModel->where('status', 'pending')->countAllResults(),
             'reportStats' => [
@@ -70,14 +185,14 @@ class DashboardController extends BaseController
                 'suspended' => $this->reportsModel->where('status', 'suspended')->countAllResults(),
             ],
             'verificationStats' => [
-                'verified' => $this->sellerVerificationModel->countAllResults(),
-                'pending' => 0,
-                'unverified' => 0,
+                'verified' => $this->sellerVerificationModel->where('is_verified', 1)->countAllResults(),
+                'pending' => $this->sellerVerificationModel->where('is_verified', 0)->where('reviewed_at', null)->countAllResults(),
+                'unverified' => $this->sellerVerificationModel->where('is_verified', null)->countAllResults(),
             ],
-            'users' => $this->userModel->findAll(),
-            'listings' => $this->listingModel->findAll(),
+            'users' => $usersData,
+            'listings' => $listingsData,
             'sellers' => $sellersData,
-            'reports' => $this->reportsModel->findAll(),
+            'reports' => $reportsData,
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);
@@ -114,16 +229,34 @@ class DashboardController extends BaseController
                 return $this->response->setJSON(['success' => false, 'message' => 'Invalid listing ID']);
             }
 
-            // Update listing as approved/verified
-            $this->listingModel->update($listingId, [
-                'is_verified_listing' => 'verified',
-                'listing_status' => 'approved'
-            ]);
+            try {
+                // Update listing as approved/verified
+                // is_verified_listing: set to 'true' (validated value, not 'verified' which fails validation)
+                // listing_status: set to 'approved' to indicate admin approval
+                $updateResult = $this->listingModel->update($listingId, [
+                    'is_verified_listing' => 'true',
+                    'listing_status' => 'approved'
+                ]);
 
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Listing approved successfully'
-            ]);
+                // Check if update was successful
+                if ($updateResult === false) {
+                    $errors = $this->listingModel->errors();
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to approve listing: ' . implode(', ', $errors)
+                    ]);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Listing approved successfully'
+                ]);
+            } catch (\Exception $e) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Error approving listing: ' . $e->getMessage()
+                ]);
+            }
         }
 
         return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
@@ -136,22 +269,43 @@ class DashboardController extends BaseController
                 return $this->response->setJSON(['success' => false, 'message' => 'Invalid listing ID']);
             }
 
-            $reason = $this->request->getJSON()->reason ?? null;
+            try {
+                $reason = $this->request->getJSON()->reason ?? null;
 
-            // Update listing as rejected
-            $updateData = ['listing_status' => 'rejected'];
-            
-            // Optionally store rejection reason if your database supports it
-            if ($reason) {
-                $updateData['rejection_reason'] = $reason;
+                // Update listing as rejected
+                // is_verified_listing: set to 'rejected' (validated value)
+                // listing_status: set to 'rejected' to indicate admin rejection
+                $updateData = [
+                    'is_verified_listing' => 'rejected',
+                    'listing_status' => 'rejected'
+                ];
+                
+                // Optionally store rejection reason if database supports it
+                if ($reason) {
+                    $updateData['rejection_reason'] = $reason;
+                }
+
+                $updateResult = $this->listingModel->update($listingId, $updateData);
+
+                // Check if update was successful
+                if ($updateResult === false) {
+                    $errors = $this->listingModel->errors();
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to reject listing: ' . implode(', ', $errors)
+                    ]);
+                }
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Listing rejected successfully'
+                ]);
+            } catch (\Exception $e) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Error rejecting listing: ' . $e->getMessage()
+                ]);
             }
-
-            $this->listingModel->update($listingId, $updateData);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Listing rejected successfully'
-            ]);
         }
 
         return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
@@ -217,21 +371,16 @@ class DashboardController extends BaseController
         if (! $listing) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Listing not found'
-            ])->setStatusCode(404);
+                'message' => 'Listing not found.',
+            ], 404);
         }
 
-        $listingImages = model('ListingImages')->where('listing_id', $listingId)->findAll();
-        $listingDocuments = model('ListingDocuments')->where('listing_id', $listingId)->findAll();
         $seller = $this->userModel->find($listing['seller_id']);
 
-        // Return JSON for AJAX requests
         return $this->response->setJSON([
             'success' => true,
             'listing' => $listing,
-            'images' => $listingImages,
-            'documents' => $listingDocuments,
-            'seller' => $seller,
+            'seller' => $seller ? $seller['fullname'] ?? 'Unknown' : 'Unknown',
         ]);
     }
 

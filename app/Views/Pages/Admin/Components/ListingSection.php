@@ -1,7 +1,16 @@
 <section id="listings-section" class="section-content">
                 <div class="content-card">
                 <h3>Land Listings Management</h3>
-                <div class="listings-grid">
+                
+                <!-- Status Filter Tabs -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid rgba(149,213,178,.2); padding-bottom: 12px;">
+                    <button class="listing-filter-btn active" data-filter="all" onclick="filterListingsByStatus('all')" style="padding: 6px 14px; border: none; background: rgba(149,213,178,.2); color: var(--accent); font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">All Listings</button>
+                    <button class="listing-filter-btn" data-filter="pending" onclick="filterListingsByStatus('pending')" style="padding: 6px 14px; border: none; background: transparent; color: rgba(254,250,224,.6); font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">⏳ Pending</button>
+                    <button class="listing-filter-btn" data-filter="verified" onclick="filterListingsByStatus('verified')" style="padding: 6px 14px; border: none; background: transparent; color: rgba(254,250,224,.6); font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">✅ Approved</button>
+                    <button class="listing-filter-btn" data-filter="rejected" onclick="filterListingsByStatus('rejected')" style="padding: 6px 14px; border: none; background: transparent; color: rgba(254,250,224,.6); font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s ease;">❌ Rejected</button>
+                </div>
+                
+                <div class="listings-grid" id="listingsGrid">
                     <?php if (!empty($listings) && is_array($listings)): ?>
                         <?php 
                             // Create a map of user IDs to names for quick lookup
@@ -24,10 +33,10 @@
                                 $listingStatus = $listing['listing_status'] ?? 'pending';
                                 $isVerified = $listing['is_verified_listing'] ?? 'pending';
                                 
-                                // Determine current status
-                                if ($isVerified === 'verified' || $listingStatus === 'approved') {
+                                // Determine current status (is_verified_listing: 'true'/'false'/'pending'/'rejected', listing_status: 'available'/'approved'/'rejected')
+                                if ($isVerified === 'true' || $listingStatus === 'approved') {
                                     $statusClass = 'verified';
-                                    $statusText = 'Verified';
+                                    $statusText = 'Approved';
                                 } elseif ($listingStatus === 'rejected' || $isVerified === 'rejected') {
                                     $statusClass = 'rejected';
                                     $statusText = 'Rejected';
@@ -36,9 +45,9 @@
                                     $statusText = 'Pending';
                                 }
                             ?>
-                            <div class="listing-card">
+                            <div class="listing-card" data-status="<?= $statusClass ?>">
                                 <div class="listing-card-image" style="position: relative;">
-                                    🏞️
+                                    <img src="<?= esc($listing['image_url'] ?? '') ?>" alt="<?= esc($listingTitle) ?>" style="width: 100%; height: 100%; object-fit: cover; background: #183127;">
                                     <!-- Status Badge Top Right -->
                                     <div style="position: absolute; top: 12px; right: 12px;">
                                         <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
