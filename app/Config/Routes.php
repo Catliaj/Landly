@@ -125,6 +125,16 @@ $routes->group('admin', function ($routes) {
 
     $routes->post('approve-seller', 'Admin\DashboardController::approveSeller');
     $routes->post('reject-seller', 'Admin\DashboardController::rejectSeller');
-    $routes->get('document/(:num)/view', 'Admin\DashboardController::getSellerDocument/$1');
+    $routes->get('document/(:num)/view', 'Admin\DashboardController::getSellerDocument/$1');    
+    // Reports management routes
+    $routes->get('reports', 'Admin\ReportsController::listReports');
+    $routes->get('reports/(:num)', 'Admin\ReportsController::getReportDetail/$1');
+    $routes->post('reports/(:num)/status', 'Admin\ReportsController::updateReportStatus/$1');
+    $routes->get('reports/statistics/overview', 'Admin\ReportsController::getStatistics');
 });
+
+// Report submission routes (for logged-in users)
+$routes->group('reports', function ($routes) {
+    $routes->post('listing', 'ReportController::submitListingReport');
+    $routes->post('message', 'ReportController::submitMessageReport');});
 

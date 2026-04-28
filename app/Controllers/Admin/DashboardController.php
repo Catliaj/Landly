@@ -129,11 +129,11 @@ class DashboardController extends BaseController
             
             // Get report counts
             $reportsFiled = $this->reportsModel
-                ->where('reported_by', $userId)
+                ->where('reporter_user_id', $userId)
                 ->countAllResults();
             
             $reportsAgainst = $this->reportsModel
-                ->where('reported_against', $userId)
+                ->where('reported_user_id', $userId)
                 ->countAllResults();
             
             $user['verification_status'] = $verificationStatus;
@@ -152,8 +152,8 @@ class DashboardController extends BaseController
         }
         
         foreach ($allReports as $report) {
-            $reportedById = $report['reported_by'] ?? null;
-            $reportedAgainstId = $report['reported_against'] ?? null;
+            $reportedById = $report['reporter_user_id'] ?? null;
+            $reportedAgainstId = $report['reported_user_id'] ?? null;
             
             $report['reported_by_name'] = !empty($reportedById) && isset($userMap[$reportedById]) 
                 ? $userMap[$reportedById] 
@@ -162,6 +162,8 @@ class DashboardController extends BaseController
             $report['reported_against_name'] = !empty($reportedAgainstId) && isset($userMap[$reportedAgainstId])
                 ? $userMap[$reportedAgainstId]
                 : 'Unknown User';
+
+            $report['subject'] = $this->formatReportSubject($report);
             
             $reportsData[] = $report;
         }
@@ -181,8 +183,8 @@ class DashboardController extends BaseController
             'totalReports' => $this->reportsModel->where('status', 'pending')->countAllResults(),
             'reportStats' => [
                 'pending' => $this->reportsModel->where('status', 'pending')->countAllResults(),
-                'resolved' => $this->reportsModel->where('status', 'resolved')->countAllResults(),
-                'suspended' => $this->reportsModel->where('status', 'suspended')->countAllResults(),
+                'resolved' => $this->reportsModel->whereIn('status', ['reviewed', 'action_taken'])->countAllResults(),
+                'suspended' => $this->reportsModel->where('status', 'dismissed')->countAllResults(),
             ],
             'verificationStats' => [
                 'verified' => $this->sellerVerificationModel->where('is_verified', 1)->countAllResults(),
@@ -196,6 +198,19 @@ class DashboardController extends BaseController
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);
+    }
+
+    private function formatReportSubject(array $report): string
+    {
+        $type = ucfirst((string) ($report['report_type'] ?? 'Report'));
+        $reason = trim((string) ($report['reason'] ?? ''));
+        $otherReason = trim((string) ($report['other_reason'] ?? ''));
+
+        if ($reason === 'Other' && $otherReason !== '') {
+            $reason = $otherReason;
+        }
+
+        return trim($type . ($reason !== '' ? ': ' . $reason : ' Report'));
     }
 
     public function activateUser($userId)
