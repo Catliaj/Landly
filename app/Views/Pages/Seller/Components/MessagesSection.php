@@ -4,7 +4,9 @@
             display: grid;
             grid-template-columns: 350px minmax(0, 1fr);
             gap: 25px;
-            min-height: calc(100vh - 200px);
+            height: calc(100vh - 200px);
+            min-height: 520px;
+            max-height: 760px;
         }
 
         #section-messages .messages-list,
@@ -14,6 +16,7 @@
             border-radius: 20px;
             overflow: hidden;
             min-width: 0;
+            min-height: 0;
         }
 
         #section-messages .messages-list {
@@ -43,6 +46,24 @@
             overflow-y: auto;
             min-height: 0;
             flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(149, 213, 178, 0.45) rgba(255, 255, 255, 0.04);
+        }
+
+        #section-messages .messages-list-body::-webkit-scrollbar,
+        #section-messages .chat-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #section-messages .messages-list-body::-webkit-scrollbar-track,
+        #section-messages .chat-body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        #section-messages .messages-list-body::-webkit-scrollbar-thumb,
+        #section-messages .chat-body::-webkit-scrollbar-thumb {
+            background: rgba(149, 213, 178, 0.45);
+            border-radius: 999px;
         }
 
         #section-messages .message-item {
@@ -207,12 +228,35 @@
             justify-content: flex-end;
         }
 
+        #section-messages .chat-report-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 10px;
+            border: 1px solid rgba(149, 213, 178, 0.3);
+            background: transparent;
+            color: var(--cream-100);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        #section-messages .chat-report-btn:hover {
+            background: rgba(149, 213, 178, 0.08);
+            box-shadow: 0 5px 15px rgba(210, 180, 140, 0.15);
+        }
+
         #section-messages .chat-body {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             min-height: 0;
             scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(149, 213, 178, 0.45) rgba(255, 255, 255, 0.04);
         }
 
         #section-messages .chat-message {
@@ -313,8 +357,9 @@
         @media (max-width: 991.98px) {
             #section-messages .messages-shell {
                 grid-template-columns: 1fr;
-                min-height: auto;
                 height: calc(100vh - 180px);
+                min-height: 480px;
+                max-height: none;
             }
 
             #section-messages .messages-list,
@@ -397,6 +442,9 @@
                         <option value="closed">Closed</option>
                     </select>
                     <button id="sellerInquiryStatusUpdateBtn" class="seller-inquiry-status-btn" type="button" disabled>Update Status</button>
+                    <button id="reportMessageBtn" class="chat-report-btn" type="button" title="Report message" aria-label="Report this conversation" onclick="openMessageReportModal()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                    </button>
                 </div>
             </div>
             <div class="chat-body" id="sellerChatBody">
@@ -414,6 +462,8 @@
         </div>
     </div>
 </section>
+
+<?= view('Reports/ReportModal') ?>
 
 <script>
     (function () {
@@ -735,7 +785,7 @@
                 const bubbleText = message.message_text || 'Attachment sent';
 
                 return `
-                    <div class="chat-message ${isSent ? 'sent' : 'received'}">
+                    <div class="chat-message ${isSent ? 'sent' : 'received'}" data-message-id="${Number(message.message_id || 0)}">
                         <div class="chat-bubble">${escapeHtml(bubbleText)}</div>
                         <div class="chat-time">${escapeHtml(formatChatTime(message.sent_at))}</div>
                     </div>

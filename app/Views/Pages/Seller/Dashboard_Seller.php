@@ -120,6 +120,12 @@ $userProfile = $userProfile ?? [
             color: var(--cream-100);
         }
 
+        .sidebar .offcanvas-body {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
         .sidebar .offcanvas-header {
             padding: 18px 20px;
             border-bottom: 1px solid rgba(149, 213, 178, 0.1);
@@ -234,7 +240,8 @@ $userProfile = $userProfile ?? [
 
         /* Navigation */
         .sidebar-nav {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             padding: 20px 0;
             overflow-y: auto;
         }
@@ -319,6 +326,8 @@ $userProfile = $userProfile ?? [
 
         /* Sidebar Footer */
         .sidebar-footer {
+            flex-shrink: 0;
+            margin-top: auto;
             padding: 20px;
             border-top: 1px solid rgba(210, 180, 140, 0.1);
         }

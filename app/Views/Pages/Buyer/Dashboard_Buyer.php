@@ -16,6 +16,7 @@ $buyerFullName = trim((string) ($userProfile['full_name'] ?? 'Buyer'));
 $buyerFirstName = trim((string) strtok($buyerFullName, ' '));
 $buyerFirstName = $buyerFirstName !== '' ? $buyerFirstName : 'there';
 $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
+$jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -120,6 +121,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         .sidebar.offcanvas {
             padding: 0;
             color: var(--cream-100);
+        }
+
+        .sidebar .offcanvas-body {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .sidebar .offcanvas-header {
@@ -236,7 +243,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         /* Navigation */
         .sidebar-nav {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             padding: 20px 0;
             overflow-y: auto;
         }
@@ -321,6 +329,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         /* Sidebar Footer */
         .sidebar-footer {
+            flex-shrink: 0;
+            margin-top: auto;
             padding: 20px;
             border-top: 1px solid rgba(149, 213, 178, 0.1);
         }
@@ -1924,7 +1934,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             background: radial-gradient(circle at top left, #0d2818 0%, #fefae0 100%);
             color: #123a25;
             border: 1px solid rgba(149, 213, 178, 0.4);
-            border-radius: 24px;
+            border-radius: 12px;
+            position: relative;
             width: 100%;
             max-width: min(96vw, 1500px);
             max-height: none;
@@ -2006,6 +2017,26 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             stroke: #e74c3c;
             stroke-width: 2;
             fill: none;
+        }
+
+        .modal-report-btn {
+            position: absolute;
+            top: 15px;
+            right: 55px;
+            background: none;
+            border: none;
+            color: #d2b48c;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            transition: color 0.3s ease;
+        }
+
+        .modal-report-btn:hover {
+            color: #e74c3c;
         }
 
         .modal-body {
@@ -2264,7 +2295,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             justify-content: space-between;
             gap: 10px;
             padding: 10px 12px;
-            border-radius: 10px;
+            border-radius: 8px;
             background: rgba(0, 0, 0, 0.18);
             border: 1px solid rgba(149, 213, 178, 0.08);
         }
@@ -2283,7 +2314,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         .modal-map-container {
             position: relative;
             overflow: hidden;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid rgba(149, 213, 178, 0.2);
             width: 100%;
             max-width: 100%;
@@ -3237,7 +3268,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         const notificationCount = document.getElementById('header-notification-count');
         const notificationApiBase = '<?= base_url('notifications') ?>';
         const buyerSidebarCountsApi = '<?= base_url('buyer/sidebar-counts') ?>';
-        const sessionExpiredRedirectUrl = <?= json_encode(base_url('auth'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const sessionExpiredRedirectUrl = <?= json_encode(base_url('auth'), $jsonFlags) ?>;
         let hasHandledSessionExpiry = false;
 
         function hasSwalReady() {
@@ -3659,6 +3690,12 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
                 sectionName = 'browse';
             }
 
+            const targetSectionId = `section-${sectionName}`;
+            const hasTargetSection = Boolean(document.getElementById(targetSectionId));
+            if (!hasTargetSection) {
+                sectionName = 'browse';
+            }
+
             // Update navigation
             navItems.forEach(item => {
                 if (item.dataset.section === sectionName) {
@@ -3703,6 +3740,8 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
             closeBuyerSidebarOnMobile();
         }
 
+        window.showSection = showSection;
+
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -3744,7 +3783,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
 
         // Buyer Chatbot controls
         const buyerChatbot = document.getElementById('buyerChatbot');
-        const buyerFirstName = <?= json_encode($buyerFirstName, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const buyerFirstName = <?= json_encode($buyerFirstName, $jsonFlags) ?>;
         const buyerChatbotToggle = document.getElementById('buyerChatbotToggle');
         const buyerChatbotContent = document.getElementById('buyerChatbotContent');
         const buyerChatbotClose = document.getElementById('buyerChatbotClose');
@@ -3782,7 +3821,7 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         // init right state
         updateBuyerChatbotState();
 
-        const chatbotApiUrl = <?= json_encode(base_url('buyer/chatbot/send-message'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const chatbotApiUrl = <?= json_encode(base_url('buyer/chatbot/send-message'), $jsonFlags) ?>;
         let chatbotLoading = false;
 
         function addBuyerChatbotListing(listing) {
@@ -3973,10 +4012,10 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
         });
 
         // Property data for modal
-        const propertyData = <?= json_encode($browsePropertyData ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-        const browseFilterOptions = <?= json_encode($browseFilterOptions ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-        const geoapifyApiKey = <?= json_encode($geoapifyApiKey, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-        const logoutRedirectUrl = <?= json_encode(base_url('/#listings'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+        const propertyData = <?= json_encode($browsePropertyData ?? [], $jsonFlags) ?>;
+        const browseFilterOptions = <?= json_encode($browseFilterOptions ?? [], $jsonFlags) ?>;
+        const geoapifyApiKey = <?= json_encode($geoapifyApiKey, $jsonFlags) ?>;
+        const logoutRedirectUrl = <?= json_encode(base_url('/#listings'), $jsonFlags) ?>;
         console.info('[Landly Map] Geoapify key loaded:', Boolean(geoapifyApiKey));
         const leafletCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
         const leafletCssCdn = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -5406,6 +5445,9 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
     <!-- Property Detail Modal -->
     <div id="propertyModal" class="modal-overlay">
         <div class="property-modal">
+            <button class="modal-report-btn" id="reportListingBtn" title="Report listing" aria-label="Report listing" onclick="openListingReportModal()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+            </button>
             <button class="modal-close" onclick="closePropertyModal()">
                 <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
@@ -5540,5 +5582,32 @@ $geoapifyApiKey = trim((string) ($geoapifyApiKey ?? ''));
     <div id="propertyLoadingOverlay" class="property-loading-overlay" aria-hidden="true">
         <div class="property-loading-card">Loading property details...</div>
     </div>
+
+    <!-- Report Modal -->
+    <?= view('Reports/ReportModal') ?>
+
+    <!-- Report Modal JavaScript Handler -->
+    <script>
+        // Listing report reasons
+        const listingReportReasons = [
+            'Fake listing',
+            'Wrong price',
+            'Misleading photos',
+            'Invalid documents',
+            'Duplicate listing',
+            'Suspicious seller',
+            'Other'
+        ];
+
+        // Open listing report modal
+        function openListingReportModal() {
+            const listingId = document.getElementById('propertyModal')?.dataset?.listingId || 0;
+            if (listingId) {
+                window.openReportModal('listing', listingId, listingReportReasons);
+            } else {
+                alert('Unable to report this listing at this time.');
+            }
+        }
+    </script>
 </body>
 </html>
