@@ -47,9 +47,9 @@
         .dashboard-container { display: flex; min-height: 100vh; position: relative; z-index: 1; }
         .sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, rgba(45, 106, 79, 0.95) 0%, rgba(13, 40, 24, 0.98) 100%);
+            background: var(--green-900);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(149, 213, 178, 0.15);
             position: fixed;
             top: 0;
             left: 0;
@@ -67,10 +67,143 @@
         .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); color: var(--green-900); display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; animation: pulse 3s ease-in-out infinite; }
         .brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.5px; }
         .brand-subtitle { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
-        .sidebar-nav { flex: 1; padding: 20px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; color: rgba(254, 250, 224, 0.75); text-decoration: none; transition: background 0.2s ease, color 0.2s ease; font-size: 14px; }
-        .nav-item:hover { background: rgba(255, 255, 255, 0.07); color: var(--accent); }
-        .nav-item.active { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+        
+        .user-profile {
+            padding: 20px;
+            border-bottom: 1px solid rgba(149, 213, 178, 0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            display: grid;
+            place-items: center;
+            font-weight: 600;
+            color: var(--green-900);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .user-details h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--cream-100);
+            margin: 0;
+        }
+        
+        .user-details span {
+            font-size: 0.75rem;
+            color: rgba(254, 250, 224, 0.6);
+            margin: 0;
+        }
+        
+        .member-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(149, 213, 178, 0.2);
+            border: 1px solid rgba(149, 213, 178, 0.4);
+            border-radius: 12px;
+            font-size: 0.65rem;
+            color: var(--accent);
+            margin-top: 6px;
+        }
+        
+        .member-badge.inactive {
+            background: rgba(229, 57, 53, 0.2);
+            border-color: rgba(229, 57, 53, 0.4);
+            color: #ffb4a9;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            min-height: 0;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        
+        .nav-section {
+            margin-bottom: 25px;
+        }
+        
+        .nav-section-title {
+            padding: 0 20px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(254, 250, 224, 0.4);
+            margin-bottom: 10px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            color: rgba(254, 250, 224, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .nav-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(149, 213, 178, 0.08);
+            color: var(--cream-100);
+        }
+        
+        .nav-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .nav-item.active {
+            background: rgba(149, 213, 178, 0.12);
+            color: var(--accent);
+        }
+        
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+        
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            flex-shrink: 0;
+        }
         .main-content { margin-left: var(--sidebar-width); padding: 32px; width: calc(100% - var(--sidebar-width)); }
         .section-content { display: none; }
         .section-content.active { display: block; }
@@ -81,7 +214,7 @@
         .section-links a { text-decoration: none; padding: 8px 14px; border-radius: 999px; background: rgba(210, 180, 140, 0.25); color: var(--green-900); font-weight: 600; border: 1px solid rgba(210,180,140,.4); }
         .section-links a:hover { background: rgba(210, 180, 140, 0.4); }
         .stats-grid { display: grid; gap: 12px; }
-        .stats-row-1 { grid-template-columns: repeat(5, 1fr); }
+        .stats-row-1 { grid-template-columns: repeat(4, 1fr); }
         .stats-row-2 { grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
         .stats-row-label { font-size: 10px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; display: block; }
         .stat-card { background: #1e3a1e; border-radius: 10px; padding: 20px; border: none; border-left: 4px solid #4a7a4a; transition: all 0.2s ease; }
@@ -578,28 +711,35 @@
             margin-top: auto;
         }
 
+        .sidebar-footer {
+            flex-shrink: 0;
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid rgba(149, 213, 178, 0.1);
+        }
+        
         .logout-btn {
             display: flex;
-            width: 100%;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            padding: 12px 16px;
-            background: rgba(226, 75, 74, 0.15);
-            border: 1px solid rgba(226, 75, 74, 0.3);
-            border-radius: 8px;
-            color: #e24b4a;
-            font-size: 14px;
+            width: 100%;
+            padding: 12px;
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 12px;
+            color: #e74c3c;
+            font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
+        
         .logout-btn:hover {
             background: rgba(231, 76, 60, 0.25);
             border-color: rgba(231, 76, 60, 0.5);
         }
-
+        
         .logout-btn svg {
             width: 18px;
             height: 18px;
@@ -796,12 +936,35 @@
                     </div>
                 </a>
             </div>
+
             <nav class="sidebar-nav">
-                <a class="nav-item active" href="#" data-section="dashboard">Dashboard</a>
-                <a class="nav-item" href="#" data-section="users">Users</a>
-                <a class="nav-item" href="#" data-section="sellers">Seller Approval</a>
-                <a class="nav-item" href="#" data-section="listings">Land Listings</a>
-                <a class="nav-item" href="#" data-section="reports">Reports & Disputes</a>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a class="nav-item active" href="#" data-section="dashboard">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a class="nav-item" href="#" data-section="users">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        <span>Users</span>
+                    </a>
+                    <a class="nav-item" href="#" data-section="sellers">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
+                        <span>Seller Approval</span>
+                    </a>
+                    <a class="nav-item" href="#" data-section="listings">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54 2.46 3.15 3.97-4.94-1.27-1.02-2.41 3.02-1.51-1.93-.74.59z"></path></svg>
+                        <span>Land Listings</span>
+                    </a>
+                    <a class="nav-item" href="#" data-section="reports">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                        <span>Reports & Disputes</span>
+                    </a>
+                </div>
             </nav>
 
             <div class="sidebar-footer">
@@ -842,10 +1005,6 @@
                     <div class="stat-card">
                         <h3>Total Sellers</h3>
                         <div class="stat-value"><?= isset($totalSellers) ? esc($totalSellers) : 0; ?></div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Admins</h3>
-                        <div class="stat-value"><?= isset($totalAdmins) ? esc($totalAdmins) : 0; ?></div>
                     </div>
                     <div class="stat-card">
                         <h3>Total Listings</h3>
@@ -2083,6 +2242,10 @@
         });
 
         // Report History Modal Functions
+        function openUserReportHistory(userId, userName, type) {
+            viewUserReportHistory(userId, userName, type);
+        }
+
         function viewUserReportHistory(userId, userName, type) {
             const userData = userReportData[userId] || { name: userName, filed: [], against: [] };
             document.getElementById('reportHistoryUserName').textContent = userData.name;

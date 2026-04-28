@@ -76,10 +76,10 @@
                                     </td>
                                     <td onclick="event.stopPropagation();">
                                         <div style="display: flex; gap: 8px; font-size: 12px;">
-                                            <span class="report-badge filed" title="Reports Filed by User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="filed" style="cursor: pointer;">
+                                            <span class="report-badge filed" title="Reports Filed by User" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" onclick="openUserReportHistory('<?php echo esc($user['user_id'] ?? 'U001'); ?>', '<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>', 'filed')" style="cursor: pointer;">
                                                 👤 <?= $user['reports_filed'] ?? 0 ?>
                                             </span>
-                                            <span class="report-badge against" title="Reports Against User" data-action="viewUserReportHistory" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" data-report-type="against" style="cursor: pointer;">
+                                            <span class="report-badge against" title="Reports Against User" data-user-id="<?php echo esc($user['user_id'] ?? 'U001'); ?>" data-user-name="<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>" onclick="openUserReportHistory('<?php echo esc($user['user_id'] ?? 'U001'); ?>', '<?php echo esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?>', 'against')" style="cursor: pointer;">
                                                 🚩 <?= $user['reports_against'] ?? 0 ?>
                                             </span>
                                         </div>
