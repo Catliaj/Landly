@@ -196,10 +196,10 @@ class ChatbotController extends BaseController
                 || !empty($intent['near_landmark'])
                 || !empty($intent['surroundings']);
 
-            $allListings = $this->getAvailableNasugbuListings(80);
+            $allListings = $this->getAvailableNasugbuListings(20);
             log_message('notice', 'Property query: Fetched ' . count($allListings) . ' listings from database');
             $allListingObjects = array_map(
-                fn(array $listing): array => $this->buildListingDataObject($listing, $includeSurroundings),
+                fn(array $listing): array => $this->buildListingDataObject($listing, false), // disable surroundings here
                 $allListings
             );
 
@@ -222,6 +222,15 @@ class ChatbotController extends BaseController
 
             $recommendation = $this->recommendListingsByIntent($allListingObjects, $intent);
             $topListings = array_slice($recommendation['top'] ?? [], 0, 3);
+
+            foreach ($topListings as &$listing) {
+                if (!empty($listing['coordinates'])) {
+                    $listing['nearby_places'] = $this->getNearbyPlacesCached(
+                        $listing['coordinates']['lat'],
+                        $listing['coordinates']['lng']
+                    );
+                }
+            }
 
             if ($recommendation['barangay_empty'] ?? false) {
                 $aiResponse = $this->buildNoListingsNearbyOptionsMessage($buyerFirstName);
@@ -1452,7 +1461,7 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
 
         try {
             $ch = curl_init($url);
-            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_SSL_VERIFYPEER => true]);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_SSL_VERIFYPEER => true]);
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -1748,5 +1757,24 @@ RESPONSE FORMAT:
             }
         }
         return $details;
+    }
+
+    private function getNearbyPlacesCached(float $lat, float $lng): array
+    {
+        $cacheKey = 'nearby_' . $lat . '_' . $lng;
+
+        $cache = cache();
+        $cached = $cache->get($cacheKey);
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $result = $this->fetchNearbyPlacesSummary($lat, $lng);
+
+        // cache for 1 hour
+        $cache->save($cacheKey, $result, 3600);
+
+        return $result;
     }
 }
