@@ -224,12 +224,16 @@
         .stat-card .stat-value { font-size: 28px; font-weight: 600; color: #ffffff; display: block; margin-top: 8px; }
         .content-card { background: #1e3a1e; border-radius: 12px; padding: 28px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 20px; }
         .content-card h3 { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 20px; border-left: 3px solid #4a7a4a; padding-left: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        table thead { background: rgba(0,0,0,0.2); }
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        .content-card table { width: 100%; min-width: 820px; border-collapse: collapse; }
+        .content-card table thead { background: rgba(0,0,0,0.2); }
         table thead th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.45); padding: 12px 16px; font-weight: 600; text-align: left; }
         table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
         table tbody tr:hover { background: rgba(255,255,255,0.03); }
-        table tbody td { font-size: 14px; color: rgba(255,255,255,0.85); padding: 14px 16px; }
+        .content-card table tbody td { font-size: 14px; color: rgba(255,255,255,0.85); padding: 14px 16px; }
+        .content-card table th, .content-card table td { white-space: normal; word-break: break-word; }
+        .report-action-cell { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .report-action-cell .btn { white-space: nowrap; }
         .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; border: 1px solid; }
         .badge.active { background: #0d3d1f; color: #4ade80; border-color: #1a6b38; }
         .badge.pending { background: #3d2e00; color: #fbbf24; border-color: #6b4f00; }

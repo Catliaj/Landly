@@ -123,6 +123,13 @@
         color: #e67e22;
     }
 
+    .report-action-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
     .report-action-btn {
         background: none;
         border: 1px solid rgba(202, 164, 110, 0.3);
@@ -132,7 +139,9 @@
         cursor: pointer;
         font-size: 0.8rem;
         transition: all 0.3s ease;
-        margin-right: 5px;
+        margin: 0;
+        min-width: 96px;
+        white-space: nowrap;
     }
 
     .report-action-btn:hover {
@@ -223,7 +232,7 @@
                 <td>${escapeHtml(report.reporter_first_name || '')} ${escapeHtml(report.reporter_last_name || '')}</td>
                 <td><span class="status-badge ${report.status}">${report.status.replace('_', ' ').toUpperCase()}</span></td>
                 <td>${new Date(report.created_at).toLocaleDateString()}</td>
-                <td>
+                <td class="report-action-cell">
                     <button class="report-action-btn" onclick="openReportDetail(${report.report_id})">View</button>
                     <button class="report-action-btn" onclick="updateReportStatus(${report.report_id})">Update</button>
                 </td>

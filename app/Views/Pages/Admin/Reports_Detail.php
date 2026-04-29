@@ -97,7 +97,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div class="action-buttons" style="gap: 15px;">
                 <button id="updateBtn" class="action-btn" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--green-900); padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onclick="saveReportUpdate()">
                     Save Changes
                 </button>
@@ -158,8 +158,17 @@
         font-size: 0.9rem;
     }
 
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
     .action-btn {
         transition: all 0.3s ease;
+        min-width: 140px;
     }
 
     .action-btn:hover {

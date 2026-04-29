@@ -1840,7 +1840,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
 
             .top-actions {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-end;
             }
 
             .browse-toolbar {
@@ -2802,7 +2802,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
 
             .top-actions {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-end;
             }
 
             .search-box {
