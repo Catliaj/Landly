@@ -163,7 +163,6 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             overflow: hidden;
             animation: pulse 3s ease-in-out infinite;
         }
-
         .brand-badge .brand-logo {
             width: 100px;
             height: 100%;
@@ -2839,6 +2838,16 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             font-family: "Inter", system-ui, sans-serif;
             transition: width 0.24s ease;
             overflow: visible;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .chatbot.dragging {
+            cursor: grabbing;
+        }
+
+        .chatbot .chatbot-header {
+            cursor: grab;
         }
 
         .swal2-container {
@@ -3232,14 +3241,14 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
                 <div class="chatbot-icon" aria-hidden="true">🤖</div>
                 <div class="chatbot-title">
                     <strong>LandlyBot</strong>
-                    <span>LandlyBot assistant</span>
+                    <span>Real estate assistant</span>
                 </div>
             </div>
             <button class="chatbot-close" id="buyerChatbotClose" aria-label="Close chat">✕</button>
         </div>
         <div class="chatbot-content" id="buyerChatbotContent" aria-live="polite" aria-atomic="true">
             <div class="chatbot-messages" id="buyerChatbotMessages">
-                <div class="chatbot-message bot">Hello <?= esc($buyerFirstName) ?>! I am LandlyBot. Need help finding land listings or tracking your inquiry?</div>
+                <div class="chatbot-message bot">Hello <?= esc($buyerFirstName) ?>! Need help finding property or tracking your inquiry?</div>
             </div>
             <div class="chatbot-input-wrap">
                 <input type="text" id="buyerChatbotInput" class="chatbot-input" placeholder="Type your message..." aria-label="Type your message" />
@@ -3809,14 +3818,120 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             }
         }
 
-        buyerChatbotToggle?.addEventListener('click', () => {
+        let buyerChatbotDragActive = false;
+        let buyerChatbotDragMoved = false;
+        let buyerChatbotDragStart = { x: 0, y: 0 };
+        let buyerChatbotOrigin = { x: 0, y: 0 };
+        let buyerChatbotBounds = null;
+
+        const buyerChatbotSection = document.querySelector('.main-content');
+        const buyerChatbotDragHandle = buyerChatbot?.querySelector('.chatbot-header');
+
+        function getBuyerChatbotBounds() {
+            if (!buyerChatbotSection || !buyerChatbot) {
+                return null;
+            }
+
+            const sectionRect = buyerChatbotSection.getBoundingClientRect();
+            const chatbotRect = buyerChatbot.getBoundingClientRect();
+
+            return {
+                minX: sectionRect.left,
+                minY: sectionRect.top,
+                maxX: sectionRect.right - chatbotRect.width,
+                maxY: sectionRect.bottom - chatbotRect.height
+            };
+        }
+
+        function setBuyerChatbotPosition(left, top) {
+            if (!buyerChatbotBounds) {
+                buyerChatbotBounds = getBuyerChatbotBounds();
+            }
+            if (!buyerChatbotBounds) {
+                return;
+            }
+
+            const safeLeft = Math.min(Math.max(left, buyerChatbotBounds.minX), buyerChatbotBounds.maxX);
+            const safeTop = Math.min(Math.max(top, buyerChatbotBounds.minY), buyerChatbotBounds.maxY);
+
+            buyerChatbot.style.left = `${safeLeft}px`;
+            buyerChatbot.style.top = `${safeTop}px`;
+            buyerChatbot.style.right = 'auto';
+            buyerChatbot.style.bottom = 'auto';
+        }
+
+        function onBuyerChatbotPointerMove(event) {
+            if (!buyerChatbotDragActive) {
+                return;
+            }
+
+            event.preventDefault();
+            buyerChatbotDragMoved = true;
+            const nextLeft = buyerChatbotOrigin.x + (event.clientX - buyerChatbotDragStart.x);
+            const nextTop = buyerChatbotOrigin.y + (event.clientY - buyerChatbotDragStart.y);
+            setBuyerChatbotPosition(nextLeft, nextTop);
+        }
+
+        function onBuyerChatbotPointerUp() {
+            if (!buyerChatbotDragActive) {
+                return;
+            }
+
+            buyerChatbotDragActive = false;
+            buyerChatbot.classList.remove('dragging');
+            document.removeEventListener('pointermove', onBuyerChatbotPointerMove);
+            document.removeEventListener('pointerup', onBuyerChatbotPointerUp);
+            document.removeEventListener('pointercancel', onBuyerChatbotPointerUp);
+
+            if (buyerChatbotDragMoved) {
+                setTimeout(() => {
+                    buyerChatbotDragMoved = false;
+                }, 150);
+            }
+        }
+
+        function onBuyerChatbotPointerDown(event) {
+            if (!buyerChatbot || event.button !== 0) {
+                return;
+            }
+
+            if (!buyerChatbotSection) {
+                return;
+            }
+
+            const chatbotRect = buyerChatbot.getBoundingClientRect();
+            buyerChatbotBounds = getBuyerChatbotBounds();
+            if (!buyerChatbotBounds) {
+                return;
+            }
+
+            buyerChatbotDragActive = true;
+            buyerChatbotDragMoved = false;
+            buyerChatbot.classList.add('dragging');
+            buyerChatbotDragStart.x = event.clientX;
+            buyerChatbotDragStart.y = event.clientY;
+            buyerChatbotOrigin.x = chatbotRect.left;
+            buyerChatbotOrigin.y = chatbotRect.top;
+
+            document.addEventListener('pointermove', onBuyerChatbotPointerMove);
+            document.addEventListener('pointerup', onBuyerChatbotPointerUp);
+            document.addEventListener('pointercancel', onBuyerChatbotPointerUp);
+        }
+
+        buyerChatbotDragHandle?.addEventListener('pointerdown', onBuyerChatbotPointerDown);
+
+        buyerChatbotToggle?.addEventListener('click', (event) => {
+            if (buyerChatbotDragMoved) {
+                event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+
             buyerChatbotContent.classList.toggle('active');
             updateBuyerChatbotState();
         });
 
-        buyerChatbotClose?.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
+        buyerChatbotClose?.addEventListener('click', () => {
             buyerChatbotContent.classList.remove('active');
             updateBuyerChatbotState();
         });
@@ -4227,7 +4342,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             return `
                 <div class="listing-card" onclick="openPropertyModal(${Number(listing.listing_id || 0)})" data-property-id="${Number(listing.listing_id || 0)}" data-property-type="${escapeHtml(listing.property_type_key || '')}">
                     <div class="listing-card-image">
-                        <img class="img-fluid" src="${escapeHtml(listing.image_url || '<?= base_url('default1.png') ?>')}" alt="${escapeHtml(listing.title || 'Land Listing')}" onerror="this.onerror=null;this.src='<?= base_url('default1.png') ?>';">
+                        <img class="img-fluid" src="${escapeHtml(listing.image_url || '')}" alt="${escapeHtml(listing.title || 'Land Listing')}">
                         <span class="listing-card-badge listing-status ${escapeHtml(listing.status_class || 'available')}">${escapeHtml(listing.status_label || 'Available')}</span>
                         <div class="listing-card-actions">
                             <button class="listing-card-action favorite-btn${savedClass}" data-listing-id="${Number(listing.listing_id || 0)}" title="${escapeHtml(savedTitle)}" aria-pressed="${savedPressed}" onclick="toggleFavorite(event, this, ${Number(listing.listing_id || 0)})">
@@ -5107,7 +5222,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             showDetailsLoadingState();
 
             try {
-                const placeholderImage = '<?= base_url('default1.png') ?>';
+                const placeholderImage = 'https://via.placeholder.com/640x400?text=No+Image';
                 const imageList = Array.isArray(property.images)
                     ? property.images.filter((img) => String(img || '').trim() !== '')
                     : [];
@@ -5118,12 +5233,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
 
                 // Set main image
                 const primaryImage = imageList[0];
-                const modalMainImage = document.getElementById('modalMainImage');
-                modalMainImage.onerror = function () {
-                    this.onerror = null;
-                    this.src = placeholderImage;
-                };
-                modalMainImage.src = primaryImage || placeholderImage;
+                document.getElementById('modalMainImage').src = primaryImage || 'https://via.placeholder.com/640x400?text=No+Image';
 
                 // Set thumbnails
                 const thumbsContainer = document.getElementById('modalThumbnails');
@@ -5133,10 +5243,6 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
                     thumb.src = img;
                     thumb.alt = `Thumbnail ${idx + 1}`;
                     thumb.className = `modal-thumb ${idx === 0 ? 'active' : ''}`;
-                    thumb.onerror = function () {
-                        this.onerror = null;
-                        this.src = placeholderImage;
-                    };
                     thumb.addEventListener('click', () => changeMainImage(img, thumb));
                     thumbsContainer.appendChild(thumb);
                 });

@@ -246,7 +246,34 @@ class DashboardController extends BaseController
             
             $reportsData[] = $report;
         }
-        
+
+        // Build monthly activity trend counts for the dashboard
+        $trendMonths = 7;
+        $activityTrendLabels = [];
+        $activityTrendNewUsers = [];
+        $activityTrendNewListings = [];
+        $activityTrendReportsFiled = [];
+        $now = new \DateTimeImmutable('now');
+
+        for ($step = $trendMonths - 1; $step >= 0; $step--) {
+            $periodStart = $now->modify('first day of -' . $step . ' month')->setTime(0, 0, 0);
+            $periodEnd = $periodStart->modify('first day of next month');
+
+            $activityTrendLabels[] = $periodStart->format('M');
+            $activityTrendNewUsers[] = (int) $db->table('users')
+                ->where('created_at >=', $periodStart->format('Y-m-d H:i:s'))
+                ->where('created_at <', $periodEnd->format('Y-m-d H:i:s'))
+                ->countAllResults();
+            $activityTrendNewListings[] = (int) $db->table('land_listings')
+                ->where('created_at >=', $periodStart->format('Y-m-d H:i:s'))
+                ->where('created_at <', $periodEnd->format('Y-m-d H:i:s'))
+                ->countAllResults();
+            $activityTrendReportsFiled[] = (int) $db->table('reports')
+                ->where('created_at >=', $periodStart->format('Y-m-d H:i:s'))
+                ->where('created_at <', $periodEnd->format('Y-m-d H:i:s'))
+                ->countAllResults();
+        }
+
         $data = [
             'fullname' => session()->get('fullname') ?? 'Admin',
             'totalUsers' => $this->userModel->countAllResults(),
@@ -275,6 +302,10 @@ class DashboardController extends BaseController
             'sellers' => $sellersData,
             'reports' => $reportsData,
             'userReportData' => $userReportData,
+            'activityTrendLabels' => $activityTrendLabels,
+            'activityTrendNewUsers' => $activityTrendNewUsers,
+            'activityTrendNewListings' => $activityTrendNewListings,
+            'activityTrendReportsFiled' => $activityTrendReportsFiled,
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);

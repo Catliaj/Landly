@@ -84,13 +84,13 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td onclick="event.stopPropagation();" style="display: flex; gap: 8px;">
+                                    <td onclick="event.stopPropagation();" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; min-width: 0;">
                                         <?php if (! empty($user['is_active'])): ?>
-                                            <button class="btn btn-danger btn-sm" type="button" onclick="confirmDeactivateUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Deactivate</button>
+                                            <button class="btn btn-danger btn-sm" type="button" style="white-space: nowrap;" onclick="confirmDeactivateUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Deactivate</button>
                                         <?php else: ?>
-                                            <button class="btn btn-primary btn-sm" type="button" onclick="confirmActivateUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Activate</button>
+                                            <button class="btn btn-primary btn-sm" type="button" style="white-space: nowrap;" onclick="confirmActivateUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Activate</button>
                                         <?php endif; ?>
-                                        <button class="btn btn-danger btn-sm" type="button" onclick="confirmDeleteUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Delete</button>
+                                        <button class="btn btn-danger btn-sm" type="button" style="white-space: nowrap;" onclick="confirmDeleteUser('<?= esc($user['user_id']) ?>', '<?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>')">Delete</button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
