@@ -61,7 +61,7 @@
         container.innerHTML = favorites.map(favorite => `
             <div class="listing-card" onclick="openPropertyModal(${favorite.listing_id})" data-property-id="${favorite.listing_id}" data-property-type="${normalizePropertyTypeKey(favorite.property_type)}">
                 <div class="listing-card-image">
-                    <img class="img-fluid" src="${escapeHtml(favorite.image_url || 'https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=400')}" alt="${escapeHtml(favorite.title)}">
+                    <img class="img-fluid" src="${escapeHtml(favorite.image_url || '<?= base_url('default1.png') ?>')}" alt="${escapeHtml(favorite.title)}" onerror="this.onerror=null;this.src='<?= base_url('default1.png') ?>';">
                     <span class="listing-card-badge listing-status ${escapeHtml(favorite.listing_status || 'available')}">${escapeHtml(favorite.listing_status_label || 'Available')}</span>
                     <div class="listing-card-actions">
                         <button class="listing-card-action saved favorite-btn" data-listing-id="${favorite.listing_id}" title="Remove from Saved" onclick="toggleFavorite(event, this, ${favorite.listing_id})">

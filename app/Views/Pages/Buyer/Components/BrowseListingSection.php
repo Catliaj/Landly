@@ -268,7 +268,7 @@ $browseFilterOptions = $browseFilterOptions ?? [
             <?php foreach ($browseListings as $listing): ?>
                 <div class="listing-card" onclick="openPropertyModal(<?= (int) ($listing['listing_id'] ?? 0) ?>)" data-property-id="<?= (int) ($listing['listing_id'] ?? 0) ?>" data-property-type="<?= esc((string) ($listing['property_type_key'] ?? '')) ?>">
                     <div class="listing-card-image">
-                        <img class="img-fluid" src="<?= esc((string) ($listing['image_url'] ?? '')) ?>" alt="<?= esc((string) ($listing['title'] ?? 'Land Listing')) ?>">
+                        <img class="img-fluid" src="<?= esc((string) ($listing['image_url'] ?? '')) ?>" alt="<?= esc((string) ($listing['title'] ?? 'Land Listing')) ?>" onerror="this.onerror=null;this.src='<?= base_url('default1.png') ?>';">
                         <span class="listing-card-badge listing-status <?= esc((string) ($listing['status_class'] ?? 'available')) ?>"><?= esc((string) ($listing['status_label'] ?? 'Available')) ?></span>
                         <div class="listing-card-actions">
                             <button class="listing-card-action favorite-btn<?= !empty($listing['is_saved']) ? ' saved' : '' ?>" data-listing-id="<?= (int) ($listing['listing_id'] ?? 0) ?>" title="<?= !empty($listing['is_saved']) ? 'Remove from Saved' : 'Save Property' ?>" aria-pressed="<?= !empty($listing['is_saved']) ? 'true' : 'false' ?>" onclick="toggleFavorite(event, this, <?= (int) ($listing['listing_id'] ?? 0) ?>)">

@@ -46,15 +46,31 @@
                                     <td><span class="report-reason"><?= esc($report['reason'] ?? '') ?></span></td>
                                     <td>
                                         <?php $status = $report['status'] ?? 'pending'; ?>
-                                        <span class="badge <?= $status === 'pending' ? 'pending' : ($status === 'resolved' ? 'verified' : 'suspended') ?>">
-                                            <?= ucfirst($status) ?>
+                                        <?php
+                                            $badgeClass = 'suspended';
+                                            $statusLabel = ucfirst($status);
+
+                                            if ($status === 'pending') {
+                                                $badgeClass = 'pending';
+                                            } elseif ($status === 'reviewed' || $status === 'action_taken' || $status === 'resolved') {
+                                                $badgeClass = 'verified';
+                                                $statusLabel = $status === 'action_taken' ? 'Action Taken' : 'Reviewed';
+                                            } elseif ($status === 'dismissed') {
+                                                $badgeClass = 'suspended';
+                                                $statusLabel = 'Dismissed';
+                                            }
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>">
+                                            <?= esc($statusLabel) ?>
                                         </span>
                                     </td>
                                     <td><?= isset($report['created_at']) ? date('M d, Y', strtotime($report['created_at'])) : '' ?></td>
                                     <td style="display: flex; gap: 8px;">
                                         <button class="btn btn-neutral btn-sm" type="button" onclick="viewReportDetails('<?= esc($report['report_id'] ?? '') ?>')">View</button>
-                                        <button class="btn btn-primary btn-sm" type="button" onclick="showReplyModal('<?= esc($report['report_id'] ?? '') ?>')">Resolve</button>
-                                        <button class="btn btn-danger btn-sm" type="button" onclick="confirmSuspendAccount('<?= esc($report['reported_against_name'] ?? '') ?>', '<?= esc($report['report_id'] ?? '') ?>')">Suspend</button>
+                                        <?php if ($status === 'pending'): ?>
+                                            <button class="btn btn-primary btn-sm" type="button" onclick="showReplyModal('<?= esc($report['report_id'] ?? '') ?>')">Resolve</button>
+                                            <button class="btn btn-danger btn-sm" type="button" onclick="confirmSuspendAccount('<?= esc($report['reported_against_name'] ?? '') ?>', '<?= esc($report['report_id'] ?? '') ?>')">Suspend</button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

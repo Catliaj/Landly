@@ -150,16 +150,23 @@ $userProfile = $userProfile ?? [
         }
 
         .brand-badge {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            color: var(--green-900);
-            display: grid;
-            place-items: center;
-            font-weight: 700;
-            font-size: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            max-width: 100px;
+            height: auto;
+            max-height: 100px;
+            overflow: hidden;
             animation: pulse 3s ease-in-out infinite;
+        }
+
+        .brand-badge .brand-logo {
+            width: 100px;
+            height: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-text {
@@ -1100,6 +1107,132 @@ $userProfile = $userProfile ?? [
 
         .listing-card-action:hover svg {
             stroke: var(--green-900);
+        }
+
+        .seller-listing-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            display: none;
+            place-items: start center;
+            padding: 32px 20px;
+            overflow: hidden;
+        }
+
+        .seller-listing-modal.is-open {
+            display: grid;
+        }
+
+        .seller-listing-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 18, 18, 0.72);
+            backdrop-filter: blur(3px);
+        }
+
+        .seller-listing-modal-dialog {
+            position: relative;
+            width: min(920px, calc(100vw - 32px));
+            max-height: min(88vh, 760px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            border-radius: 20px;
+            border: 1px solid rgba(149, 213, 178, 0.28);
+            background: linear-gradient(160deg, rgba(16, 34, 29, 0.98) 0%, rgba(10, 24, 22, 0.98) 100%);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+            padding: 22px;
+            margin: 0 auto;
+            transform: translateX(100px);
+        }
+
+        .seller-listing-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .seller-listing-modal-header h3 {
+            margin: 0;
+            color: var(--cream-100);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .seller-listing-modal-close {
+            border: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(149, 213, 178, 0.14);
+            color: var(--cream-100);
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .seller-listing-modal-close:hover {
+            background: rgba(149, 213, 178, 0.24);
+            color: var(--accent);
+        }
+
+        .seller-listing-modal-status {
+            border: 1px solid rgba(149, 213, 178, 0.24);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: rgba(149, 213, 178, 0.08);
+            color: var(--cream-100);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .seller-listing-modal-status.is-loading {
+            border-color: rgba(93, 173, 226, 0.38);
+            background: rgba(93, 173, 226, 0.12);
+            color: #d6ecff;
+        }
+
+        .seller-listing-modal-status.is-success {
+            border-color: rgba(46, 204, 113, 0.42);
+            background: rgba(46, 204, 113, 0.12);
+            color: #b7f7cf;
+        }
+
+        .seller-listing-modal-status.is-error {
+            border-color: rgba(231, 76, 60, 0.45);
+            background: rgba(231, 76, 60, 0.12);
+            color: #ffd2cc;
+        }
+
+        .seller-listing-modal.is-busy .seller-listing-modal-close,
+        .seller-listing-modal.is-busy [data-modal-close="edit"] {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .seller-delete-dialog {
+            width: min(540px, 100%);
+        }
+
+        .seller-delete-warning {
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(231, 76, 60, 0.36);
+            background: rgba(231, 76, 60, 0.12);
+            color: #ffd2cc;
+        }
+
+        .seller-delete-warning p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .seller-delete-warning p + p {
+            margin-top: 6px;
+            color: rgba(255, 232, 226, 0.9);
+            font-size: 0.92rem;
         }
 
         .listing-card-content {
@@ -2206,22 +2339,16 @@ $userProfile = $userProfile ?? [
         <aside class="sidebar offcanvas offcanvas-lg offcanvas-start" id="sellerSidebar" tabindex="-1" aria-labelledby="sellerSidebarLabel">
             <div class="offcanvas-header d-lg-none">
                 <a href="<?= base_url('/') ?>" class="brand" id="sellerSidebarLabel">
-                    <div class="brand-badge">L</div>
-                    <div>
-                        <div class="brand-text">Landly</div>
-                        <div class="brand-subtitle">Seller Portal</div>
-                    </div>
+                    <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
+                    <div class="brand-subtitle">Seller Portal</div>
                 </a>
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" data-bs-target="#sellerSidebar" aria-label="Close"></button>
             </div>
 
             <div class="sidebar-header d-none d-lg-block">
                 <a href="<?= base_url('/') ?>" class="brand">
-                    <div class="brand-badge">L</div>
-                    <div>
-                        <div class="brand-text">Landly</div>
-                        <div class="brand-subtitle">Seller Portal</div>
-                    </div>
+                    <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
+                    <div class="brand-subtitle">Seller Portal</div>
                 </a>
             </div>
 
@@ -2281,13 +2408,7 @@ $userProfile = $userProfile ?? [
                         </a>
                     </div>
 
-                    <div class="nav-section">
-                        <div class="nav-section-title">Account</div>
-                        <a href="#" class="nav-item" data-section="verification">
-                            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                            <span>Verification</span>
-                        </a>
-                    </div>
+                  
                 </nav>
 
                 <div class="sidebar-footer">
@@ -2345,8 +2466,7 @@ $userProfile = $userProfile ?? [
             <!-- Inquiries Section -->
             <?= view('Pages/Seller/Components/InquiriesSection', ['sellerInquiries' => $sellerInquiries ?? []]) ?>
 
-            <!-- Verification Section -->
-            <?= view('Pages/Seller/Components/VerificationSection') ?>
+          
 
             <!-- Analytics Section -->
             <!-- <section id="section-analytics" class="content-section">
@@ -3013,11 +3133,26 @@ $userProfile = $userProfile ?? [
         });
 
         const listingFilterBtns = document.querySelectorAll('#section-listings .filter-btn[data-filter]');
-        const listingCards = Array.from(document.querySelectorAll('#section-listings .listing-card'));
+        let listingCards = [];
         const listingEmptyState = document.getElementById('seller-listings-empty');
         const listingEmptyTitle = document.getElementById('seller-listings-empty-title');
         const listingEmptyDescription = document.getElementById('seller-listings-empty-description');
+        const editModal = document.getElementById('seller-edit-listing-modal');
+        const deleteModal = document.getElementById('seller-delete-listing-modal');
+        const editForm = document.getElementById('seller-edit-listing-form');
+        const editStatus = document.getElementById('seller-edit-status');
+        const editSubmitBtn = document.getElementById('seller-edit-submit-btn');
+        const deleteConfirmBtn = document.getElementById('seller-delete-confirm-btn');
+        const csrfTokenValue = document.querySelector('#add-listing-form input[name="<?= csrf_token() ?>"]')?.value || '';
+        const csrfTokenName = '<?= csrf_token() ?>';
         let activeListingFilter = 'all';
+        let pendingDeleteListingId = null;
+
+        function syncListingCards() {
+            listingCards = Array.from(document.querySelectorAll('#section-listings .listing-card'));
+        }
+
+        syncListingCards();
 
         function updateListingEmptyState(visibleCount, hasQuery) {
             if (!listingEmptyState || !listingEmptyTitle || !listingEmptyDescription) {
@@ -3047,6 +3182,7 @@ $userProfile = $userProfile ?? [
         }
 
         function applyListingFilters() {
+            syncListingCards();
             let visibleCount = 0;
 
             listingCards.forEach((card) => {
@@ -3064,6 +3200,193 @@ $userProfile = $userProfile ?? [
             updateListingEmptyState(visibleCount, false);
         }
 
+        function listingRequestHeaders() {
+            const headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+
+            if (csrfTokenValue) {
+                headers[csrfTokenName] = csrfTokenValue;
+            }
+
+            return headers;
+        }
+
+        function openListingModal(modal) {
+            if (!modal) return;
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeListingModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            if (modal === editModal) {
+                resetEditModalFeedback();
+            }
+            if (!document.querySelector('.seller-listing-modal.is-open')) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function setEditStatus(message = '', type = '') {
+            if (!editStatus) return;
+            editStatus.textContent = message;
+            editStatus.hidden = message === '';
+            editStatus.className = 'seller-listing-modal-status';
+            if (type) {
+                editStatus.classList.add(`is-${type}`);
+            }
+        }
+
+        function setEditBusy(isBusy, message = '') {
+            if (editModal) {
+                editModal.classList.toggle('is-busy', isBusy);
+            }
+            if (editSubmitBtn) {
+                editSubmitBtn.disabled = isBusy;
+                editSubmitBtn.textContent = isBusy ? 'Saving...' : 'Save Changes';
+            }
+            if (message) {
+                setEditStatus(message, isBusy ? 'loading' : '');
+            }
+        }
+
+        function resetEditModalFeedback() {
+            setEditBusy(false);
+            setEditStatus('');
+        }
+
+        function deriveTitleStatusFromListing(listing) {
+            if (Number(listing?.is_titled || 0) === 1) {
+                return 'clean';
+            }
+
+            if (Number(listing?.has_tax_declaration || 0) === 1) {
+                return 'tax-declaration';
+            }
+
+            return 'untitled';
+        }
+
+        function fillEditForm(listing) {
+            if (!editForm || !listing) return;
+            resetEditModalFeedback();
+
+            editForm.querySelector('#edit-listing-id').value = String(listing.listing_id || '');
+            editForm.querySelector('#edit-title').value = String(listing.title || '');
+            editForm.querySelector('#edit-property-type').value = String(listing.property_type || '');
+            editForm.querySelector('#edit-price').value = String(listing.price || '');
+            editForm.querySelector('#edit-province').value = String(listing.province || '');
+            editForm.querySelector('#edit-city').value = String(listing.city || '');
+            editForm.querySelector('#edit-barangay').value = String(listing.barangay || '');
+            editForm.querySelector('#edit-title-status').value = deriveTitleStatusFromListing(listing);
+            editForm.querySelector('#edit-road-access').value = String(listing.road_access_type || '');
+            editForm.querySelector('#edit-view-type').value = String(listing.view_type || 'none');
+            editForm.querySelector('#edit-developing-area').value = String(Number(listing.developing_area || 0));
+            editForm.querySelector('#edit-investment-ready').value = String(Number(listing.investment_ready || 0));
+            editForm.querySelector('#edit-description').value = String(listing.description || '');
+            editForm.querySelector('#edit-latitude').value = String(listing.latitude || listing.Latitude || '');
+            editForm.querySelector('#edit-longitude').value = String(listing.longitude || listing.Longitude || '');
+        }
+
+        async function openEditListingModal(listingId) {
+            try {
+                const response = await fetch(`<?= base_url('seller/listings') ?>/${Number(listingId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+                if (!response.ok || data?.status !== 'success' || !data?.listing) {
+                    throw new Error(data?.message || 'Unable to load listing details.');
+                }
+
+                fillEditForm(data.listing);
+                openListingModal(editModal);
+            } catch (error) {
+                alert(error?.message || 'Unable to open edit modal.');
+            }
+        }
+
+        async function submitEditListing(event) {
+            event.preventDefault();
+            if (!editForm) return;
+
+            const listingId = Number(editForm.querySelector('#edit-listing-id')?.value || 0);
+            if (listingId <= 0) {
+                alert('Invalid listing selected.');
+                return;
+            }
+
+            const payload = {};
+            editForm.querySelectorAll('[name]').forEach((field) => {
+                if (!field || typeof field.name !== 'string') {
+                    return;
+                }
+                payload[field.name] = field.value;
+            });
+
+            setEditBusy(true, 'Updating listing...');
+
+            try {
+                const response = await fetch(`<?= base_url('seller/listings') ?>/${listingId}`, {
+                    method: 'PUT',
+                    headers: listingRequestHeaders(),
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok || data?.status !== 'success') {
+                    throw new Error(data?.message || 'Failed to update listing.');
+                }
+
+                setEditStatus('Listing updated successfully. Refreshing...', 'success');
+                if (editSubmitBtn) {
+                    editSubmitBtn.textContent = 'Updated';
+                }
+                window.setTimeout(() => {
+                    window.location.reload();
+                }, 900);
+            } catch (error) {
+                setEditStatus(error?.message || 'Failed to update listing.', 'error');
+                setEditBusy(false);
+            }
+        }
+
+        async function confirmDeleteListing() {
+            const listingId = Number(pendingDeleteListingId || 0);
+            if (listingId <= 0) {
+                closeListingModal(deleteModal);
+                return;
+            }
+
+            try {
+                const response = await fetch(`<?= base_url('seller/listings') ?>/${listingId}`, {
+                    method: 'DELETE',
+                    headers: listingRequestHeaders()
+                });
+
+                const data = await response.json();
+                if (!response.ok || data?.status !== 'success') {
+                    throw new Error(data?.message || 'Failed to delete listing.');
+                }
+
+                closeListingModal(deleteModal);
+                pendingDeleteListingId = null;
+                window.location.reload();
+            } catch (error) {
+                alert(error?.message || 'Failed to delete listing.');
+            }
+        }
+
         listingFilterBtns.forEach((btn) => {
             btn.addEventListener('click', () => {
                 activeListingFilter = btn.dataset.filter || 'all';
@@ -3074,6 +3397,56 @@ $userProfile = $userProfile ?? [
         });
 
         applyListingFilters();
+
+        document.addEventListener('click', (event) => {
+            const editBtn = event.target.closest('#section-listings .listing-edit-btn');
+            if (editBtn) {
+                const card = editBtn.closest('.listing-card');
+                const listingId = Number(card?.dataset?.listingId || 0);
+                if (listingId > 0) {
+                    openEditListingModal(listingId);
+                }
+                return;
+            }
+
+            const deleteBtn = event.target.closest('#section-listings .listing-delete-btn');
+            if (deleteBtn) {
+                const card = deleteBtn.closest('.listing-card');
+                const listingId = Number(card?.dataset?.listingId || 0);
+                if (listingId > 0) {
+                    pendingDeleteListingId = listingId;
+                    openListingModal(deleteModal);
+                }
+                return;
+            }
+
+            const closeBtn = event.target.closest('[data-modal-close]');
+            if (closeBtn) {
+                const modalKey = closeBtn.getAttribute('data-modal-close');
+                if (modalKey === 'edit') {
+                    closeListingModal(editModal);
+                }
+                if (modalKey === 'delete') {
+                    closeListingModal(deleteModal);
+                    pendingDeleteListingId = null;
+                }
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            closeListingModal(editModal);
+            closeListingModal(deleteModal);
+            pendingDeleteListingId = null;
+        });
+
+        if (editForm) {
+            editForm.addEventListener('submit', submitEditListing);
+        }
+
+        if (deleteConfirmBtn) {
+            deleteConfirmBtn.addEventListener('click', confirmDeleteListing);
+        }
 
         // Period buttons functionality
         const periodBtns = document.querySelectorAll('.period-btn');

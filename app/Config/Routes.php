@@ -130,6 +130,7 @@ $routes->group('admin', function ($routes) {
     $routes->get('reports', 'Admin\ReportsController::listReports');
     $routes->get('reports/(:num)', 'Admin\ReportsController::getReportDetail/$1');
     $routes->post('reports/(:num)/status', 'Admin\ReportsController::updateReportStatus/$1');
+    $routes->post('reports/(:num)/suspend', 'Admin\ReportsController::suspendReportAndTargets/$1');
     $routes->get('reports/statistics/overview', 'Admin\ReportsController::getStatistics');
 });
 

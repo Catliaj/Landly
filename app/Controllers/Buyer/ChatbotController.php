@@ -471,7 +471,7 @@ class ChatbotController extends BaseController
             return $fallbackGreeting;
         }
 
-        $systemPrompt = "You are Landly AI Assistant, a friendly real estate assistant for a land marketplace named Landly.
+        $systemPrompt = "You are LandlyBot, a friendly assistant for the Landly land marketplace.
 
 RULES:
 - Respond warmly to greetings.
@@ -980,7 +980,7 @@ STYLE:
 
     private function buildNasugbuRecommendationPrompt(array $allListings, array $topListings, array $intent): string
     {
-        return "You are Landly AI Assistant, a smart real estate assistant for land listings.
+        return "You are LandlyBot, a smart assistant for Landly land listings.
 
 STRICT CONSTRAINTS:
 - Process and recommend listings only in Nasugbu, Batangas.
@@ -1547,7 +1547,7 @@ INTENT:\n" . json_encode($intent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHE
             ? "\n\nNEARBY_REQUEST:\n" . json_encode($nearbyIntent, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)
             : '';
 
-        return "You are Landly AI Assistant, a chatbot designed ONLY for the Landly land marketplace platform.
+        return "You are LandlyBot, a chatbot designed ONLY for the Landly land marketplace platform.
 
 STRICT RULES:
 - Only answer questions related to: Land buying/selling, Land listings, Property details (price, location, size, documents), Seller verification, Legal land process (Philippines), Nearby places (schools, beaches, churches, hospitals), Locations (e.g., Nasugbu, Batangas)

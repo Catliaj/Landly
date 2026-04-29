@@ -10,7 +10,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class InquriesController extends BaseController
 {
-    private const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'reserved', 'closed'];
+    private const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'reserved', 'closed', 'sold'];
 
     public function index(): ResponseInterface
     {
@@ -252,7 +252,7 @@ class InquriesController extends BaseController
             ]);
         }
 
-        if ($userId === $buyerId && in_array($status, ['accepted', 'rejected', 'reserved'], true)) {
+        if ($userId === $buyerId && in_array($status, ['accepted', 'rejected', 'reserved', 'sold'], true)) {
             return $this->response->setStatusCode(403)->setJSON([
                 'status' => 'error',
                 'message' => 'Buyer cannot set this status.',
@@ -332,6 +332,7 @@ class InquriesController extends BaseController
             'accepted' => 'in_inquiry',
             'reserved' => 'reserved',
             'closed' => 'closed',
+            'sold' => 'sold',
             default => null,
         };
     }

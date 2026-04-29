@@ -153,16 +153,23 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
         }
 
         .brand-badge {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            color: var(--green-900);
-            display: grid;
-            place-items: center;
-            font-weight: 700;
-            font-size: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            max-width: 100px;
+            height: auto;
+            max-height: 100px;
+            overflow: hidden;
             animation: pulse 3s ease-in-out infinite;
+        }
+
+        .brand-badge .brand-logo {
+            width: 100px;
+            height: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand-text {
@@ -3078,22 +3085,16 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
         <aside class="sidebar offcanvas offcanvas-lg offcanvas-start" id="buyerSidebar" tabindex="-1" aria-labelledby="buyerSidebarLabel">
             <div class="offcanvas-header d-lg-none">
                 <a href="<?= base_url('/') ?>" class="brand" id="buyerSidebarLabel">
-                    <div class="brand-badge">L</div>
-                    <div>
-                        <div class="brand-text">Landly</div>
-                        <div class="brand-subtitle">Buyer Portal</div>
-                    </div>
+                    <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
+                    <div class="brand-subtitle">Buyer Portal</div>
                 </a>
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" data-bs-target="#buyerSidebar" aria-label="Close"></button>
             </div>
 
             <div class="sidebar-header d-none d-lg-block">
                 <a href="<?= base_url('/') ?>" class="brand">
-                    <div class="brand-badge">L</div>
-                    <div>
-                        <div class="brand-text">Landly</div>
-                        <div class="brand-subtitle">Buyer Portal</div>
-                    </div>
+                    <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
+                    <div class="brand-subtitle">Buyer Portal</div>
                 </a>
             </div>
 
@@ -3231,14 +3232,14 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
                 <div class="chatbot-icon" aria-hidden="true">🤖</div>
                 <div class="chatbot-title">
                     <strong>LandlyBot</strong>
-                    <span>Real estate assistant</span>
+                    <span>LandlyBot assistant</span>
                 </div>
             </div>
             <button class="chatbot-close" id="buyerChatbotClose" aria-label="Close chat">✕</button>
         </div>
         <div class="chatbot-content" id="buyerChatbotContent" aria-live="polite" aria-atomic="true">
             <div class="chatbot-messages" id="buyerChatbotMessages">
-                <div class="chatbot-message bot">Hello <?= esc($buyerFirstName) ?>! Need help finding property or tracking your inquiry?</div>
+                <div class="chatbot-message bot">Hello <?= esc($buyerFirstName) ?>! I am LandlyBot. Need help finding land listings or tracking your inquiry?</div>
             </div>
             <div class="chatbot-input-wrap">
                 <input type="text" id="buyerChatbotInput" class="chatbot-input" placeholder="Type your message..." aria-label="Type your message" />
@@ -3813,7 +3814,9 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             updateBuyerChatbotState();
         });
 
-        buyerChatbotClose?.addEventListener('click', () => {
+        buyerChatbotClose?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             buyerChatbotContent.classList.remove('active');
             updateBuyerChatbotState();
         });
@@ -4224,7 +4227,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             return `
                 <div class="listing-card" onclick="openPropertyModal(${Number(listing.listing_id || 0)})" data-property-id="${Number(listing.listing_id || 0)}" data-property-type="${escapeHtml(listing.property_type_key || '')}">
                     <div class="listing-card-image">
-                        <img class="img-fluid" src="${escapeHtml(listing.image_url || '')}" alt="${escapeHtml(listing.title || 'Land Listing')}">
+                        <img class="img-fluid" src="${escapeHtml(listing.image_url || '<?= base_url('default1.png') ?>')}" alt="${escapeHtml(listing.title || 'Land Listing')}" onerror="this.onerror=null;this.src='<?= base_url('default1.png') ?>';">
                         <span class="listing-card-badge listing-status ${escapeHtml(listing.status_class || 'available')}">${escapeHtml(listing.status_label || 'Available')}</span>
                         <div class="listing-card-actions">
                             <button class="listing-card-action favorite-btn${savedClass}" data-listing-id="${Number(listing.listing_id || 0)}" title="${escapeHtml(savedTitle)}" aria-pressed="${savedPressed}" onclick="toggleFavorite(event, this, ${Number(listing.listing_id || 0)})">
@@ -5104,7 +5107,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
             showDetailsLoadingState();
 
             try {
-                const placeholderImage = 'https://via.placeholder.com/640x400?text=No+Image';
+                const placeholderImage = '<?= base_url('default1.png') ?>';
                 const imageList = Array.isArray(property.images)
                     ? property.images.filter((img) => String(img || '').trim() !== '')
                     : [];
@@ -5115,7 +5118,12 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
 
                 // Set main image
                 const primaryImage = imageList[0];
-                document.getElementById('modalMainImage').src = primaryImage || 'https://via.placeholder.com/640x400?text=No+Image';
+                const modalMainImage = document.getElementById('modalMainImage');
+                modalMainImage.onerror = function () {
+                    this.onerror = null;
+                    this.src = placeholderImage;
+                };
+                modalMainImage.src = primaryImage || placeholderImage;
 
                 // Set thumbnails
                 const thumbsContainer = document.getElementById('modalThumbnails');
@@ -5125,6 +5133,10 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JS
                     thumb.src = img;
                     thumb.alt = `Thumbnail ${idx + 1}`;
                     thumb.className = `modal-thumb ${idx === 0 ? 'active' : ''}`;
+                    thumb.onerror = function () {
+                        this.onerror = null;
+                        this.src = placeholderImage;
+                    };
                     thumb.addEventListener('click', () => changeMainImage(img, thumb));
                     thumbsContainer.appendChild(thumb);
                 });

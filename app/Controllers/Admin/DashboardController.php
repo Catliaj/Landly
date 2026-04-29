@@ -31,6 +31,12 @@ class DashboardController extends BaseController
         // Fetch sellers who are pending approval (have uploaded documents but not verified)
         // Get sellers with at least one unverified document or inactive status
         $db = \Config\Database::connect();
+        $allUsers = $this->userModel->findAll();
+        $userMap = [];
+
+        foreach ($allUsers as $user) {
+            $userMap[$user['user_id']] = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+        }
         
         $sellers = $db->query("
             SELECT DISTINCT u.*, COUNT(sv.document_id) as doc_count
@@ -72,21 +78,45 @@ class DashboardController extends BaseController
         $listingsData = [];
         foreach ($listings as $listing) {
             $listingId = $listing['listing_id'];
+            $sellerId = $listing['seller_id'] ?? null;
+            $sellerName = ! empty($sellerId) && isset($userMap[$sellerId]) && trim($userMap[$sellerId]) !== ''
+                ? $userMap[$sellerId]
+                : 'Unknown Seller';
+
+            $listing['seller_name'] = $sellerName;
+            $listing['property_type_label'] = $this->formatPropertyType((string) ($listing['property_type'] ?? ''));
+            $listing['listing_location'] = trim(implode(', ', array_filter([
+                (string) ($listing['barangay'] ?? ''),
+                (string) ($listing['city'] ?? ''),
+                (string) ($listing['province'] ?? ''),
+            ])));
             
-            // Get primary image for this listing
-            $primaryImage = $db->table('listing_images')
+            // Get all images for this listing, keeping the primary image first
+            $listingImages = $db->table('listing_images')
                 ->where('listing_id', $listingId)
-                ->where('is_primary', 1)
+                ->orderBy('is_primary', 'DESC')
+                ->orderBy('image_id', 'ASC')
                 ->get()
-                ->getRow('array');
-            
-            if ($primaryImage && !empty($primaryImage['image_path'])) {
-                $imagePath = trim($primaryImage['image_path']);
-                if (preg_match('#^(?:https?:)?//#i', $imagePath) === 1 || str_starts_with($imagePath, 'data:')) {
-                    $listing['image_url'] = $imagePath;
-                } else {
-                    $listing['image_url'] = base_url(ltrim(str_replace('\\', '/', $imagePath), '/'));
+                ->getResult('array');
+
+            $listing['images'] = [];
+            foreach ($listingImages as $listingImage) {
+                $imagePath = trim((string) ($listingImage['image_path'] ?? ''));
+                if ($imagePath === '') {
+                    continue;
                 }
+
+                if (preg_match('#^(?:https?:)?//#i', $imagePath) === 1 || str_starts_with($imagePath, 'data:')) {
+                    $imageUrl = $imagePath;
+                } else {
+                    $imageUrl = base_url(ltrim(str_replace('\\', '/', $imagePath), '/'));
+                }
+
+                $listing['images'][] = $imageUrl;
+            }
+
+            if (! empty($listing['images'])) {
+                $listing['image_url'] = $listing['images'][0];
             } else {
                 // Fall back to SVG placeholder with listing title
                 $title = trim($listing['title'] ?? '') ?: 'Land Listing';
@@ -102,7 +132,6 @@ class DashboardController extends BaseController
         
         // Enrich users with verification status and report counts
         $usersData = [];
-        $allUsers = $this->userModel->findAll();
         foreach ($allUsers as $user) {
             $userId = $user['user_id'];
             
@@ -137,6 +166,7 @@ class DashboardController extends BaseController
                 ->countAllResults();
             
             $user['verification_status'] = $verificationStatus;
+            $user['fullname'] = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
             $user['reports_filed'] = $reportsFiled;
             $user['reports_against'] = $reportsAgainst;
             
@@ -145,10 +175,16 @@ class DashboardController extends BaseController
         
         // Enrich reports with user names
         $reportsData = [];
+        $userReportData = [];
         $allReports = $this->reportsModel->findAll();
         $userMap = [];
         foreach ($allUsers as $u) {
             $userMap[$u['user_id']] = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+            $userReportData[$u['user_id']] = [
+                'name' => $userMap[$u['user_id']],
+                'filed' => [],
+                'against' => [],
+            ];
         }
         
         foreach ($allReports as $report) {
@@ -164,6 +200,49 @@ class DashboardController extends BaseController
                 : 'Unknown User';
 
             $report['subject'] = $this->formatReportSubject($report);
+
+            $reportDate = $report['created_at'] ?? null;
+            $formattedDate = $reportDate ? date('M d, Y', strtotime((string) $reportDate)) : 'Unknown Date';
+
+            if (! empty($reportedById)) {
+                if (! isset($userReportData[$reportedById])) {
+                    $userReportData[$reportedById] = [
+                        'name' => $report['reported_by_name'],
+                        'filed' => [],
+                        'against' => [],
+                    ];
+                }
+
+                $userReportData[$reportedById]['filed'][] = [
+                    'report_id' => $report['report_id'],
+                    'filed_against' => $report['reported_against_name'],
+                    'subject' => $report['subject'],
+                    'reason' => $report['reason'] ?? '',
+                    'description' => $report['description'] ?? '',
+                    'status' => ucfirst((string) ($report['status'] ?? 'pending')),
+                    'date' => $formattedDate,
+                ];
+            }
+
+            if (! empty($reportedAgainstId)) {
+                if (! isset($userReportData[$reportedAgainstId])) {
+                    $userReportData[$reportedAgainstId] = [
+                        'name' => $report['reported_against_name'],
+                        'filed' => [],
+                        'against' => [],
+                    ];
+                }
+
+                $userReportData[$reportedAgainstId]['against'][] = [
+                    'report_id' => $report['report_id'],
+                    'filed_by' => $report['reported_by_name'],
+                    'subject' => $report['subject'],
+                    'reason' => $report['reason'] ?? '',
+                    'description' => $report['description'] ?? '',
+                    'status' => ucfirst((string) ($report['status'] ?? 'pending')),
+                    'date' => $formattedDate,
+                ];
+            }
             
             $reportsData[] = $report;
         }
@@ -184,7 +263,7 @@ class DashboardController extends BaseController
             'reportStats' => [
                 'pending' => $this->reportsModel->where('status', 'pending')->countAllResults(),
                 'resolved' => $this->reportsModel->whereIn('status', ['reviewed', 'action_taken'])->countAllResults(),
-                'suspended' => $this->reportsModel->where('status', 'dismissed')->countAllResults(),
+                'suspended' => $this->reportsModel->where('status', 'suspended')->countAllResults(),
             ],
             'verificationStats' => [
                 'verified' => $this->sellerVerificationModel->where('is_verified', 1)->countAllResults(),
@@ -195,6 +274,7 @@ class DashboardController extends BaseController
             'listings' => $listingsData,
             'sellers' => $sellersData,
             'reports' => $reportsData,
+            'userReportData' => $userReportData,
         ];
 
         return view('Pages/Admin/Dashboard_Admin', $data);
@@ -211,6 +291,18 @@ class DashboardController extends BaseController
         }
 
         return trim($type . ($reason !== '' ? ': ' . $reason : ' Report'));
+    }
+
+    private function formatPropertyType(string $propertyType): string
+    {
+        $propertyType = trim($propertyType);
+
+        return match ($propertyType) {
+            'residential_land' => 'Residential Land',
+            'agricultural_land' => 'Agricultural Land',
+            'commercial_land' => 'Commercial Land',
+            default => $propertyType !== '' ? ucwords(str_replace('_', ' ', $propertyType)) : 'N/A',
+        };
     }
 
     public function activateUser($userId)
@@ -391,11 +483,32 @@ class DashboardController extends BaseController
         }
 
         $seller = $this->userModel->find($listing['seller_id']);
+        $images = $this->listingImagesModel
+            ->where('listing_id', $listingId)
+            ->orderBy('is_primary', 'DESC')
+            ->orderBy('image_id', 'ASC')
+            ->findAll();
+
+        $imageUrls = [];
+        foreach ($images as $image) {
+            $imagePath = trim((string) ($image['image_path'] ?? ''));
+            if ($imagePath === '') {
+                continue;
+            }
+
+            if (preg_match('#^(?:https?:)?//#i', $imagePath) === 1 || str_starts_with($imagePath, 'data:')) {
+                $imageUrls[] = $imagePath;
+            } else {
+                $imageUrls[] = base_url(ltrim(str_replace('\\', '/', $imagePath), '/'));
+            }
+        }
 
         return $this->response->setJSON([
             'success' => true,
             'listing' => $listing,
-            'seller' => $seller ? $seller['fullname'] ?? 'Unknown' : 'Unknown',
+            'seller' => $seller ? trim(($seller['first_name'] ?? '') . ' ' . ($seller['last_name'] ?? '')) : 'Unknown',
+            'images' => $imageUrls,
+            'property_type_label' => $this->formatPropertyType((string) ($listing['property_type'] ?? '')),
         ]);
     }
 

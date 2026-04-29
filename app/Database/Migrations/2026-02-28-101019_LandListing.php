@@ -87,7 +87,7 @@ class LandListing extends Migration
             ],
             'is_verified_listing' => [
                 'type'       => 'ENUM',
-                'constraint' => ['true', 'false', 'pending', 'rejected'],
+                'constraint' => ['true', 'false', 'pending', 'rejected', 'suspended'],
                 'default'    => 'pending',
             ],
             'price' => [
