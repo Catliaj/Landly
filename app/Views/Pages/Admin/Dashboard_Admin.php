@@ -928,7 +928,11 @@
         "reportSuspended": <?php echo isset($reportStats['suspended']) ? intval($reportStats['suspended']) : 0; ?>,
         "verificationVerified": <?php echo isset($verificationStats['verified']) ? intval($verificationStats['verified']) : 0; ?>,
         "verificationPending": <?php echo isset($verificationStats['pending']) ? intval($verificationStats['pending']) : 0; ?>,
-        "verificationUnverified": <?php echo isset($verificationStats['unverified']) ? intval($verificationStats['unverified']) : 0; ?>
+        "verificationUnverified": <?php echo isset($verificationStats['unverified']) ? intval($verificationStats['unverified']) : 0; ?>,
+        "activityTrendLabels": <?php echo json_encode($activityTrendLabels ?? [], JSON_HEX_TAG); ?>,
+        "activityTrendNewUsers": <?php echo json_encode($activityTrendNewUsers ?? [], JSON_NUMERIC_CHECK | JSON_HEX_TAG); ?>,
+        "activityTrendNewListings": <?php echo json_encode($activityTrendNewListings ?? [], JSON_NUMERIC_CHECK | JSON_HEX_TAG); ?>,
+        "activityTrendReportsFiled": <?php echo json_encode($activityTrendReportsFiled ?? [], JSON_NUMERIC_CHECK | JSON_HEX_TAG); ?>
     }
     </script>
 </head>
@@ -2446,6 +2450,10 @@
         const verificationVerified = dashboardData.verificationVerified || 0;
         const verificationPending = dashboardData.verificationPending || 0;
         const verificationUnverified = dashboardData.verificationUnverified || 0;
+        const activityTrendLabels = Array.isArray(dashboardData.activityTrendLabels) && dashboardData.activityTrendLabels.length > 0 ? dashboardData.activityTrendLabels : ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7'];
+        const activityTrendNewUsers = Array.isArray(dashboardData.activityTrendNewUsers) ? dashboardData.activityTrendNewUsers : [];
+        const activityTrendNewListings = Array.isArray(dashboardData.activityTrendNewListings) ? dashboardData.activityTrendNewListings : [];
+        const activityTrendReportsFiled = Array.isArray(dashboardData.activityTrendReportsFiled) ? dashboardData.activityTrendReportsFiled : [];
 
         // 1. USER CATEGORY PIE CHART
         const userCategoryCtx = document.getElementById('userCategoryChart');
@@ -2603,11 +2611,11 @@
             new Chart(activityTrendCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7'],
+                    labels: activityTrendLabels,
                     datasets: [
                         {
                             label: 'New Users',
-                            data: [],
+                            data: activityTrendNewUsers,
                             borderColor: 'rgba(149,213,178,.8)',
                             backgroundColor: 'rgba(149,213,178,.1)',
                             borderWidth: 2,
@@ -2620,7 +2628,7 @@
                         },
                         {
                             label: 'New Listings',
-                            data: [],
+                            data: activityTrendNewListings,
                             borderColor: 'rgba(210,180,140,.8)',
                             backgroundColor: 'rgba(210,180,140,.1)',
                             borderWidth: 2,
@@ -2633,7 +2641,7 @@
                         },
                         {
                             label: 'Reports Filed',
-                            data: [],
+                            data: activityTrendReportsFiled,
                             borderColor: 'rgba(231,76,60,.8)',
                             backgroundColor: 'rgba(231,76,60,.1)',
                             borderWidth: 2,
