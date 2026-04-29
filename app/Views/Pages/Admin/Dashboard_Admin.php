@@ -64,7 +64,8 @@
             border-bottom: 1px solid rgba(149, 213, 178, 0.1);
         }
         .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
-        .brand-badge { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); color: var(--green-900); display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; animation: pulse 3s ease-in-out infinite; }
+        .brand-badge { display: inline-flex; align-items: center; justify-content: center; width: 100px; max-width: 100px; height: auto; max-height: 100px; overflow: hidden; animation: pulse 3s ease-in-out infinite; }
+        .brand-badge .brand-logo { width: 100px; height: 100%; max-height: 100px; object-fit: contain; display: block; }
         .brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.5px; }
         .brand-subtitle { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
         
@@ -254,7 +255,11 @@
         .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
         .listing-card { background: #162e16; border-radius: 12px; padding: 0; overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.07); }
         .listing-card:hover { border-color: rgba(255,255,255,0.14); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-        .listing-card-image { width: 100%; height: 180px; background: #2a7a6a; object-fit: cover; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,0.5); font-size: 40px; position: relative; border-radius: 12px 12px 0 0; }
+        .listing-card-image { width: 100%; aspect-ratio: 1 / 1; background: #2a7a6a; object-fit: cover; display: flex; align-items: center; justify-content: center; color: rgba(254,250,224,0.5); font-size: 40px; position: relative; border-radius: 12px 12px 0 0; overflow: hidden; }
+        .listing-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .listing-card-carousel { width: 100%; height: 100%; position: relative; }
+        .listing-card-carousel button { transition: background 0.15s ease, transform 0.15s ease; }
+        .listing-card-carousel button:hover { background: rgba(0,0,0,0.65); transform: translateY(-50%) scale(1.05); }
         .listing-card-content { padding: 16px 20px 20px; flex: 1; display: flex; flex-direction: column; }
         .listing-card-title { font-size: 17px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
         .listing-card-seller { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
@@ -364,7 +369,8 @@
         
         .listing-modal-image {
             width: 100%;
-            height: 200px;
+            aspect-ratio: 1 / 1;
+            height: auto;
             background: #2a7a6a;
             border-radius: 10px;
             display: flex;
@@ -628,7 +634,8 @@
             }
             
             .listing-modal-image {
-                height: 150px;
+                aspect-ratio: 1 / 1;
+                height: auto;
             }
             
             .listing-modal-details-grid {
@@ -665,7 +672,8 @@
             }
             
             .listing-modal-image {
-                height: 120px;
+                aspect-ratio: 1 / 1;
+                height: auto;
             }
             
             .listing-modal-left,
@@ -929,11 +937,8 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a class="brand" href="/admin/dashboard">
-                    <div class="brand-badge">A</div>
-                    <div>
-                        <div class="brand-text">Landly</div>
-                        <div class="brand-subtitle">Admin Panel</div>
-                    </div>
+                    <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
+                    <div class="brand-subtitle">Admin Panel</div>
                 </a>
             </div>
 
@@ -1044,11 +1049,7 @@
                             <div class="chart-container" style="position: relative; height: 280px;">
                                 <canvas id="userCategoryChart"></canvas>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item"><div class="legend-color" style="background: #95d5b2;"></div><span>Buyers</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #d2b48c;"></div><span>Sellers</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Admins</span></div>
-                            </div>
+                            
                         </div>
 
                         <!-- Listing Status Bar Chart -->
@@ -1057,11 +1058,7 @@
                             <div class="chart-container" style="position: relative; height: 280px;">
                                 <canvas id="listingStatusChart"></canvas>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Verified</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Rejected</span></div>
-                            </div>
+    
                         </div>
 
                         <!-- Report Status Chart -->
@@ -1070,11 +1067,7 @@
                             <div class="chart-container" style="position: relative; height: 280px;">
                                 <canvas id="reportStatusChart"></canvas>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Resolved</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Suspended</span></div>
-                            </div>
+                            
                         </div>
 
                         <!-- Verification Status Chart -->
@@ -1083,11 +1076,7 @@
                             <div class="chart-container" style="position: relative; height: 280px;">
                                 <canvas id="verificationChart"></canvas>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>Verified</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #f1c40f;"></div><span>Pending</span></div>
-                                <div class="legend-item"><div class="legend-color" style="background: #95a5a6;"></div><span>Unverified</span></div>
-                            </div>
+                           
                         </div>
 
                         <!-- Activity Trend Chart -->
@@ -1227,8 +1216,8 @@
                     <!-- Footer -->
                     <div class="listing-modal-footer">
                         <button class="listing-modal-footer-btn btn-close" onclick="closeListingDetailsModal()">Close</button>
-                        <button class="listing-modal-footer-btn btn-approve" onclick="approveListing(currentListingId, currentListingTitle)">Approve</button>
-                        <button class="listing-modal-footer-btn btn-reject" onclick="rejectListing(currentListingId, currentListingTitle)">Reject</button>
+                        <button id="listingApproveBtn" class="listing-modal-footer-btn btn-approve" onclick="approveListing(currentListingId, currentListingTitle)">Approve</button>
+                        <button id="listingRejectBtn" class="listing-modal-footer-btn btn-reject" onclick="rejectListing(currentListingId, currentListingTitle)">Reject</button>
                     </div>
                 </div>
             </div>
@@ -1629,12 +1618,13 @@
             fetch(`/admin/reports/${reportId}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data && data.success) {
-                        const report = data.report;
+                    const report = data && (data.report || data.data) ? (data.report || data.data) : null;
+
+                    if (data && (data.success || data.status === 'success') && report) {
                         document.getElementById('detailReportId').textContent = report.report_id || reportId;
                         document.getElementById('detailSubject').textContent = report.subject || '';
-                        document.getElementById('detailReporter').textContent = report.reported_by_name || '';
-                        document.getElementById('detailTarget').textContent = report.reported_against_name || '';
+                        document.getElementById('detailReporter').textContent = report.reported_by_name || report.reporter_name || '';
+                        document.getElementById('detailTarget').textContent = report.reported_against_name || report.target_name || '';
                         document.getElementById('detailReason').textContent = report.reason || '';
                         document.getElementById('detailDescription').textContent = report.description || '';
                         document.getElementById('detailStatus').textContent = report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : '';
@@ -1678,14 +1668,50 @@
             modal.classList.remove('active');
         }
 
+        function updateListingCarousel(container, nextIndex) {
+            if (!container) return;
+
+            let images = [];
+            try {
+                images = JSON.parse(container.dataset.images || '[]');
+            } catch (error) {
+                images = [];
+            }
+
+            if (!images.length) return;
+
+            const normalizedIndex = ((nextIndex % images.length) + images.length) % images.length;
+            container.dataset.index = String(normalizedIndex);
+
+            const imageElement = container.querySelector('[data-carousel-image]');
+            if (imageElement) {
+                imageElement.src = images[normalizedIndex];
+            }
+
+            container.querySelectorAll('[data-carousel-dot]').forEach((dot) => {
+                const dotIndex = Number(dot.getAttribute('data-carousel-dot') || 0);
+                dot.style.background = dotIndex === normalizedIndex ? '#95d5b2' : 'rgba(255,255,255,0.35)';
+            });
+        }
+
+        function shiftListingCardImage(button, direction) {
+            const carousel = button.closest('[data-listing-carousel]');
+            if (!carousel) return;
+
+            const currentIndex = Number(carousel.dataset.index || 0);
+            updateListingCarousel(carousel, currentIndex + direction);
+        }
+
         // === Listing Details Modal Functions ===
         let currentListingId = null;
         let currentListingTitle = null;
+        let currentListingStatus = 'pending';
         
         function viewListingDetails(listingId, title, sellerName) {
             // Store for footer buttons
             currentListingId = listingId;
             currentListingTitle = title;
+            currentListingStatus = 'pending';
             
             // Clear all fields
             document.getElementById('detailListingId').textContent = listingId;
@@ -1708,6 +1734,29 @@
                 .then(data => {
                     if (data && data.success && data.listing) {
                         const listing = data.listing;
+                        const listingImages = Array.isArray(data.images) ? data.images.filter(Boolean) : [];
+
+                        if (data.seller && String(data.seller).trim() !== '') {
+                            document.getElementById('detailListingSeller').textContent = data.seller;
+                        }
+
+                        if (listingImages.length > 0) {
+                            const carouselDots = listingImages.map(function(_, index) {
+                                const dotColor = index === 0 ? '#95d5b2' : 'rgba(255,255,255,0.35)';
+                                return '<span data-carousel-dot="' + index + '" style="width: 6px; height: 6px; border-radius: 50%; background: ' + dotColor + ';"></span>';
+                            }).join('');
+
+                            const carouselControls = listingImages.length > 1
+                                ? '<button type="button" onclick="event.stopPropagation(); shiftListingCardImage(this, -1)" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); border: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.45); color: #fff; cursor: pointer;">‹</button>' +
+                                  '<button type="button" onclick="event.stopPropagation(); shiftListingCardImage(this, 1)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.45); color: #fff; cursor: pointer;">›</button>' +
+                                  '<div style="position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: none;">' + carouselDots + '</div>'
+                                : '';
+
+                            imageDiv.innerHTML = '<div class="listing-card-carousel" data-listing-carousel="modal-' + listingId + '" data-images="' + JSON.stringify(listingImages).replaceAll('"', '&quot;') + '" data-index="0" style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #183127;">' +
+                                '<img src="' + listingImages[0] + '" alt="' + String(title || 'Property Image').replaceAll('"', '&quot;') + '" data-carousel-image style="width: 100%; height: 100%; object-fit: cover; display: block;">' +
+                                carouselControls +
+                                '</div>';
+                        }
                         
                         // Populate description
                         document.getElementById('detailListingDescription').textContent = listing.description || 'No description provided';
@@ -1740,31 +1789,36 @@
                         }
                         
                         // Determine status
-                        let statusClass = 'pending';
-                        let statusText = 'Pending';
+                        currentListingStatus = 'pending';
                         if (listing.is_verified_listing === 'true' || listing.listing_status === 'approved') {
                             statusClass = 'available';
                             statusText = 'Approved';
+                            currentListingStatus = 'verified';
                         } else if (listing.listing_status === 'rejected' || listing.is_verified_listing === 'rejected') {
                             statusClass = 'closed';
                             statusText = 'Rejected';
+                            currentListingStatus = 'rejected';
                         }
                         
+                        document.getElementById('detailListingStatus').innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
+                        document.getElementById('detailListingStatusDetail').textContent = statusText;
+                        updateListingActionButtons()
                         document.getElementById('detailListingStatus').innerHTML = `<span class="badge ${statusClass}">${statusText}</span>`;
                         document.getElementById('detailListingStatusDetail').textContent = statusText;
                         
                         // Populate land area if available
                         const areaElement = document.getElementById('detailListingArea');
-                        if (listing.land_area) {
-                            areaElement.textContent = listing.land_area + ' sq.m';
+                        if (listing.land_area || listing.developing_area) {
+                            const areaValue = listing.land_area || listing.developing_area;
+                            areaElement.textContent = areaValue + ' sq.m';
                         } else {
                             areaElement.textContent = 'N/A';
                         }
                         
                         // Populate land type if available
                         const typeElement = document.getElementById('detailListingType');
-                        if (listing.land_type) {
-                            typeElement.textContent = listing.land_type;
+                        if (data.property_type_label || listing.property_type) {
+                            typeElement.textContent = data.property_type_label || listing.property_type;
                         } else {
                             typeElement.textContent = 'N/A';
                         }
@@ -1780,6 +1834,20 @@
             modal.classList.add('active');
         }
 
+
+        function updateListingActionButtons() {
+            const approveButton = document.getElementById('listingApproveBtn');
+            const rejectButton = document.getElementById('listingRejectBtn');
+            const isFinalized = currentListingStatus === 'verified';
+
+            if (approveButton) {
+                approveButton.style.display = isFinalized ? 'none' : 'inline-flex';
+            }
+
+            if (rejectButton) {
+                rejectButton.style.display = isFinalized ? 'none' : 'inline-flex';
+            }
+        }
         function closeListingDetailsModal() {
             const modal = document.getElementById('listingDetailsModal');
             modal.classList.remove('active');
@@ -1930,14 +1998,40 @@
                 return;
             }
 
-            // Show success message
-            fireAppAlert({
-                icon: 'success',
-                title: 'Reply Sent',
-                html: `Reply sent to report <strong>${reportId}</strong><br><br><em>${replyText}</em>`,
-                confirmButtonText: 'OK'
+            fetch(`/admin/reports/${reportId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    status: 'reviewed',
+                    admin_notes: replyText
+                })
+            })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok || !data || data.status !== 'success') {
+                    throw new Error(data && data.message ? data.message : 'Failed to update report status');
+                }
+
+                fireAppAlert({
+                    icon: 'success',
+                    title: 'Report Resolved',
+                    html: `Report <strong>${reportId}</strong> was marked as reviewed.<br><br><em>${replyText}</em>`,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    location.reload();
+                });
+                closeReplyModal();
+            })
+            .catch(error => {
+                fireAppAlert({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: error.message || 'Unable to update the report status.'
+                });
             });
-            closeReplyModal();
         }
 
         // === User Details Modal Functions ===
@@ -2013,24 +2107,7 @@
         });
 
         function suspendAccount(userName, reportId) {
-            fireAppAlert({
-                icon: 'warning',
-                title: 'Suspend Account?',
-                html: `Are you sure you want to suspend the account of <strong>${userName}</strong>?<br><br><small style="color: rgba(254,250,224,.7);">Report ID: ${reportId}</small>`,
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Suspend',
-                cancelButtonText: 'Cancel',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fireAppAlert({
-                        icon: 'success',
-                        title: 'Account Suspended',
-                        html: `Account for <strong>${userName}</strong> has been suspended.`,
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
+            return confirmSuspendAccount(userName, reportId);
         }
 
         // Close modals when clicking outside
@@ -2133,83 +2210,7 @@
         }
 
         // User Report History Data
-        const userReportData = {
-            'U001': {
-                name: 'John Buyer',
-                filed: [],
-                against: []
-            },
-            'U002': {
-                name: 'Maria Santos',
-                filed: [],
-                against: [
-                    {
-                        report_id: 'R001',
-                        filed_by: 'John Buyer',
-                        subject: 'Fake Documents',
-                        reason: 'Fraudulent Documents Submitted',
-                        description: 'The seller submitted counterfeit identification and property documents.',
-                        status: 'Pending',
-                        date: 'Apr 10, 2026'
-                    }
-                ]
-            },
-            'U003': {
-                name: 'Juan Dela Cruz',
-                filed: [],
-                against: [
-                    {
-                        report_id: 'R002',
-                        filed_by: 'Jane Investor',
-                        subject: 'Misrepresented Property',
-                        reason: 'Property Photos Don\'t Match Actual',
-                        description: 'The photos used in the listing do not match the actual property condition.',
-                        status: 'Pending',
-                        date: 'Apr 09, 2026'
-                    }
-                ]
-            },
-            'U004': {
-                name: 'Carlos Lopez',
-                filed: [
-                    {
-                        report_id: 'R003',
-                        filed_against: 'Ana Rodriguez',
-                        subject: 'Unprofessional Conduct',
-                        reason: 'Harassment and Rude Behavior',
-                        description: 'During property negotiations, the user engaged in unprofessional and disrespectful communication.',
-                        status: 'Resolved',
-                        date: 'Apr 08, 2026'
-                    }
-                ],
-                against: []
-            },
-            'U005': {
-                name: 'Admin User',
-                filed: [],
-                against: []
-            },
-            'U006': {
-                name: 'Jane Investor',
-                filed: [
-                    {
-                        report_id: 'R002',
-                        filed_against: 'Juan Dela Cruz',
-                        subject: 'Misrepresented Property',
-                        reason: 'Property Photos Don\'t Match Actual',
-                        description: 'The photos used in the listing do not match the actual property condition.',
-                        status: 'Pending',
-                        date: 'Apr 09, 2026'
-                    }
-                ],
-                against: []
-            },
-            'U007': {
-                name: 'Ana Rodriguez',
-                filed: [],
-                against: []
-            }
-        };
+        const userReportData = <?php echo json_encode($userReportData ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
         // Event Delegation for Data Action Attributes
         document.addEventListener('click', function(e) {
@@ -2978,14 +2979,39 @@
             });
 
             if (result.isConfirmed) {
-                fireAppAlert({
-                    title: 'Account Suspended',
-                    text: `${userName}'s account has been suspended.`,
-                    icon: 'success',
-                    timer: 2000
-                }).then(() => {
-                    location.reload();
-                });
+                try {
+                    const response = await fetch(`/admin/reports/${reportId}/suspend`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new URLSearchParams({
+                            '<?= csrf_token(); ?>': '<?= csrf_hash(); ?>',
+                            admin_notes: `Suspended from admin dashboard for report #${reportId}`
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data || data.status !== 'success') {
+                        throw new Error(data && data.message ? data.message : 'Failed to suspend account.');
+                    }
+
+                    fireAppAlert({
+                        title: 'Account Suspended',
+                        text: `${userName}'s account has been suspended.`,
+                        icon: 'success',
+                        timer: 2000
+                    }).then(() => {
+                        location.reload();
+                    });
+                } catch (error) {
+                    fireAppAlert({
+                        title: 'Suspend Failed',
+                        text: error.message || 'Unable to suspend this account right now.',
+                        icon: 'error'
+                    });
+                }
             }
         }
     </script>

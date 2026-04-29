@@ -31,6 +31,7 @@
                     <option value="reviewed">Reviewed</option>
                     <option value="dismissed">Dismissed</option>
                     <option value="action_taken">Action Taken</option>
+                    <option value="suspended">Suspended</option>
                 </select>
             </div>
 
@@ -100,6 +101,9 @@
                 <button id="updateBtn" class="action-btn" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--green-900); padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onclick="saveReportUpdate()">
                     Save Changes
                 </button>
+                <button id="suspendBtn" class="action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onclick="suspendReportWithTargets()">
+                    Suspend
+                </button>
                 <button id="dismissBtn" class="action-btn secondary" style="background: transparent; border: 1px solid rgba(202, 164, 110, 0.3); color: #d2b48c; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onclick="dismissReport()">
                     Dismiss Report
                 </button>
@@ -143,6 +147,11 @@
     .status-badge.action_taken {
         background: rgba(46, 204, 113, 0.2);
         color: #2ecc71;
+    }
+
+    .status-badge.suspended {
+        background: rgba(230, 126, 34, 0.2);
+        color: #e67e22;
     }
 
     textarea {
@@ -312,6 +321,69 @@
         if (confirm('Are you sure you want to dismiss this report?')) {
             document.getElementById('statusSelect').value = 'dismissed';
             await saveReportUpdate();
+        }
+    }
+
+    async function suspendReportWithTargets() {
+        if (!confirm('Are you sure you want to suspend this report?\n\nThis will:\n- Mark the report as Suspended\n- Suspend the reported user account\n- Suspend the listing (if applicable)\n\nThis action cannot be easily undone!')) {
+            return;
+        }
+
+        const btn = document.getElementById('suspendBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Suspending...';
+
+        try {
+            const response = await fetch(`/admin/reports/${reportId}/suspend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    admin_notes: document.getElementById('adminNotes').value
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to suspend report');
+
+            const data = await response.json();
+            
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Report Suspended',
+                    html: 'The report has been suspended and the following actions were taken:<br><br>' +
+                          '✓ Report status updated to Suspended<br>' +
+                          '✓ Reported user account has been suspended<br>' +
+                          (currentReport.report_type === 'listing' ? '✓ Listing has been suspended<br>' : '') +
+                          '<br><small>All related parties have been notified of these actions.</small>',
+                    customClass: {
+                        popup: 'sweet-alert-popup',
+                        confirmButton: 'sweet-alert-button'
+                    }
+                });
+            } else {
+                alert('Report suspended successfully!');
+            }
+
+            // Reload report
+            await loadReport();
+        } catch (error) {
+            console.error('Error suspending report:', error);
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to suspend report. Please try again.'
+                });
+            } else {
+                alert('Failed to suspend report');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     }
 

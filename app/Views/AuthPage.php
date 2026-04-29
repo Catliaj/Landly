@@ -138,16 +138,23 @@
 		}
 
 		.brand-badge {
-			width: 50px;
-			height: 50px;
-			border-radius: 14px;
-			background: linear-gradient(135deg, var(--accent), #e3c18a);
-			color: var(--green-900);
-			display: grid;
-			place-items: center;
-			font-weight: 900;
-			font-size: 1.4rem;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 100px;
+			max-width: 100px;
+			height: auto;
+			max-height: 100px;
+			overflow: hidden;
 			box-shadow: 0 8px 25px rgba(202, 164, 110, 0.3);
+		}
+
+		.brand-badge .brand-logo {
+			width: 100px;
+			height: 100%;
+			max-height: 100px;
+			object-fit: contain;
+			display: block;
 		}
 
 		.info-panel h1 {
@@ -1026,8 +1033,7 @@
 		<!-- Left Panel - Info -->
 		<div class="info-panel">
 			<div class="brand">
-				<div class="brand-badge">L</div>
-				<span>Landly</span>
+				<div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
 			</div>
 			<h1>Secure your place in the premium land marketplace.</h1>
 			<p class="tagline">Join verified buyers and sellers to access exclusive land deals, advanced mapping tools, and secure transactions.</p>
@@ -1508,11 +1514,21 @@
 							setAuthMode('login');
 						}
 					} else {
+						let serverMessage = '';
+						try {
+							const payload = await response.clone().json();
+							serverMessage = String(payload && payload.message ? payload.message : '').trim();
+						} catch (parseError) {
+							serverMessage = '';
+						}
+
 						const statusMessage = options.errorByStatus && options.errorByStatus[response.status]
 							? options.errorByStatus[response.status]
 							: options.errorText;
 
-						await showGenericResult('error', options.errorTitle, statusMessage);
+						const finalMessage = serverMessage !== '' ? serverMessage : statusMessage;
+
+						await showGenericResult('error', options.errorTitle, finalMessage);
 					}
 				} catch (error) {
 					await showGenericResult('error', options.errorTitle, options.errorText);

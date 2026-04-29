@@ -26,6 +26,13 @@ class AuthController extends BaseController
             ])->setStatusCode(ResponseInterface::HTTP_UNAUTHORIZED);
         }
 
+        // Block suspended/inactive accounts before password verification.
+        if ((int) ($user['is_active'] ?? 0) === 0) {
+            return $this->response->setJSON([
+                'message' => 'Your account is suspended. Please email support to appeal this action.'
+            ])->setStatusCode(ResponseInterface::HTTP_LOCKED);
+        }
+
         // 2️⃣ Verify password
         if (!password_verify($password, $user['password'])) {
             return $this->response->setJSON([

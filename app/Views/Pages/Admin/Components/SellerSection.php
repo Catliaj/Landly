@@ -60,9 +60,9 @@
                             <div class="seller-card" data-status="<?= $verificationStatus ?>">
                                 <div class="seller-card-header" style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px;">
                                     <!-- Profile Photo Avatar -->
-                                    <div class="seller-profile-pic" style="width: 64px; height: 64px; min-width: 64px; border-radius: 8px; background: linear-gradient(135deg, #2a7a6a, #1a5a4a); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #ffffff; overflow: hidden;">
+                                    <div class="seller-profile-pic" style="width: 84px; height: 84px; min-width: 50px; border-radius: 8px; background: linear-gradient(135deg, #2a7a6a, #1a5a4a); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #ffffff; overflow: hidden; flex-shrink: 0;">
                                         <?php if ($avatarUrl): ?>
-                                            <img src="<?= esc($avatarUrl) ?>" alt="<?= esc($sellerName) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <img src="<?= esc($avatarUrl) ?>" alt="<?= esc($sellerName) ?>" style="width: 100%; height: 100%; object-fit: contain; object-position: center center; background: #1a5a4a;">
                                         <?php else: ?>
                                             <?= $nameInitial ?>
                                         <?php endif; ?>

@@ -97,6 +97,189 @@ class LandListingCRUDController extends BaseController
         }
     }
 
+    public function readLandListing(int $listingId)
+    {
+        $sellerId = $this->getCurrentUserId();
+        if ($sellerId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized.']);
+        }
+
+        $model = new \App\Models\LandListings();
+        $listing = $model
+            ->where('listing_id', $listingId)
+            ->where('seller_id', $sellerId)
+            ->first();
+
+        if (! is_array($listing)) {
+            return $this->response->setStatusCode(404)->setJSON(['status' => 'error', 'message' => 'Listing not found.']);
+        }
+
+        $location = $this->getListingLocation($listingId);
+        if ($location !== null) {
+            $listing['latitude'] = (float) ($location['latitude'] ?? 0);
+            $listing['longitude'] = (float) ($location['longitude'] ?? 0);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'listing' => $listing,
+        ]);
+    }
+
+    public function updateLandListing(int $listingId)
+    {
+        $sellerId = $this->getCurrentUserId();
+        if ($sellerId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized.']);
+        }
+
+        $model = new \App\Models\LandListings();
+        $existing = $model
+            ->where('listing_id', $listingId)
+            ->where('seller_id', $sellerId)
+            ->first();
+
+        if (! is_array($existing)) {
+            return $this->response->setStatusCode(404)->setJSON(['status' => 'error', 'message' => 'Listing not found.']);
+        }
+
+        $input = $this->request->getJSON(true);
+        if (! is_array($input) || $input === []) {
+            $input = $this->request->getRawInput();
+        }
+        if (! is_array($input) || $input === []) {
+            $input = $this->request->getPost();
+        }
+
+        $titleStatus = strtolower(trim((string) ($input['title_status'] ?? '')));
+
+        $updateData = [
+            'title' => trim((string) ($input['title'] ?? ($existing['title'] ?? ''))),
+            'description' => trim((string) ($input['description'] ?? ($existing['description'] ?? ''))),
+            'barangay' => trim((string) ($input['barangay'] ?? ($existing['barangay'] ?? ''))),
+            'city' => trim((string) ($input['city'] ?? ($existing['city'] ?? ''))),
+            'province' => trim((string) ($input['province'] ?? ($existing['province'] ?? ''))),
+            'road_access_type' => (string) ($input['road_access_type'] ?? ($existing['road_access_type'] ?? '')),
+            'view_type' => (string) ($input['view_type'] ?? ($existing['view_type'] ?? 'none')),
+            'property_type' => (string) ($input['property_type'] ?? ($existing['property_type'] ?? '')),
+            'investment_ready' => (int) ($input['investment_ready'] ?? ($existing['investment_ready'] ?? 0)),
+            'developing_area' => (int) ($input['developing_area'] ?? ($existing['developing_area'] ?? 0)),
+            'price' => (float) ($input['price'] ?? ($existing['price'] ?? 0)),
+        ];
+
+        if ($titleStatus === 'clean') {
+            $updateData['is_titled'] = 1;
+            $updateData['has_tax_declaration'] = 0;
+            $updateData['document_status'] = 'complete';
+        } elseif ($titleStatus === 'tax-declaration') {
+            $updateData['is_titled'] = 0;
+            $updateData['has_tax_declaration'] = 1;
+            $updateData['document_status'] = 'partial';
+        } elseif ($titleStatus === 'untitled') {
+            $updateData['is_titled'] = 0;
+            $updateData['has_tax_declaration'] = 0;
+            $updateData['document_status'] = 'pending';
+        }
+
+        if ($updateData['title'] === '' || $updateData['property_type'] === '' || $updateData['city'] === '' || $updateData['province'] === '' || $updateData['road_access_type'] === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Please fill in all required fields.',
+            ]);
+        }
+
+        if ($updateData['price'] <= 0) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Price must be greater than zero.',
+            ]);
+        }
+
+        $db = Database::connect();
+        $db->transBegin();
+
+        try {
+            $updated = $model->update($listingId, $updateData);
+            if (! $updated) {
+                $error = implode(' ', $model->errors() ?: ['Unable to update listing.']);
+                throw new \RuntimeException($error);
+            }
+
+            $this->upsertListingLocation($listingId, $input);
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Transaction failed while updating listing.');
+            }
+
+            $db->transCommit();
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Listing updated successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function deleteLandListing(int $listingId)
+    {
+        $sellerId = $this->getCurrentUserId();
+        if ($sellerId <= 0) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized.']);
+        }
+
+        $model = new \App\Models\LandListings();
+        $existing = $model
+            ->where('listing_id', $listingId)
+            ->where('seller_id', $sellerId)
+            ->first();
+
+        if (! is_array($existing)) {
+            return $this->response->setStatusCode(404)->setJSON(['status' => 'error', 'message' => 'Listing not found.']);
+        }
+
+        $db = Database::connect();
+        $db->transBegin();
+
+        try {
+            $imagePaths = $this->getStoredPathsFromTable('listing_images', $listingId, ['image_path', 'file_path', 'path']);
+            $documentPaths = $this->getStoredPathsFromTable('listing_documents', $listingId, ['document_path', 'file_path', 'path']);
+
+            $this->deleteRowsByListingId('listing_locations', $listingId);
+            $this->deleteRowsByListingId('listing_images', $listingId);
+            $this->deleteRowsByListingId('listing_documents', $listingId);
+
+            $deleted = $model->delete($listingId);
+            if (! $deleted) {
+                throw new \RuntimeException('Unable to delete listing.');
+            }
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Transaction failed while deleting listing.');
+            }
+
+            $db->transCommit();
+
+            $this->deleteStoredFiles(array_merge($imagePaths, $documentPaths));
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Listing deleted successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function saveListingLocation(int $listingId): ?array
     {
         $latitudeInput = $this->request->getPost('latitude');
@@ -142,6 +325,118 @@ class LandListingCRUDController extends BaseController
         }
 
         return $location;
+    }
+
+    private function getListingLocation(int $listingId): ?array
+    {
+        $db = Database::connect();
+        if (! $db->tableExists('listing_locations')) {
+            return null;
+        }
+
+        $row = $db->table('listing_locations')
+            ->where('listing_id', $listingId)
+            ->get()
+            ->getRowArray();
+
+        return is_array($row) ? $row : null;
+    }
+
+    private function upsertListingLocation(int $listingId, array $input): void
+    {
+        $latitudeInput = $input['latitude'] ?? $input['Latitude'] ?? null;
+        $longitudeInput = $input['longitude'] ?? $input['Longitude'] ?? null;
+
+        if ($latitudeInput === null || $latitudeInput === '' || $longitudeInput === null || $longitudeInput === '') {
+            return;
+        }
+
+        if (! is_numeric($latitudeInput) || ! is_numeric($longitudeInput)) {
+            return;
+        }
+
+        $db = Database::connect();
+        if (! $db->tableExists('listing_locations')) {
+            return;
+        }
+
+        $table = $db->table('listing_locations');
+        $existing = $table->where('listing_id', $listingId)->get()->getRowArray();
+
+        $payload = [
+            'listing_id' => $listingId,
+            'latitude' => (float) $latitudeInput,
+            'longitude' => (float) $longitudeInput,
+        ];
+
+        if (is_array($existing)) {
+            $table->where('listing_id', $listingId)->update([
+                'latitude' => $payload['latitude'],
+                'longitude' => $payload['longitude'],
+            ]);
+            return;
+        }
+
+        $table->insert($payload);
+    }
+
+    private function getStoredPathsFromTable(string $tableName, int $listingId, array $pathFieldCandidates): array
+    {
+        $db = Database::connect();
+        if (! $db->tableExists($tableName)) {
+            return [];
+        }
+
+        $fields = $db->getFieldNames($tableName);
+        $listingField = in_array('listing_id', $fields, true)
+            ? 'listing_id'
+            : (in_array('land_listing_id', $fields, true) ? 'land_listing_id' : null);
+
+        if ($listingField === null) {
+            return [];
+        }
+
+        $pathField = null;
+        foreach ($pathFieldCandidates as $candidate) {
+            if (in_array($candidate, $fields, true)) {
+                $pathField = $candidate;
+                break;
+            }
+        }
+
+        if ($pathField === null) {
+            return [];
+        }
+
+        $rows = $db->table($tableName)
+            ->select($pathField)
+            ->where($listingField, $listingId)
+            ->get()
+            ->getResultArray();
+
+        return array_values(array_filter(array_map(
+            static fn(array $row): string => trim((string) ($row[$pathField] ?? '')),
+            $rows
+        )));
+    }
+
+    private function deleteRowsByListingId(string $tableName, int $listingId): void
+    {
+        $db = Database::connect();
+        if (! $db->tableExists($tableName)) {
+            return;
+        }
+
+        $fields = $db->getFieldNames($tableName);
+        $listingField = in_array('listing_id', $fields, true)
+            ? 'listing_id'
+            : (in_array('land_listing_id', $fields, true) ? 'land_listing_id' : null);
+
+        if ($listingField === null) {
+            return;
+        }
+
+        $db->table($tableName)->where($listingField, $listingId)->delete();
     }
 
     /**

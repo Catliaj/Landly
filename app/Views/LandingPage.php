@@ -323,12 +323,21 @@ $availableResultCount = count($availableListings);
         }
 
         .brand-badge {
-            width: 35px; height: 35px; border-radius: 8px;
+            width: 100px; max-width: 100px; height: auto; max-height: 100px; border-radius: 8px;
             background: linear-gradient(135deg, var(--accent) 0%, #c9a86c 100%);
             color: var(--green-900);
             display: grid; place-items: center;
             transition: all 0.4s ease;
             animation: pulse 3s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        .brand-badge .brand-logo {
+            width: 100px;
+            height: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            display: block;
         }
 
         .brand:hover .brand-badge {
@@ -385,7 +394,7 @@ $availableResultCount = count($availableListings);
             content: "";
             position: absolute;
             inset: 0;
-            background: url('https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+            background: url('https://t3.ftcdn.net/jpg/02/34/65/14/360_F_234651400_AyM4aKTmhKWHry7mPu9SAukaS71CGNsH.jpg') center/cover no-repeat;
             filter: blur(3px);
             transform: scale(1.03);
             z-index: 0;
@@ -1512,9 +1521,10 @@ $availableResultCount = count($availableListings);
         /* --- Footer Wave & Cream Footer --- */
         .footer-wave {
             position: relative;
-            height: 120px;
-            background: linear-gradient(180deg, var(--green-900) 0%, var(--green-800) 100%);
+            height: 72px;
+            background: transparent;
             margin-top: -1px;
+            overflow: hidden;
         }
 
         .footer-wave svg {
@@ -1522,13 +1532,13 @@ $availableResultCount = count($availableListings);
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 72px;
         }
 
         .cream-footer {
             background: linear-gradient(180deg, #efe7d8 0%, #f5f0e6 100%);
             color: var(--green-900);
-            padding: 80px 0 30px;
+            padding: 56px 0 24px;
             position: relative;
         }
 
@@ -1678,8 +1688,8 @@ $availableResultCount = count($availableListings);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 40px;
-            margin-top: 50px;
+            padding-top: 24px;
+            margin-top: 32px;
             border-top: 1px solid rgba(15, 27, 27, 0.1);
         }
 
@@ -2341,7 +2351,7 @@ $availableResultCount = count($availableListings);
 
     <header>
         <div class="container nav">
-            <div class="brand"><div class="brand-badge">L</div> Landly</div>
+            <div class="brand"><div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div></div>
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#contact">Contact</a>
@@ -2368,21 +2378,19 @@ $availableResultCount = count($availableListings);
             </div>
             <div class="hero-glass">
                 <div class="hero-slideshow" aria-hidden="true">
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="hero-slide" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzDJO41WAj-rQ3zP8unfkn8EPxVoLnWCHCMQ&s');"></div>
+                    <div class="hero-slide" style="background-image: url('https://img.fazwaz.com/eyJidWNrZXQiOiJwcmQtbGlmdWxsY29ubmVjdC1iYWNrZW5kLWIyYi1pbWFnZXMiLCJrZXkiOiJwcm9wZXJ0aWVzXC85ZjJhMjg4Yi0wMTE2LTQwMjAtOWU1Yy00YWZkMjIyM2QzNWJcL2Y3ZGFmNjQ5LTk3MTItNGY4NC05OTE1LTlkZDRjNDQwMTRiYS5qcGciLCJlZGl0cyI6eyJyb3RhdGUiOm51bGwsInJlc2l6ZSI6eyJ3aWR0aCI6MzU1LCJoZWlnaHQiOjI0MCwiZml0IjoiY292ZXIifX19');"></div>
+                    <div class="hero-slide" style="background-image: url('https://images.real.ph/real/uploads/listings/large/listing_655e15edd5dc5582_1700664813.jpg');"></div>
                 </div>
             </div>
         </div>
     </section>
 
     <section class="section" id="features">
-
-    <section class="section" id="features">
         <div class="container">
             <div class="section-header">
-                <h2>Designed for exclusive transactions</h2>
-                <span class="feature-pill">Premium Experience</span>
+                <h2>Built around the Landly flow</h2>
+                <span class="feature-pill">What the system supports</span>
             </div>
             <div class="features-grid stagger-children">
                 <!-- Row 1 -->
@@ -2390,50 +2398,50 @@ $availableResultCount = count($availableListings);
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
-                    <h3>Verified Ownership</h3>
-                    <p>Every listing undergoes rigorous legal and document verification. We ensure the land is ready for a clean title transfer.</p>
-                    <span class="feature-tag">Trusted & Secure</span>
+                    <h3>Seller and Listing Review</h3>
+                    <p>Sellers upload their profile requirements and land documents. Admin review helps buyers see which listings are verified, pending, or rejected.</p>
+                    <span class="feature-tag">Admin checked</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                     </div>
-                    <h3>Advanced Mapping</h3>
-                    <p>View high-resolution satellite imagery and topographic data. Walk the boundaries of your property from anywhere in the world.</p>
-                    <span class="feature-tag">Precision View</span>
+                    <h3>Location Details</h3>
+                    <p>Listings show the barangay, city, province, and map coordinates provided by the seller, so buyers can understand where the land is located.</p>
+                    <span class="feature-tag">Nasugbu focused</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     </div>
-                    <h3>Zoning Intelligence</h3>
-                    <p>Get instant clarity on land-use regulations and building codes. Know exactly what you can build before you make an offer.</p>
-                    <span class="feature-tag">Data-Driven</span>
+                    <h3>Seller Dashboard</h3>
+                    <p>Sellers can add listings, upload proof documents, track views, review inquiries, and update inquiry status from one dashboard.</p>
+                    <span class="feature-tag">Listing tools</span>
                 </div>
                 <!-- Row 2 -->
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                     </div>
-                    <h3>Off-Market Access</h3>
-                    <p>Gain exclusive entry to premium plots not listed on the open market. Secure unique opportunities before they go public.</p>
-                    <span class="feature-tag">Member Only</span>
+                    <h3>Buyer Inquiry Flow</h3>
+                    <p>Buyers browse approved listings, save properties, and send inquiries to sellers when they want more information about a lot.</p>
+                    <span class="feature-tag">Buyer to seller</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     </div>
-                    <h3>Concierge Support</h3>
-                    <p>Dedicated land advisors guide you through negotiations and closing. Expert help for high-value land acquisitions.</p>
-                    <span class="feature-tag">White-Glove Service</span>
+                    <h3>Messages After Inquiry</h3>
+                    <p>Once an inquiry exists, the buyer and seller can continue the conversation in the message section and keep the discussion tied to the listing.</p>
+                    <span class="feature-tag">Conversation based</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/><path d="M12 8v4m0 0v.01"/></svg>
                     </div>
-                    <h3>Secure Escrow</h3>
-                    <p>Close deals with confidence using our integrated secure-pay system. Your funds are protected throughout the entire transaction.</p>
-                    <span class="feature-tag">Financial Safety</span>
+                    <h3>Report and Moderation</h3>
+                    <p>Users can report listings or messages. Admins can review reports, inspect the context, and decide whether to dismiss or take action.</p>
+                    <span class="feature-tag">Safer platform</span>
                 </div>
             </div>
         </div>
@@ -2453,50 +2461,34 @@ $availableResultCount = count($availableListings);
             <div class="footer-grid">
                 <div class="footer-about">
                     <div class="footer-brand">
-                        <div class="brand-badge">L</div>
-                        <span>Landly</span>
+                        <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
                     </div>
-                    <p class="footer-description">The exclusive land marketplace connecting verified buyers with premium properties across the Philippines.</p>
+                    <p class="footer-description">A land listing platform for buyers, sellers, and admins managing properties in Nasugbu, Batangas.</p>
                 </div>
                 <div class="footer-column">
                     <h4>Marketplace</h4>
-                    <a href="#">Browse Listings</a>
-                    <a href="#">Map Explorer</a>
-                    <a href="#">Seller Verification</a>
-                    <a href="#">Price Trends</a>
+                    <a href="auth">Browse Listings</a>
+                    <a href="auth">Save Properties</a>
+                    <a href="auth">Send Inquiries</a>
+                    <a href="auth">Message Sellers</a>
                 </div>
                 <div class="footer-column">
-                    <h4>Company</h4>
-                    <a href="#">About Us</a>
-                    <a href="#">Careers</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <h4>System Flow</h4>
+                    <a href="auth">Seller Verification</a>
+                    <a href="auth">Listing Review</a>
+                    <a href="auth">Reports</a>
+                    <a href="auth">Admin Dashboard</a>
                 </div>
                 <div class="footer-subscribe">
-                    <h4>Join the Private List</h4>
-                    <p>Get exclusive access to premium listings before they go public.</p>
+                    <h4>Use Landly</h4>
+                    <p>Log in or create an account to browse listings, ask sellers questions, or submit land for review.</p>
                     <form class="subscribe-form">
-                        <input type="email" placeholder="Enter your email" />
-                        <button type="submit" class="subscribe-btn">Join</button>
+                        <a href="auth" class="subscribe-btn" style="text-decoration: none; text-align: center;">Open App</a>
                     </form>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>© 2026 Landly. All rights reserved.</p>
-                <div class="footer-socials">
-                    <a href="#" class="footer-social" aria-label="Facebook">
-                        <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                    </a>
-                    <a href="#" class="footer-social" aria-label="Instagram">
-                        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                    </a>
-                    <a href="#" class="footer-social" aria-label="Twitter">
-                        <svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
-                    </a>
-                    <a href="#" class="footer-social" aria-label="LinkedIn">
-                        <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                    </a>
-                </div>
             </div>
         </div>
     </footer>
@@ -2509,8 +2501,7 @@ $availableResultCount = count($availableListings);
                 <!-- Login Info Content -->
                 <div class="auth-info-login">
                     <div class="brand">
-                        <div class="brand-badge">L</div>
-                        <span>Landly</span>
+                        <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
                     </div>
                     <h2>Secure your place in the premium land marketplace.</h2>
                     <p class="tagline">Access exclusive land deals, verified ownership documents, and secure transactions all in one place.</p>
@@ -2532,8 +2523,7 @@ $availableResultCount = count($availableListings);
                 <!-- Signup Info Content -->
                 <div class="auth-info-signup">
                     <div class="brand">
-                        <div class="brand-badge">L</div>
-                        <span>Landly</span>
+                        <div class="brand-badge"><img src="<?= base_url('Logo.jpg') ?>" alt="Landly" class="brand-logo"></div>
                     </div>
                     <h2>Join the exclusive land marketplace.</h2>
                     <p class="tagline">Create your account to access curated listings, secure document storage, and connect with verified buyers and sellers.</p>

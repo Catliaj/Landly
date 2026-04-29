@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class LandListings extends Model
 {
-    private const VERIFIED_LISTING_STATUSES = ['true', 'false', 'pending', 'rejected'];
+    private const VERIFIED_LISTING_STATUSES = ['true', 'false', 'pending', 'rejected', 'suspended'];
 
     protected $table = 'land_listings';
     protected $primaryKey = 'listing_id';
@@ -46,7 +46,7 @@ class LandListings extends Model
 
     // Validation
     protected $validationRules = [
-        'is_verified_listing' => 'required|in_list[true,false,pending,rejected]',
+        'is_verified_listing' => 'required|in_list[true,false,pending,rejected,suspended]',
     ];
     protected $skipValidation = false;
 

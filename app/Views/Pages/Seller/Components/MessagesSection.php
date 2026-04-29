@@ -440,6 +440,7 @@
                         <option value="rejected">Rejected</option>
                         <option value="reserved">Reserved</option>
                         <option value="closed">Closed</option>
+                        <option value="sold">Sold</option>
                     </select>
                     <button id="sellerInquiryStatusUpdateBtn" class="seller-inquiry-status-btn" type="button" disabled>Update Status</button>
                     <button id="reportMessageBtn" class="chat-report-btn" type="button" title="Report message" aria-label="Report this conversation" onclick="openMessageReportModal()">
@@ -504,7 +505,7 @@
         let pollingInFlight = false;
         const POLLING_INTERVAL_MS = 5000;
         const SELLER_MESSAGES_MOBILE_BREAKPOINT = window.matchMedia('(max-width: 991.98px)');
-        const allowedInquiryStatuses = ['pending', 'accepted', 'rejected', 'reserved', 'closed'];
+        const allowedInquiryStatuses = ['pending', 'accepted', 'rejected', 'reserved', 'closed', 'sold'];
 
         function escapeHtml(value) {
             return String(value ?? '')

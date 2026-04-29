@@ -22,6 +22,7 @@
                     <option value="reviewed">Reviewed</option>
                     <option value="dismissed">Dismissed</option>
                     <option value="action_taken">Action Taken</option>
+                    <option value="suspended">Suspended</option>
                 </select>
             </div>
         </div>
@@ -115,6 +116,11 @@
     .status-badge.action_taken {
         background: rgba(46, 204, 113, 0.2);
         color: #2ecc71;
+    }
+
+    .status-badge.suspended {
+        background: rgba(230, 126, 34, 0.2);
+        color: #e67e22;
     }
 
     .report-action-btn {

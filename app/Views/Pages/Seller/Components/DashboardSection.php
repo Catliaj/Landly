@@ -303,8 +303,34 @@ foreach ($dayKeys as $index => $key) {
         font-size: 0.82rem;
     }
 
-    .seller-performance-table {
+    .seller-performance-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        max-height: 100px;
+        overflow-x: hidden;
+        overflow-y: auto;
         margin-top: 14px;
+        padding-right: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(210, 180, 140, 0.65) rgba(254, 250, 224, 0.08);
+    }
+
+    .seller-performance-table-wrap::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .seller-performance-table-wrap::-webkit-scrollbar-track {
+        background: rgba(254, 250, 224, 0.08);
+        border-radius: 999px;
+    }
+
+    .seller-performance-table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(210, 180, 140, 0.65);
+        border-radius: 999px;
+    }
+
+    .seller-performance-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 0.82rem;
@@ -446,13 +472,10 @@ foreach ($dayKeys as $index => $key) {
         </article>
 
         <article class="seller-analytics-card">
-            <h3>Average Seller Response Time</h3>
+            <h3> Seller Summary Analytics </h3>
             <p class="seller-analytics-subtitle">Time from inquiry created to your first status action.</p>
 
-            <div class="seller-response-main">
-                <div class="value"><?= esc($avgResponseLabel) ?></div>
-                <div class="meta">Based on <?= number_format($responseSamples) ?> resolved inquiries</div>
-            </div>
+          
 
             <div class="seller-kpi-row">
                 <div class="seller-kpi">
@@ -477,31 +500,33 @@ foreach ($dayKeys as $index => $key) {
             <?php if ($topPerformanceRows === []): ?>
                 <div class="seller-analytics-subtitle" style="margin-top: 16px;">No listings available yet to compute a score.</div>
             <?php else: ?>
-                <table class="seller-performance-table" aria-label="Top listing performance table">
-                    <thead>
-                        <tr>
-                            <th>Listing</th>
-                            <th>Views</th>
-                            <th>Inquiries</th>
-                            <th>Accepted</th>
-                            <th>Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($topPerformanceRows as $row): ?>
+                <div class="seller-performance-table-wrap">
+                    <table class="seller-performance-table" aria-label="Top listing performance table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div><?= esc($row['title']) ?></div>
-                                    <div style="color: rgba(254, 250, 224, 0.58); font-size: 0.72rem; margin-top: 2px;"><?= esc($row['location_label']) ?></div>
-                                </td>
-                                <td><?= number_format($row['views']) ?></td>
-                                <td><?= number_format($row['inquiries']) ?></td>
-                                <td><?= number_format($row['accepted']) ?></td>
-                                <td><span class="seller-score-badge"><?= number_format($row['score']) ?></span></td>
+                                <th>Listing</th>
+                                <th>Views</th>
+                                <th>Inquiries</th>
+                                <th>Accepted</th>
+                                <th>Score</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($topPerformanceRows as $row): ?>
+                                <tr>
+                                    <td>
+                                        <div><?= esc($row['title']) ?></div>
+                                        <div style="color: rgba(254, 250, 224, 0.58); font-size: 0.72rem; margin-top: 2px;"><?= esc($row['location_label']) ?></div>
+                                    </td>
+                                    <td><?= number_format($row['views']) ?></td>
+                                    <td><?= number_format($row['inquiries']) ?></td>
+                                    <td><?= number_format($row['accepted']) ?></td>
+                                    <td><span class="seller-score-badge"><?= number_format($row['score']) ?></span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </article>
     </div>

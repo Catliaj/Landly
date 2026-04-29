@@ -137,6 +137,7 @@ class Favorites extends BaseController
             ->join('users', 'users.user_id = land_listings.seller_id', 'left')
             ->join('listing_locations', 'listing_locations.listing_id = land_listings.listing_id', 'left')
             ->where('buyer_favorites.buyer_id', $buyerId)
+            ->where('land_listings.listing_status !=', 'sold')
             ->orderBy('buyer_favorites.created_at', 'DESC')
             ->findAll();
 
@@ -254,22 +255,18 @@ class Favorites extends BaseController
     private function resolveListingImageUrl(?string $imagePath, string $title): string
     {
         $imagePath = trim((string) $imagePath);
+        $fallbackUrl = base_url('default1.png');
 
         if ($imagePath !== '') {
             if (preg_match('#^(?:https?:)?//#i', $imagePath) === 1 || str_starts_with($imagePath, 'data:')) {
                 return $imagePath;
             }
 
-            return base_url(ltrim(str_replace('\\', '/', $imagePath), '/'));
+            $normalizedPath = ltrim(str_replace('\\', '/', $imagePath), '/');
+            return is_file(FCPATH . $normalizedPath) ? base_url($normalizedPath) : $fallbackUrl;
         }
 
-        $label = trim($title) !== '' ? trim($title) : 'Landly Listing';
-        $svg = sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480"><rect width="800" height="480" fill="#183127"/><rect x="36" y="36" width="728" height="408" rx="30" fill="#234236"/><text x="50%%" y="50%%" text-anchor="middle" dominant-baseline="middle" fill="#d2b48c" font-family="Arial, sans-serif" font-size="34">%s</text></svg>',
-            htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
-        );
-
-        return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+        return $fallbackUrl;
     }
 
     private function getPrimaryImagesByListing(array $listingIds): array
